@@ -22,6 +22,7 @@ import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
+import Data.Bool (bool)
 import Prelude hiding (fail)
 
 -- | Run a 'Cut' effect within an underlying 'Alternative' instance (typically another 'Algebra' for 'Choose' & 'Empty' effects).
@@ -47,10 +48,10 @@ instance Applicative (CutC m) where
     f (\ f' fs -> a (cons . f') fs fail) nil fail
   {-# INLINE (<*>) #-}
 
-instance Alternative (CutC m) where
-  empty = CutC (\ _ nil _ -> nil)
+instance (Algebra sig m, Effect sig) => Alternative (CutC m) where
+  empty = send Empty
   {-# INLINE empty #-}
-  CutC l <|> CutC r = CutC (\ cons nil fail -> l cons (r cons nil fail) fail)
+  l <|> r = send (Choose (bool r l))
   {-# INLINE (<|>) #-}
 
 instance Monad (CutC m) where
@@ -70,7 +71,7 @@ instance MonadIO m => MonadIO (CutC m) where
   liftIO io = lift (liftIO io)
   {-# INLINE liftIO #-}
 
-instance MonadPlus (CutC m)
+instance (Algebra sig m, Effect sig) => MonadPlus (CutC m)
 
 instance MonadTrans CutC where
   lift m = CutC (\ cons nil _ -> m >>= flip cons nil)
@@ -79,7 +80,7 @@ instance MonadTrans CutC where
 instance (Algebra sig m, Effect sig) => Algebra (Cut :+: Empty :+: Choose :+: sig) (CutC m) where
   alg (L Cutfail)    = CutC $ \ _    _   fail -> fail
   alg (L (Call m k)) = CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
-  alg (R (L Empty))          = empty
-  alg (R (R (L (Choose k)))) = k True <|> k False
+  alg (R (L Empty))          = CutC (\ _ nil _ -> nil)
+  alg (R (R (L (Choose k)))) = CutC (\ cons nil fail -> runCutC (k True) cons (runCutC (k False) cons nil fail) fail)
   alg (R (R (R other)))      = CutC $ \ cons nil _ -> alg (handle [()] (fmap concat . traverse runCutAll) other) >>= foldr cons nil
   {-# INLINE alg #-}

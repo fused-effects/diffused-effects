@@ -17,6 +17,7 @@ import Control.Applicative (Alternative(..), liftA2)
 import Control.Algebra.Class
 import Control.Effect.Choose
 import Control.Effect.Empty
+import Data.Bool (bool)
 import Control.Monad (MonadPlus(..), join)
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix
@@ -53,10 +54,10 @@ instance Applicative (NonDetC m) where
 -- $
 --   prop> run (runNonDet (pure a <|> (pure b <|> pure c))) === Fork (Leaf a) (Fork (Leaf b) (Leaf c))
 --   prop> run (runNonDet ((pure a <|> pure b) <|> pure c)) === Fork (Fork (Leaf a) (Leaf b)) (Leaf c)
-instance Alternative (NonDetC m) where
-  empty = NonDetC (\ _ _ nil -> nil)
+instance (Algebra sig m, Effect sig) => Alternative (NonDetC m) where
+  empty = send Empty
   {-# INLINE empty #-}
-  NonDetC l <|> NonDetC r = NonDetC $ \ fork leaf nil -> fork (l fork leaf nil) (r fork leaf nil)
+  l <|> r = send (Choose (bool r l))
   {-# INLINE (<|>) #-}
 
 instance Monad (NonDetC m) where
@@ -81,15 +82,15 @@ instance MonadIO m => MonadIO (NonDetC m) where
   liftIO io = lift (liftIO io)
   {-# INLINE liftIO #-}
 
-instance MonadPlus (NonDetC m)
+instance (Algebra sig m, Effect sig) => MonadPlus (NonDetC m)
 
 instance MonadTrans NonDetC where
   lift m = NonDetC (\ _ leaf _ -> m >>= leaf)
   {-# INLINE lift #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Empty :+: Choose :+: sig) (NonDetC m) where
-  alg (L Empty)          = empty
-  alg (R (L (Choose k))) = k True <|> k False
+  alg (L Empty)          = NonDetC (\ _ _ nil -> nil)
+  alg (R (L (Choose k))) = NonDetC $ \ fork leaf nil -> fork (runNonDetC (k True) fork leaf nil) (runNonDetC (k False) fork leaf nil)
   alg (R (R other))      = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
   {-# INLINE alg #-}
 
