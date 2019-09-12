@@ -1,2 +1,5 @@
 module Control.Algebra
-() where
+( Effects(..)
+) where
+
+newtype Effects m a = Effects { runEffects :: m a }
