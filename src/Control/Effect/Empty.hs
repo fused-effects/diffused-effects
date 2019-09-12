@@ -3,9 +3,11 @@ module Control.Effect.Empty
 ( -- * Empty effect
   Empty(..)
 , abort
+, guard
 ) where
 
 import Control.Algebra.Class
+import Data.Bool (bool)
 import GHC.Generics (Generic1)
 
 -- | An effect modelling nondeterminism without choice.
@@ -22,3 +24,6 @@ instance Effect   Empty
 --   prop> run (runEmpty abort) === Nothing
 abort :: (Algebra sig m, Member Empty sig) => m a
 abort = send Empty
+
+guard :: (Algebra sig m, Member Empty sig) => Bool -> m ()
+guard = bool abort (pure ())
