@@ -64,10 +64,10 @@ instance MonadTrans (ErrorC e) where
   {-# INLINE lift #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Error e :+: sig) (ErrorC e m) where
-  eff (L (Throw e))     = ErrorC (pure (Left e))
-  eff (L (Catch m h k)) = ErrorC (runError m >>= either (either (pure . Left) (runError . k) <=< runError . h) (runError . k))
-  eff (R other)         = ErrorC (eff (handle (Right ()) (either (pure . Left) runError) other))
-  {-# INLINE eff #-}
+  alg (L (Throw e))     = ErrorC (pure (Left e))
+  alg (L (Catch m h k)) = ErrorC (runError m >>= either (either (pure . Left) (runError . k) <=< runError . h) (runError . k))
+  alg (R other)         = ErrorC (alg (handle (Right ()) (either (pure . Left) runError) other))
+  {-# INLINE alg #-}
 
 
 -- $setup

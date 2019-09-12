@@ -64,9 +64,9 @@ instance MonadTrans ChooseC where
   {-# INLINE lift #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Choose :+: sig) (ChooseC m) where
-  eff (L (Choose k)) = ChooseC $ \ fork leaf -> fork (runChooseC (k True) fork leaf) (runChooseC (k False) fork leaf)
-  eff (R other)      = ChooseC $ \ fork leaf -> eff (handle (Leaf ()) (fmap join . traverse (runChoose (liftA2 Fork) (pure . Leaf))) other) >>= fold fork leaf
-  {-# INLINE eff #-}
+  alg (L (Choose k)) = ChooseC $ \ fork leaf -> fork (runChooseC (k True) fork leaf) (runChooseC (k False) fork leaf)
+  alg (R other)      = ChooseC $ \ fork leaf -> alg (handle (Leaf ()) (fmap join . traverse (runChoose (liftA2 Fork) (pure . Leaf))) other) >>= fold fork leaf
+  {-# INLINE alg #-}
 
 
 data BinaryTree a = Leaf a | Fork (BinaryTree a) (BinaryTree a)

@@ -36,9 +36,9 @@ instance (Algebra sig m, Effect sig) => Fail.MonadFail (FailC m) where
   {-# INLINE fail #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Fail :+: sig) (FailC m) where
-  eff (L (Fail s)) = Fail.fail s
-  eff (R other)    = FailC (eff (R (handleCoercible other)))
-  {-# INLINE eff #-}
+  alg (L (Fail s)) = Fail.fail s
+  alg (R other)    = FailC (alg (R (handleCoercible other)))
+  {-# INLINE alg #-}
 
 
 -- $setup

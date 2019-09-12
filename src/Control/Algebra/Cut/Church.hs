@@ -77,9 +77,9 @@ instance MonadTrans CutC where
   {-# INLINE lift #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Cut :+: Empty :+: Choose :+: sig) (CutC m) where
-  eff (L Cutfail)    = CutC $ \ _    _   fail -> fail
-  eff (L (Call m k)) = CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
-  eff (R (L Empty))          = empty
-  eff (R (R (L (Choose k)))) = k True <|> k False
-  eff (R (R (R other)))      = CutC $ \ cons nil _ -> eff (handle [()] (fmap concat . traverse runCutAll) other) >>= foldr cons nil
-  {-# INLINE eff #-}
+  alg (L Cutfail)    = CutC $ \ _    _   fail -> fail
+  alg (L (Call m k)) = CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
+  alg (R (L Empty))          = empty
+  alg (R (R (L (Choose k)))) = k True <|> k False
+  alg (R (R (R other)))      = CutC $ \ cons nil _ -> alg (handle [()] (fmap concat . traverse runCutAll) other) >>= foldr cons nil
+  {-# INLINE alg #-}

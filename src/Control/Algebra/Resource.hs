@@ -59,18 +59,18 @@ runUnlifting :: UnliftIO m -> ResourceC m a -> IO a
 runUnlifting h@(UnliftIO handler) = handler . runReader h . runResourceC
 
 instance (Algebra sig m, MonadIO m) => Algebra (Resource :+: sig) (ResourceC m) where
-  eff (L (Resource acquire release use k)) = do
+  alg (L (Resource acquire release use k)) = do
     handler <- ResourceC ask
     a <- liftIO (Exc.bracket
       (runUnlifting handler acquire)
       (runUnlifting handler . release)
       (runUnlifting handler . use))
     k a
-  eff (L (OnError  acquire release use k)) = do
+  alg (L (OnError  acquire release use k)) = do
     handler <- ResourceC ask
     a <- liftIO (Exc.bracketOnError
       (runUnlifting handler acquire)
       (runUnlifting handler . release)
       (runUnlifting handler . use))
     k a
-  eff (R other) = ResourceC (eff (R (handleCoercible other)))
+  alg (R other) = ResourceC (alg (R (handleCoercible other)))

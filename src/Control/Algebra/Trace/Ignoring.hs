@@ -34,9 +34,9 @@ instance MonadTrans TraceC where
   {-# INLINE lift #-}
 
 instance Algebra sig m => Algebra (Trace :+: sig) (TraceC m) where
-  eff (L trace) = traceCont trace
-  eff (R other) = TraceC (eff (handleCoercible other))
-  {-# INLINE eff #-}
+  alg (L trace) = traceCont trace
+  alg (R other) = TraceC (alg (handleCoercible other))
+  {-# INLINE alg #-}
 
 
 -- $setup

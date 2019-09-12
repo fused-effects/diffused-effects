@@ -32,8 +32,8 @@ newtype TraceC m a = TraceC { runTraceC :: StateC [String] m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
 instance (Algebra sig m, Effect sig) => Algebra (Trace :+: sig) (TraceC m) where
-  eff (L (Trace m k)) = TraceC (modify (m :)) *> k
-  eff (R other)       = TraceC (eff (R (handleCoercible other)))
+  alg (L (Trace m k)) = TraceC (modify (m :)) *> k
+  alg (R other)       = TraceC (alg (R (handleCoercible other)))
 
 
 -- $setup

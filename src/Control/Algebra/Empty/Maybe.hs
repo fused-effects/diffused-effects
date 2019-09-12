@@ -67,9 +67,9 @@ instance MonadTrans EmptyC where
   {-# INLINE lift #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Empty :+: sig) (EmptyC m) where
-  eff (L Empty) = EmptyC (pure Nothing)
-  eff (R other) = EmptyC (eff (handle (Just ()) (maybe (pure Nothing) runEmptyC) other))
-  {-# INLINE eff #-}
+  alg (L Empty) = EmptyC (pure Nothing)
+  alg (R other) = EmptyC (alg (handle (Just ()) (maybe (pure Nothing) runEmptyC) other))
+  {-# INLINE alg #-}
 
 -- $setup
 -- >>> :seti -XFlexibleContexts

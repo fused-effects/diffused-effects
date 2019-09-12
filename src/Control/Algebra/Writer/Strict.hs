@@ -44,21 +44,21 @@ newtype WriterC w m a = WriterC { runWriterC :: StateC w m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
 instance (Monoid w, Algebra sig m, Effect sig) => Algebra (Writer w :+: sig) (WriterC w m) where
-  eff (L (Tell w     k)) = WriterC $ do
+  alg (L (Tell w     k)) = WriterC $ do
     modify (`mappend` w)
     runWriterC k
-  eff (L (Listen   m k)) = WriterC $ do
+  alg (L (Listen   m k)) = WriterC $ do
     w <- get
     put (mempty :: w)
     a <- runWriterC m
     w' <- get
     modify (mappend (w :: w))
     runWriterC (k w' a)
-  eff (L (Censor f m k)) = WriterC $ do
+  alg (L (Censor f m k)) = WriterC $ do
     w <- get
     put (mempty :: w)
     a <- runWriterC m
     modify (mappend w . f)
     runWriterC (k a)
-  eff (R other)          = WriterC (eff (R (handleCoercible other)))
-  {-# INLINE eff #-}
+  alg (R other)          = WriterC (alg (R (handleCoercible other)))
+  {-# INLINE alg #-}

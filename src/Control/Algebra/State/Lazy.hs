@@ -70,10 +70,10 @@ instance MonadTrans (StateC s) where
   {-# INLINE lift #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (State s :+: sig) (StateC s m) where
-  eff (L (Get   k)) = StateC (\ s -> runState s (k s))
-  eff (L (Put s k)) = StateC (\ _ -> runState s k)
-  eff (R other)     = StateC (\ s -> eff (handle (s, ()) (uncurry runState) other))
-  {-# INLINE eff #-}
+  alg (L (Get   k)) = StateC (\ s -> runState s (k s))
+  alg (L (Put s k)) = StateC (\ _ -> runState s k)
+  alg (R other)     = StateC (\ s -> alg (handle (s, ()) (uncurry runState) other))
+  {-# INLINE alg #-}
 
 -- | Run a lazy 'State' effect, yielding the result value and the final state.
 --   More programs terminate with lazy state than strict state, but injudicious

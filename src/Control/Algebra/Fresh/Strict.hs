@@ -32,17 +32,17 @@ newtype FreshC m a = FreshC { runFreshC :: StateC Int m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
 instance (Algebra sig m, Effect sig) => Algebra (Fresh :+: sig) (FreshC m) where
-  eff (L (Fresh   k)) = FreshC $ do
+  alg (L (Fresh   k)) = FreshC $ do
     i <- get
     put (succ i)
     runFreshC (k i)
-  eff (L (Reset m k)) = FreshC $ do
+  alg (L (Reset m k)) = FreshC $ do
     i <- get
     a <- runFreshC m
     put (i :: Int)
     runFreshC (k a)
-  eff (R other)       = FreshC (eff (R (handleCoercible other)))
-  {-# INLINE eff #-}
+  alg (R other)       = FreshC (alg (R (handleCoercible other)))
+  {-# INLINE alg #-}
 
 
 -- $setup

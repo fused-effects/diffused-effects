@@ -45,9 +45,9 @@ instance MonadTrans (ResumableC err) where
 newtype Handler err m = Handler { runHandler :: forall x . err x -> m x }
 
 instance Algebra sig m => Algebra (Resumable err :+: sig) (ResumableC err m) where
-  eff (L (Resumable err k)) = ResumableC (ReaderC (\ handler -> runHandler handler err)) >>= k
-  eff (R other)             = ResumableC (eff (R (handleCoercible other)))
-  {-# INLINE eff #-}
+  alg (L (Resumable err k)) = ResumableC (ReaderC (\ handler -> runHandler handler err)) >>= k
+  alg (R other)             = ResumableC (alg (R (handleCoercible other)))
+  {-# INLINE alg #-}
 
 
 -- $setup

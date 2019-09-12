@@ -58,23 +58,23 @@ reify a k =
 --
 --   prop> run (runInterpret (\ op -> case op of { Get k -> k a ; Put _ k -> k }) get) === a
 runInterpret
-  :: forall eff m a.
-     (HFunctor eff, Monad m)
-  => (forall x . eff m x -> m x)
-  -> (forall s . Reifies s (Handler eff m) => InterpretC s eff m a)
+  :: forall alg m a.
+     (HFunctor alg, Monad m)
+  => (forall x . alg m x -> m x)
+  -> (forall s . Reifies s (Handler alg m) => InterpretC s alg m a)
   -> m a
 runInterpret f m =
   reify (Handler handler) (go m)
 
   where
 
-    handler :: forall s x . eff (InterpretC s eff m) x -> InterpretC s eff m x
+    handler :: forall s x . alg (InterpretC s alg m) x -> InterpretC s alg m x
     handler e =
       InterpretC (f (handleCoercible e))
 
     go
       :: forall x s .
-         InterpretC s eff m x
+         InterpretC s alg m x
       -> Tagged s (m x)
     go m =
       Tagged (runInterpretC m)
@@ -84,10 +84,10 @@ runInterpret f m =
 --
 --   prop> run (runInterpretState (\ s op -> case op of { Get k -> runState s (k s) ; Put s' k -> runState s' k }) a get) === a
 runInterpretState
-  :: (HFunctor eff, Monad m)
-  => (forall x . s -> eff (StateC s m) x -> m (s, x))
+  :: (HFunctor alg, Monad m)
+  => (forall x . s -> alg (StateC s m) x -> m (s, x))
   -> s
-  -> (forall t. Reifies t (Handler eff (StateC s m)) => InterpretC t eff (StateC s m) a)
+  -> (forall t. Reifies t (Handler alg (StateC s m)) => InterpretC t alg (StateC s m) a)
   -> m (s, a)
 runInterpretState handler state m =
   runState state $
@@ -105,11 +105,11 @@ instance MonadTrans (InterpretC s sig) where
   lift = InterpretC
 
 
-instance (HFunctor eff, HFunctor sig, Reifies s (Handler eff m), Monad m, Algebra sig m) => Algebra (eff :+: sig) (InterpretC s eff m) where
-  eff (L eff) =
-    runHandler (unTag (reflect @s)) eff
-  eff (R other) =
-    InterpretC (eff (handleCoercible other))
+instance (HFunctor alg, HFunctor sig, Reifies s (Handler alg m), Monad m, Algebra sig m) => Algebra (alg :+: sig) (InterpretC s alg m) where
+  alg (L alg) =
+    runHandler (unTag (reflect @s)) alg
+  alg (R other) =
+    InterpretC (alg (handleCoercible other))
 
 
 -- $setup

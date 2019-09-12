@@ -32,7 +32,7 @@ instance MonadTrans LiftC where
   lift = LiftC
 
 instance Monad m => Algebra (Lift m) (LiftC m) where
-  eff = LiftC . (>>= runLiftC) . unLift
+  alg = LiftC . (>>= runLiftC) . unLift
 
 instance MonadUnliftIO m => MonadUnliftIO (LiftC m) where
   askUnliftIO = LiftC $ withUnliftIO $ \u -> return (UnliftIO (unliftIO u . runLiftC))

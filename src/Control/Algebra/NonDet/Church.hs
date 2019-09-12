@@ -104,10 +104,10 @@ instance MonadTrans NonDetC where
   {-# INLINE lift #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Empty :+: Choose :+: sig) (NonDetC m) where
-  eff (L Empty)          = empty
-  eff (R (L (Choose k))) = k True <|> k False
-  eff (R (R other))      = NonDetC $ \ fork leaf nil -> eff (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
-  {-# INLINE eff #-}
+  alg (L Empty)          = empty
+  alg (R (L (Choose k))) = k True <|> k False
+  alg (R (R other))      = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
+  {-# INLINE alg #-}
 
 
 data BinaryTree a = Nil | Leaf a | Fork (BinaryTree a) (BinaryTree a)

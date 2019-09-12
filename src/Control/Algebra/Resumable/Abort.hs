@@ -34,9 +34,9 @@ newtype ResumableC err m a = ResumableC { runResumableC :: ErrorC (SomeError err
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
 instance (Algebra sig m, Effect sig) => Algebra (Resumable err :+: sig) (ResumableC err m) where
-  eff (L (Resumable err _)) = ResumableC (throwError (SomeError err))
-  eff (R other)             = ResumableC (eff (R (handleCoercible other)))
-  {-# INLINE eff #-}
+  alg (L (Resumable err _)) = ResumableC (throwError (SomeError err))
+  alg (R other)             = ResumableC (alg (R (handleCoercible other)))
+  {-# INLINE alg #-}
 
 
 -- | An error at some existentially-quantified type index.
