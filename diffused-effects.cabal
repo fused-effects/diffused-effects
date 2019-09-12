@@ -1,10 +1,9 @@
 cabal-version:       2.2
 
-name:                fused-effects
-version:             0.5.0.1
-synopsis:            A fast, flexible, fused effect system.
-description:         A fast, flexible, fused effect system, à la Effect Handlers in Scope, Monad Transformers and Modular Algebraic Effects: What Binds Them Together, and Fusion for Free—Efficient Algebraic Effect Handlers.
-homepage:            https://github.com/fused-effects/fused-effects
+name:                diffused-effects
+version:             0.0.0.0
+synopsis:            all your intentions turned to vapour
+homepage:            https://github.com/fused-effects/diffused-effects
 license:             BSD-3-Clause
 license-file:        LICENSE
 author:              Nicolas Wu, Tom Schrijvers, Rob Rix, Patrick Thomson
@@ -70,7 +69,7 @@ test-suite examples
                      , ReinterpretLog
                      , Teletype
   build-depends:       base        >= 4.9 && < 4.14
-                     , fused-effects
+                     , diffused-effects
                      , hspec       >= 2.4.1
                      , QuickCheck  >= 2.7 && < 3
                      , transformers
@@ -83,7 +82,7 @@ test-suite test
   other-modules:       Control.Effect.Spec
                      , Control.Effect.NonDet.Spec
   build-depends:       base                >= 4.9 && < 4.14
-                     , fused-effects
+                     , diffused-effects
                      , hspec               >= 2.4.1
                      , inspection-testing ^>= 0.4
   hs-source-dirs:      test
@@ -94,7 +93,7 @@ test-suite doctest
   main-is:             Doctest.hs
   build-depends:       base     >= 4.9 && < 4.14
                      , doctest  >= 0.7 && < 1
-                     , fused-effects
+                     , diffused-effects
   hs-source-dirs:      test
 
 
@@ -102,8 +101,9 @@ benchmark benchmark
   import:             common
   type:               exitcode-stdio-1.0
   main-is:            Bench.hs
+  other-modules:      NonDet.NQueens
   build-depends:      base >= 4.9 && < 4.14
-                    , fused-effects
+                    , diffused-effects
                     , gauge
   hs-source-dirs:     benchmark
   ghc-options:        -threaded -rtsopts "-with-rtsopts=-N -A4m -n2m"
@@ -111,4 +111,4 @@ benchmark benchmark
 
 source-repository head
   type:     git
-  location: https://github.com/fused-effects/fused-effects
+  location: https://github.com/fused-effects/diffused-effects
