@@ -15,7 +15,7 @@ import qualified Control.Effect.Sum as Sum
 
 -- | The class of Algebras (results) for algebras (effect handlers) over signatures (effects), whose actions are given by the 'alg' method.
 class (HFunctor sig, Monad m) => Algebra sig m | m -> sig where
-  -- | Construct a value in the Algebra for an effect signature (typically a sum of a handled effect and any remaining effects).
+  -- | Construct a value in the carrier for an effect signature (typically a sum of a handled effect and any remaining effects).
   alg :: sig m a -> m a
 
 
