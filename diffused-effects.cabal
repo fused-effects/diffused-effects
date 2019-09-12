@@ -13,7 +13,6 @@ category:            Control
 build-type:          Simple
 extra-source-files:
   README.md
-  ChangeLog.md
 
 tested-with:         GHC == 8.2.2
                    , GHC == 8.4.4
