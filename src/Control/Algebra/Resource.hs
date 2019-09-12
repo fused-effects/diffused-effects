@@ -11,23 +11,13 @@ module Control.Algebra.Resource
 , run
 ) where
 
-import           Control.Applicative (Alternative(..))
 import           Control.Algebra.Class
 import           Control.Algebra.Reader
+import           Control.Effect.Lift
 import           Control.Effect.Resource
 import qualified Control.Exception as Exc
-import           Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import           Control.Monad.Fix
-import           Control.Monad.IO.Class
 import           Control.Monad.IO.Unlift
 import           Control.Monad.Trans.Class
-
--- Not exposed due to its potential to silently drop effects (#180).
-unliftResource :: (forall x . m x -> IO x) -- ^ "unlifting" function to run the Algebra in 'IO'
-            -> ResourceC m a
-            -> m a
-unliftResource handler = runReader (UnliftIO handler) . runResourceC
 
 -- | Executes a 'Resource' effect. Because this runs using 'MonadUnliftIO',
 -- invocations of 'runResource' must happen at the "bottom" of a stack of
@@ -46,11 +36,7 @@ runResource :: MonadUnliftIO m
 runResource r = withRunInIO (\f -> runUnlifting (UnliftIO f) r)
 
 newtype ResourceC m a = ResourceC { runResourceC :: ReaderC (UnliftIO m) m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus)
-
-instance MonadUnliftIO m => MonadUnliftIO (ResourceC m) where
-  askUnliftIO = ResourceC . ReaderC $ \(UnliftIO h) ->
-    withUnliftIO $ \u -> pure (UnliftIO $ \r -> unliftIO u (unliftResource h r))
+  deriving (Applicative, Functor, Monad)
 
 instance MonadTrans ResourceC where
   lift = ResourceC . lift
@@ -58,17 +44,17 @@ instance MonadTrans ResourceC where
 runUnlifting :: UnliftIO m -> ResourceC m a -> IO a
 runUnlifting h@(UnliftIO handler) = handler . runReader h . runResourceC
 
-instance (Algebra sig m, MonadIO m) => Algebra (Resource :+: sig) (ResourceC m) where
+instance (Algebra sig m, Member (Lift IO) sig) => Algebra (Resource :+: sig) (ResourceC m) where
   alg (L (Resource acquire release use k)) = do
     handler <- ResourceC ask
-    a <- liftIO (Exc.bracket
+    a <- sendM (Exc.bracket
       (runUnlifting handler acquire)
       (runUnlifting handler . release)
       (runUnlifting handler . use))
     k a
   alg (L (OnError  acquire release use k)) = do
     handler <- ResourceC ask
-    a <- liftIO (Exc.bracketOnError
+    a <- sendM (Exc.bracketOnError
       (runUnlifting handler acquire)
       (runUnlifting handler . release)
       (runUnlifting handler . use))
