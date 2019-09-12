@@ -11,14 +11,9 @@ module Control.Algebra.Trace.Returning
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Algebra.State.Strict
 import Control.Effect.Trace
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Bifunctor (first)
 
@@ -29,7 +24,7 @@ runTrace :: Functor m => TraceC m a -> m ([String], a)
 runTrace = fmap (first reverse) . runState [] . runTraceC
 
 newtype TraceC m a = TraceC { runTraceC :: StateC [String] m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadTrans)
 
 instance (Algebra sig m, Effect sig) => Algebra (Trace :+: sig) (TraceC m) where
   alg (L (Trace m k)) = TraceC (modify (m :)) *> k
