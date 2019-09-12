@@ -32,12 +32,12 @@ instance MonadTrans CullC where
 
 instance (Algebra sig m, Effect sig) => Algebra (Cull :+: Empty :+: Choose :+: sig) (CullC m) where
   alg (L (Cull m k))         = CullC (local (const True) (runCullC m)) >>= k
-  alg (R (L Empty))          = CullC (send Empty)
+  alg (R (L Empty))          = CullC empty
   alg (R (R (L (Choose k)))) = CullC $ ReaderC $ \ cull ->
     if cull then
       NonDetC $ \ fork leaf nil ->
         runNonDetC (runReader cull (runCullC (k True))) fork leaf (runNonDetC (runReader cull (runCullC (k False))) fork leaf nil)
     else
-      choose (runReader cull (runCullC (k True))) (runReader cull (runCullC (k False)))
+      runReader cull (runCullC (k True)) <|> runReader cull (runCullC (k False))
   alg (R (R (R other)))      = CullC (alg (R (R (R (handleCoercible other)))))
   {-# INLINE alg #-}

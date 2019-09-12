@@ -2,7 +2,7 @@
 module Control.Effect.Empty
 ( -- * Empty effect
   Empty(..)
-, abort
+, empty
 , guard
 ) where
 
@@ -21,9 +21,9 @@ instance Effect   Empty
 
 -- | Abort the computation.
 --
---   prop> run (runEmpty abort) === Nothing
-abort :: (Algebra sig m, Member Empty sig) => m a
-abort = send Empty
+--   prop> run (runEmpty empty) === Nothing
+empty :: (Algebra sig m, Member Empty sig) => m a
+empty = send Empty
 
 guard :: (Algebra sig m, Member Empty sig) => Bool -> m ()
-guard = bool abort (pure ())
+guard = bool empty (pure ())
