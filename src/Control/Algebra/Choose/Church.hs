@@ -11,15 +11,11 @@ module Control.Algebra.Choose.Church
 , run
 ) where
 
-import Control.Applicative ((<|>), liftA2)
+import Control.Applicative (liftA2)
 import Control.Algebra.Class
 import Control.Effect.Choose
 import Control.Monad (join)
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
-import Data.Maybe (fromJust)
 import Prelude hiding (fail)
 
 runChoose :: (m b -> m b -> m b) -> (a -> m b) -> ChooseC m a -> m b
@@ -43,21 +39,6 @@ instance Monad (ChooseC m) where
   ChooseC a >>= f = ChooseC $ \ fork leaf ->
     a fork (runChoose fork leaf . f)
   {-# INLINE (>>=) #-}
-
-instance Fail.MonadFail m => Fail.MonadFail (ChooseC m) where
-  fail s = lift (Fail.fail s)
-  {-# INLINE fail #-}
-
-instance MonadFix m => MonadFix (ChooseC m) where
-  mfix f = ChooseC $ \ fork leaf ->
-    mfix (runChoose (liftA2 Fork) (pure . Leaf)
-      . f . fromJust . fold (<|>) Just)
-    >>= fold fork leaf
-  {-# INLINE mfix #-}
-
-instance MonadIO m => MonadIO (ChooseC m) where
-  liftIO io = lift (liftIO io)
-  {-# INLINE liftIO #-}
 
 instance MonadTrans ChooseC where
   lift m = ChooseC (\ _ leaf -> m >>= leaf)
