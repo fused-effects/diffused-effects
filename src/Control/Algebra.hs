@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, UndecidableInstances #-}
 module Control.Algebra
 ( Effects(..)
 ) where
@@ -16,6 +16,9 @@ newtype Effects m a = Effects { runEffects :: m a }
 
 instance MonadTrans Effects where
   lift = Effects
+
+instance Algebra sig m => Algebra sig (Effects m) where
+  alg = Effects . alg . handleCoercible
 
 instance (Algebra sig m, Member Effect.Fail sig) => Fail.MonadFail (Effects m) where
   fail = lift . Effect.fail
