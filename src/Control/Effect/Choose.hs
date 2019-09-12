@@ -7,7 +7,8 @@ module Control.Effect.Choose
 , many
 , some
 , some1
-  -- * Choosing semigroup
+, oneOf
+-- * Choosing semigroup
 , Choosing(..)
 ) where
 
@@ -44,6 +45,20 @@ some a = (:) <$> a <*> many a
 some1 :: (Carrier sig m, Member Choose sig) => m a -> m (NonEmpty a)
 some1 a = (:|) <$> a <*> many a
 
+
+-- | Nondeterministically choose an element from a 'Foldable' collection.
+-- This can be used to emulate the style of nondeterminism associated with
+-- programming in the list monad:
+-- @
+--   pythagoreanTriples = do
+--     a <- oneOf [1..10]
+--     b <- oneOf [1..10]
+--     c <- oneOf [1..10]
+--     guard (a^2 + b^2 == c^2)
+--     pure (a, b, c)
+-- @
+oneOf :: (Foldable t, Carrier sig m, Member Choose sig, Member Empty sig) => t a -> m a
+oneOf = getChoosing . foldMap (Choosing . pure)
 
 newtype Choosing m a = Choosing { getChoosing :: m a }
 
