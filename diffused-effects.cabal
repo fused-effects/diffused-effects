@@ -29,8 +29,7 @@ common common
 
 library
   import:              common
-  exposed-modules:     Control.Carrier
-                     , Control.Carrier.Choose.Church
+  exposed-modules:     Control.Carrier.Choose.Church
                      , Control.Carrier.Class
                      , Control.Carrier.Cull
                      , Control.Carrier.Cut.Church
