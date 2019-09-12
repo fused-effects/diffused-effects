@@ -15,4 +15,4 @@ instance MonadTrans Effects where
   lift = Effects
 
 instance (Algebra sig m, Member Effect.Fail sig) => Fail.MonadFail (Effects m) where
-  fail = Effects . Effect.fail
+  fail = lift . Effect.fail
