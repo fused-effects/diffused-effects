@@ -32,11 +32,11 @@ newtype FailC m a = FailC { runFailC :: ErrorC String m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
 instance (Algebra sig m, Effect sig) => Fail.MonadFail (FailC m) where
-  fail s = FailC (throwError s)
+  fail s = send (Fail s)
   {-# INLINE fail #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Fail :+: sig) (FailC m) where
-  alg (L (Fail s)) = Fail.fail s
+  alg (L (Fail s)) = FailC (throwError s)
   alg (R other)    = FailC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}
 
