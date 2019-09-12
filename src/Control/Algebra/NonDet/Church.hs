@@ -13,17 +13,12 @@ module Control.Algebra.NonDet.Church
 , run
 ) where
 
-import Control.Applicative (Alternative(..), liftA2)
+import Control.Applicative (liftA2)
 import Control.Algebra.Class
 import Control.Effect.Choose
 import Control.Effect.Empty
-import Data.Bool (bool)
-import Control.Monad (MonadPlus(..), join)
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
+import Control.Monad (join)
 import Control.Monad.Trans.Class
-import Data.Maybe (fromJust)
 
 -- | Run a 'NonDet' effect, collecting all branches’ results into an 'Alternative' functor.
 --
@@ -51,38 +46,10 @@ instance Applicative (NonDetC m) where
     f fork (\ f' -> a fork (leaf . f') nil) nil
   {-# INLINE (<*>) #-}
 
--- $
---   prop> run (runNonDet (pure a <|> (pure b <|> pure c))) === Fork (Leaf a) (Fork (Leaf b) (Leaf c))
---   prop> run (runNonDet ((pure a <|> pure b) <|> pure c)) === Fork (Fork (Leaf a) (Leaf b)) (Leaf c)
-instance (Algebra sig m, Effect sig) => Alternative (NonDetC m) where
-  empty = send Empty
-  {-# INLINE empty #-}
-  l <|> r = send (Choose (bool r l))
-  {-# INLINE (<|>) #-}
-
 instance Monad (NonDetC m) where
   NonDetC a >>= f = NonDetC $ \ fork leaf nil ->
     a fork (\ a' -> runNonDetC (f a') fork leaf nil) nil
   {-# INLINE (>>=) #-}
-
-instance Fail.MonadFail m => Fail.MonadFail (NonDetC m) where
-  fail s = lift (Fail.fail s)
-  {-# INLINE fail #-}
-
-instance MonadFix m => MonadFix (NonDetC m) where
-  mfix f = NonDetC $ \ fork leaf nil ->
-    mfix (\ a -> runNonDetC (f (fromJust (fold (<|>) Just Nothing a)))
-      (liftA2 Fork)
-      (pure . Leaf)
-      (pure Nil))
-    >>= fold fork leaf nil
-  {-# INLINE mfix #-}
-
-instance MonadIO m => MonadIO (NonDetC m) where
-  liftIO io = lift (liftIO io)
-  {-# INLINE liftIO #-}
-
-instance (Algebra sig m, Effect sig) => MonadPlus (NonDetC m)
 
 instance MonadTrans NonDetC where
   lift m = NonDetC (\ _ leaf _ -> m >>= leaf)
@@ -103,12 +70,6 @@ instance Applicative BinaryTree where
   {-# INLINE pure #-}
   f <*> a = fold Fork (<$> a) Nil f
   {-# INLINE (<*>) #-}
-
-instance Alternative BinaryTree where
-  empty = Nil
-  {-# INLINE empty #-}
-  (<|>) = Fork
-  {-# INLINE (<|>) #-}
 
 instance Monad BinaryTree where
   a >>= f = fold Fork f Nil a
