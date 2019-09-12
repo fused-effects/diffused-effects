@@ -14,6 +14,7 @@ module Control.Effect.Cull
 , run
 ) where
 
+import Control.Applicative (Alternative(..))
 import Control.Effect.Carrier
 import Control.Effect.Choose
 import Control.Effect.Empty
