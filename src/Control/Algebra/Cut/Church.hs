@@ -22,7 +22,6 @@ import Control.Monad.Fix
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Bool (bool)
-import Prelude hiding (fail)
 
 -- | Run a 'Cut' effect within an underlying 'Alternative' instance (typically another 'Algebra' for 'Choose' & 'Empty' effects).
 --
