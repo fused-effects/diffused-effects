@@ -8,7 +8,6 @@ module Control.Carrier.NonDet.Church
 , runNonDet
 , NonDetC(..)
   -- * Re-exports
-, Alternative(..)
 , oneOf
 , Carrier
 , Member
