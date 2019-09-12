@@ -5,7 +5,7 @@ module Control.Effect.Empty
 , abort
 ) where
 
-import Control.Carrier.Class
+import Control.Algebra.Class
 import GHC.Generics (Generic1)
 
 -- | An effect modelling nondeterminism without choice.
@@ -20,5 +20,5 @@ instance Effect   Empty
 -- | Abort the computation.
 --
 --   prop> run (runEmpty abort) === Nothing
-abort :: (Carrier sig m, Member Empty sig) => m a
+abort :: (Algebra sig m, Member Empty sig) => m a
 abort = send Empty

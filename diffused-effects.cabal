@@ -26,29 +26,29 @@ common common
 
 library
   import:              common
-  exposed-modules:     Control.Carrier.Choose.Church
-                     , Control.Carrier.Class
-                     , Control.Carrier.Cull
-                     , Control.Carrier.Cut.Church
-                     , Control.Carrier.Empty.Maybe
-                     , Control.Carrier.Error.Either
-                     , Control.Carrier.Fail
-                     , Control.Carrier.Fresh.Strict
-                     , Control.Carrier.Interpose
-                     , Control.Carrier.Interpret
-                     , Control.Carrier.Lift
-                     , Control.Carrier.NonDet.Church
-                     , Control.Carrier.Pure
-                     , Control.Carrier.Reader
-                     , Control.Carrier.Resource
-                     , Control.Carrier.Resumable.Abort
-                     , Control.Carrier.Resumable.Resume
-                     , Control.Carrier.State.Lazy
-                     , Control.Carrier.State.Strict
-                     , Control.Carrier.Trace.Ignoring
-                     , Control.Carrier.Trace.Printing
-                     , Control.Carrier.Trace.Returning
-                     , Control.Carrier.Writer.Strict
+  exposed-modules:     Control.Algebra.Choose.Church
+                     , Control.Algebra.Class
+                     , Control.Algebra.Cull
+                     , Control.Algebra.Cut.Church
+                     , Control.Algebra.Empty.Maybe
+                     , Control.Algebra.Error.Either
+                     , Control.Algebra.Fail
+                     , Control.Algebra.Fresh.Strict
+                     , Control.Algebra.Interpose
+                     , Control.Algebra.Interpret
+                     , Control.Algebra.Lift
+                     , Control.Algebra.NonDet.Church
+                     , Control.Algebra.Pure
+                     , Control.Algebra.Reader
+                     , Control.Algebra.Resource
+                     , Control.Algebra.Resumable.Abort
+                     , Control.Algebra.Resumable.Resume
+                     , Control.Algebra.State.Lazy
+                     , Control.Algebra.State.Strict
+                     , Control.Algebra.Trace.Ignoring
+                     , Control.Algebra.Trace.Printing
+                     , Control.Algebra.Trace.Returning
+                     , Control.Algebra.Writer.Strict
                      , Control.Effect
                      , Control.Effect.Choose
                      , Control.Effect.Class

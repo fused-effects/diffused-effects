@@ -4,9 +4,9 @@
 -- * First, we will define a structured log message type, which is the type our
 --   application prefers to log in.
 --
--- * Next, we will define a logging carrier that prints strings to stdout.
+-- * Next, we will define a logging Algebra that prints strings to stdout.
 --
--- * Finally, we will bridge the two with an effect carrier that reinterprets
+-- * Finally, we will bridge the two with an effect Algebra that reinterprets
 --   structured log messages as strings.
 
 
@@ -33,7 +33,7 @@ module ReinterpretLog
   , runApplication
   ) where
 
-import Control.Effect.Carrier
+import Control.Effect.Algebra
 import Control.Effect.Lift
 import Control.Effect.Reader
 import Control.Effect.Writer
@@ -65,7 +65,7 @@ renderLogMessage = \case
 
 -- The application: it logs two messages, then quits.
 application ::
-     ( Carrier sig m
+     ( Algebra sig m
      , Member (Log Message) sig
      )
   => m ()
@@ -114,7 +114,7 @@ data Log (a :: Type) (m :: Type -> Type) (k :: Type)
 
 -- Log an 'a'.
 log ::
-     ( Carrier sig m
+     ( Algebra sig m
      , Member (Log a) sig
      )
   => a
@@ -124,10 +124,10 @@ log x =
 
 
 --------------------------------------------------------------------------------
--- The logging effect carriers
+-- The logging effect Algebras
 --------------------------------------------------------------------------------
 
--- Carrier one: log strings to stdout.
+-- Algebra one: log strings to stdout.
 newtype LogStdoutC m a
   = LogStdoutC (m a)
   deriving newtype (Applicative, Functor, Monad, MonadIO)
@@ -135,11 +135,11 @@ newtype LogStdoutC m a
 instance
      -- So long as the 'm' monad can interpret the 'sig' effects (and also
      -- perform IO)...
-     ( Carrier sig m
+     ( Algebra sig m
      , MonadIO m
      )
      -- ... the 'LogStdoutC m' monad can interpret 'Log String :+: sig' effects
-  => Carrier (Log String :+: sig) (LogStdoutC m) where
+  => Algebra (Log String :+: sig) (LogStdoutC m) where
 
   eff :: (Log String :+: sig) (LogStdoutC m) a -> LogStdoutC m a
   eff = \case
@@ -159,7 +159,7 @@ runLogStdout (LogStdoutC m) =
   m
 
 
--- Carrier two: reinterpret a program that logs 's's into one that logs 't's
+-- Algebra two: reinterpret a program that logs 's's into one that logs 't's
 -- using a function (provided at runtime) from 's' to 't'.
 newtype ReinterpretLogC s t m a
   = ReinterpretLogC { unReinterpretLogC :: ReaderC (s -> t) m a }
@@ -168,12 +168,12 @@ newtype ReinterpretLogC s t m a
 instance
      -- So long as the 'm' monad can interpret the 'sig' effects, one of which
      -- is 'Log t'...
-     ( Carrier sig m
+     ( Algebra sig m
      , Member (Log t) sig
      )
      -- ... the 'ReinterpretLogC s t m' monad can interpret 'Log s :+: sig'
      -- effects
-  => Carrier (Log s :+: sig) (ReinterpretLogC s t m) where
+  => Algebra (Log s :+: sig) (ReinterpretLogC s t m) where
 
   eff ::
        (Log s :+: sig) (ReinterpretLogC s t m) a
@@ -198,7 +198,7 @@ reinterpretLog f =
 
 
 
--- Carrier three: collect log messages in a list. This is used for writing this
+-- Algebra three: collect log messages in a list. This is used for writing this
 -- example's test spec.
 newtype CollectLogMessagesC s m a
   = CollectLogMessagesC { unCollectLogMessagesC :: WriterC [s] m a }
@@ -206,12 +206,12 @@ newtype CollectLogMessagesC s m a
 
 instance
      -- So long as the 'm' monad can interpret the 'sig' effects...
-     ( Carrier sig m
+     ( Algebra sig m
      , Effect sig
      )
      -- ...the 'CollectLogMessagesC s m' monad can interpret 'Log s :+: sig'
      -- effects
-  => Carrier (Log s :+: sig) (CollectLogMessagesC s m) where
+  => Algebra (Log s :+: sig) (CollectLogMessagesC s m) where
 
   eff ::
        (Log s :+: sig) (CollectLogMessagesC s m) a
