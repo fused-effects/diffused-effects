@@ -26,8 +26,8 @@ import Data.Bool (bool)
 -- | Run a 'Cull' effect. Branches outside of any 'cull' block will not be pruned.
 --
 --   prop> run (runNonDet (runCull (pure a <|> pure b))) === [a, b]
-runCull :: Alternative m => CullC m a -> m a
-runCull (CullC m) = runNonDetC (runReader False m) (<|>) pure empty
+runCull :: (m b -> m b -> m b) -> (a -> m b) -> m b -> CullC m a -> m b
+runCull fork leaf nil (CullC m) = runNonDetC (runReader False m) fork leaf nil
 
 newtype CullC m a = CullC { runCullC :: ReaderC Bool (NonDetC m) a }
   deriving (Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO)
