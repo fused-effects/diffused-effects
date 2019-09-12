@@ -11,13 +11,9 @@ module Control.Algebra.Trace.Printing
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
+import Control.Effect.Lift
 import Control.Effect.Trace
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import System.IO
 
@@ -26,13 +22,13 @@ runTrace :: TraceC m a -> m a
 runTrace = runTraceC
 
 newtype TraceC m a = TraceC { runTraceC :: m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus)
+  deriving (Applicative, Functor, Monad)
 
 instance MonadTrans TraceC where
   lift = TraceC
   {-# INLINE lift #-}
 
-instance (MonadIO m, Algebra sig m) => Algebra (Trace :+: sig) (TraceC m) where
-  alg (L (Trace s k)) = liftIO (hPutStrLn stderr s) *> k
+instance (Algebra sig m, Member (Lift IO) sig) => Algebra (Trace :+: sig) (TraceC m) where
+  alg (L (Trace s k)) = sendM (hPutStrLn stderr s) *> k
   alg (R other)       = TraceC (alg (handleCoercible other))
   {-# INLINE alg #-}
