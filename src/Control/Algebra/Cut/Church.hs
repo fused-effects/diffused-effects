@@ -11,17 +11,11 @@ module Control.Algebra.Cut.Church
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Effect.Choose
 import Control.Effect.Cut
 import Control.Effect.Empty
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
-import Data.Bool (bool)
 
 -- | Run a 'Cut' effect within an underlying 'Alternative' instance (typically another 'Algebra' for 'Choose' & 'Empty' effects).
 --
@@ -42,30 +36,10 @@ instance Applicative (CutC m) where
     f (\ f' fs -> a (cons . f') fs fail) nil fail
   {-# INLINE (<*>) #-}
 
-instance (Algebra sig m, Effect sig) => Alternative (CutC m) where
-  empty = send Empty
-  {-# INLINE empty #-}
-  l <|> r = send (Choose (bool r l))
-  {-# INLINE (<|>) #-}
-
 instance Monad (CutC m) where
   CutC a >>= f = CutC $ \ cons nil fail ->
     a (\ a' as -> runCutC (f a') cons as fail) nil fail
   {-# INLINE (>>=) #-}
-
-instance Fail.MonadFail m => Fail.MonadFail (CutC m) where
-  fail s = lift (Fail.fail s)
-  {-# INLINE fail #-}
-
-instance MonadFix m => MonadFix (CutC m) where
-  mfix f = CutC (\ cons nil _ -> mfix (\ a -> runCutC (f (head a)) (fmap . (:)) (pure []) (pure [])) >>= foldr cons nil)
-  {-# INLINE mfix #-}
-
-instance MonadIO m => MonadIO (CutC m) where
-  liftIO io = lift (liftIO io)
-  {-# INLINE liftIO #-}
-
-instance (Algebra sig m, Effect sig) => MonadPlus (CutC m)
 
 instance MonadTrans CutC where
   lift m = CutC (\ cons nil _ -> m >>= flip cons nil)
