@@ -21,8 +21,8 @@ instance Algebra sig m => Algebra sig (Effects m) where
   alg = Effects . alg . handleCoercible
 
 instance (Algebra sig m, Member Effect.Fail sig) => Fail.MonadFail (Effects m) where
-  fail = lift . Effect.fail
+  fail = Effect.fail
 
 instance (Algebra sig m, Member Effect.Choose sig, Member Effect.Empty sig) => Alternative.Alternative (Effects m) where
-  empty = lift Effect.empty
-  Effects l <|> Effects r = Effects (l Effect.<|> r)
+  empty = Effect.empty
+  (<|>) = (Effect.<|>)
