@@ -11,14 +11,9 @@ module Control.Algebra.Fresh.Strict
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Algebra.State.Strict
 import Control.Effect.Fresh
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 
 -- | Run a 'Fresh' effect counting up from 0.
@@ -29,7 +24,7 @@ runFresh :: Functor m => FreshC m a -> m a
 runFresh = evalState 0 . runFreshC
 
 newtype FreshC m a = FreshC { runFreshC :: StateC Int m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadTrans)
 
 instance (Algebra sig m, Effect sig) => Algebra (Fresh :+: sig) (FreshC m) where
   alg (L (Fresh   k)) = FreshC $ do
