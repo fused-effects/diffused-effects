@@ -7,9 +7,13 @@ module Control.Effect.Choose
 , many
 , some
 , some1
+, oneOf
+-- * Choosing semigroup
+, Choosing(..)
 ) where
 
 import Control.Algebra.Class
+import Control.Effect.Empty
 import Data.Bool (bool)
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics (Generic1)
@@ -40,3 +44,26 @@ some a = (:) <$> a <*> many a
 -- | One or more, returning a 'NonEmpty' list of the results.
 some1 :: (Algebra sig m, Member Choose sig) => m a -> m (NonEmpty a)
 some1 a = (:|) <$> a <*> many a
+
+
+-- | Nondeterministically choose an element from a 'Foldable' collection.
+-- This can be used to emulate the style of nondeterminism associated with
+-- programming in the list monad:
+-- @
+--   pythagoreanTriples = do
+--     a <- oneOf [1..10]
+--     b <- oneOf [1..10]
+--     c <- oneOf [1..10]
+--     guard (a^2 + b^2 == c^2)
+--     pure (a, b, c)
+-- @
+oneOf :: (Foldable t, Algebra sig m, Member Choose sig, Member Empty sig) => t a -> m a
+oneOf = getChoosing . foldMap (Choosing . pure)
+
+newtype Choosing m a = Choosing { getChoosing :: m a }
+
+instance (Algebra sig m, Member Choose sig) => Semigroup (Choosing m a) where
+  Choosing m1 <> Choosing m2 = Choosing (choose m1 m2)
+
+instance (Algebra sig m, Member Choose sig, Member Empty sig) => Monoid (Choosing m a) where
+  mempty = Choosing (send Empty)
