@@ -31,8 +31,8 @@ import Data.Maybe (fromJust)
 --
 --   prop> run (runNonDet (pure a)) === [a]
 --   prop> run (runNonDet (pure a)) === Just a
-runNonDet :: (Alternative f, Applicative m) => NonDetC m a -> m (f a)
-runNonDet (NonDetC m) = m (liftA2 (<|>)) (pure . pure) (pure empty)
+runNonDet :: (m b -> m b -> m b) -> (a -> m b) -> m b -> NonDetC m a -> m b
+runNonDet fork leaf nil (NonDetC m) = m fork leaf nil
 
 -- | A carrier for 'NonDet' effects based on Ralf Hinze’s design described in [Deriving Backtracking Monad Transformers](https://www.cs.ox.ac.uk/ralf.hinze/publications/#P12).
 newtype NonDetC m a = NonDetC
@@ -91,7 +91,7 @@ instance MonadTrans NonDetC where
 instance (Algebra sig m, Effect sig) => Algebra (Empty :+: Choose :+: sig) (NonDetC m) where
   alg (L Empty)          = NonDetC (\ _ _ nil -> nil)
   alg (R (L (Choose k))) = NonDetC $ \ fork leaf nil -> fork (runNonDetC (k True) fork leaf nil) (runNonDetC (k False) fork leaf nil)
-  alg (R (R other))      = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
+  alg (R (R other))      = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse (runNonDet (liftA2 Fork) (pure . Leaf) (pure Nil))) other) >>= fold fork leaf nil
   {-# INLINE alg #-}
 
 
