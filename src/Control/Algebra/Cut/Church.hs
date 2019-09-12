@@ -28,8 +28,8 @@ import Prelude hiding (fail)
 -- | Run a 'Cut' effect within an underlying 'Alternative' instance (typically another 'Algebra' for 'Choose' & 'Empty' effects).
 --
 --   prop> run (runNonDetOnce (runCut (pure a))) === Just a
-runCut :: Alternative m => CutC m a -> m a
-runCut m = runCutC m ((<|>) . pure) empty empty
+runCut :: (a -> m b -> m b) -> m b -> m b -> CutC m a -> m b
+runCut cons nil cutfail (CutC m) = m cons nil cutfail
 
 -- | Run a 'Cut' effect, returning all its results in an 'Alternative' collection.
 runCutAll :: (Alternative f, Applicative m) => CutC m a -> m (f a)
