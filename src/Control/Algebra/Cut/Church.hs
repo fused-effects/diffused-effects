@@ -4,7 +4,6 @@ module Control.Algebra.Cut.Church
   module Control.Effect.Cut
   -- * Cut Algebra
 , runCut
-, runCutAll
 , CutC(..)
 -- * Re-exports
 , Algebra
@@ -30,10 +29,6 @@ import Prelude hiding (fail)
 --   prop> run (runNonDetOnce (runCut (pure a))) === Just a
 runCut :: (a -> m b -> m b) -> m b -> m b -> CutC m a -> m b
 runCut cons nil cutfail (CutC m) = m cons nil cutfail
-
--- | Run a 'Cut' effect, returning all its results in an 'Alternative' collection.
-runCutAll :: (Alternative f, Applicative m) => CutC m a -> m (f a)
-runCutAll (CutC m) = m (fmap . (<|>) . pure) (pure empty) (pure empty)
 
 newtype CutC m a = CutC
   { -- | A higher-order function receiving three parameters: a function to combine each solution with the rest of the solutions, an action to run when no results are produced (e.g. on 'empty'), and an action to run when no results are produced and backtrcking should not be attempted (e.g. on 'cutfail').
@@ -82,5 +77,5 @@ instance (Algebra sig m, Effect sig) => Algebra (Cut :+: Empty :+: Choose :+: si
   alg (L (Call m k)) = CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
   alg (R (L Empty))          = CutC (\ _ nil _ -> nil)
   alg (R (R (L (Choose k)))) = CutC (\ cons nil fail -> runCutC (k True) cons (runCutC (k False) cons nil fail) fail)
-  alg (R (R (R other)))      = CutC $ \ cons nil _ -> alg (handle [()] (fmap concat . traverse runCutAll) other) >>= foldr cons nil
+  alg (R (R (R other)))      = CutC $ \ cons nil _ -> alg (handle [()] (fmap concat . traverse (runCut (fmap . (:)) (pure []) (pure []))) other) >>= foldr cons nil
   {-# INLINE alg #-}
