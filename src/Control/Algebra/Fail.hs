@@ -8,18 +8,12 @@ module Control.Algebra.Fail
   -- * Re-exports
 , Algebra
 , Member
-, Fail.MonadFail(..)
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Algebra.Error.Either
 import Control.Effect.Fail
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 
 -- | Run a 'Fail' effect, returning failure messages in 'Left' and successful computations’ results in 'Right'.
@@ -29,11 +23,7 @@ runFail :: FailC m a -> m (Either String a)
 runFail = runError . runFailC
 
 newtype FailC m a = FailC { runFailC :: ErrorC String m a }
-  deriving (Alternative, Applicative, Functor, Monad, MonadFix, MonadIO, MonadPlus, MonadTrans)
-
-instance (Algebra sig m, Effect sig) => Fail.MonadFail (FailC m) where
-  fail s = send (Fail s)
-  {-# INLINE fail #-}
+  deriving (Applicative, Functor, Monad, MonadTrans)
 
 instance (Algebra sig m, Effect sig) => Algebra (Fail :+: sig) (FailC m) where
   alg (L (Fail s)) = FailC (throwError s)
