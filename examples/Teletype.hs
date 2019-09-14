@@ -7,7 +7,7 @@ module Teletype
 
 import Prelude hiding (read)
 
-import Control.Effect.Carrier
+import Control.Effect.Algebra
 import Control.Effect.State
 import Control.Effect.Writer
 import Control.Monad.IO.Class
@@ -32,10 +32,10 @@ data Teletype m k
   deriving stock (Functor, Generic1)
   deriving anyclass (HFunctor, Effect)
 
-read :: (Member Teletype sig, Carrier sig m) => m String
+read :: (Member Teletype sig, Algebra sig m) => m String
 read = send (Read pure)
 
-write :: (Member Teletype sig, Carrier sig m) => String -> m ()
+write :: (Member Teletype sig, Algebra sig m) => String -> m ()
 write s = send (Write s (pure ()))
 
 
@@ -45,10 +45,10 @@ runTeletypeIO = runTeletypeIOC
 newtype TeletypeIOC m a = TeletypeIOC { runTeletypeIOC :: m a }
   deriving newtype (Applicative, Functor, Monad, MonadIO)
 
-instance (MonadIO m, Carrier sig m) => Carrier (Teletype :+: sig) (TeletypeIOC m) where
-  eff (L (Read    k)) = liftIO getLine      >>= k
-  eff (L (Write s k)) = liftIO (putStrLn s) >>  k
-  eff (R other)       = TeletypeIOC (eff (handleCoercible other))
+instance (MonadIO m, Algebra sig m) => Algebra (Teletype :+: sig) (TeletypeIOC m) where
+  alg (L (Read    k)) = liftIO getLine      >>= k
+  alg (L (Write s k)) = liftIO (putStrLn s) >>  k
+  alg (R other)       = TeletypeIOC (alg (handleCoercible other))
 
 
 runTeletypeRet :: [String] -> TeletypeRetC m a -> m ([String], ([String], a))
@@ -57,11 +57,11 @@ runTeletypeRet i = runWriter . runState i . runTeletypeRetC
 newtype TeletypeRetC m a = TeletypeRetC { runTeletypeRetC :: StateC [String] (WriterC [String] m) a }
   deriving newtype (Applicative, Functor, Monad)
 
-instance (Carrier sig m, Effect sig) => Carrier (Teletype :+: sig) (TeletypeRetC m) where
-  eff (L (Read    k)) = do
+instance (Algebra sig m, Effect sig) => Algebra (Teletype :+: sig) (TeletypeRetC m) where
+  alg (L (Read    k)) = do
     i <- TeletypeRetC get
     case i of
       []  -> k ""
       h:t -> TeletypeRetC (put t) *> k h
-  eff (L (Write s k)) = TeletypeRetC (tell [s]) *> k
-  eff (R other)       = TeletypeRetC (eff (R (R (handleCoercible other))))
+  alg (L (Write s k)) = TeletypeRetC (tell [s]) *> k
+  alg (R other)       = TeletypeRetC (alg (R (R (handleCoercible other))))

@@ -5,7 +5,7 @@ module Control.Effect.Cull
 , cull
 ) where
 
-import Control.Carrier.Class
+import Control.Algebra.Class
 
 -- | 'Cull' effects are used with 'Choose' to provide control over branching.
 data Cull m k
@@ -27,7 +27,7 @@ instance Effect Cull where
 --   prop> run (runNonDet (runCull (cull (empty  <|> pure a)))) === [a]
 --   prop> run (runNonDet (runCull (cull (pure a <|> pure b) <|> pure c))) === [a, c]
 --   prop> run (runNonDet (runCull (cull (asum (map pure (repeat a)))))) === [a]
-cull :: (Carrier sig m, Member Cull sig) => m a -> m a
+cull :: (Algebra sig m, Member Cull sig) => m a -> m a
 cull m = send (Cull m pure)
 
 

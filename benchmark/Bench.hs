@@ -3,7 +3,7 @@ module Main
 ( main
 ) where
 
-import Control.Effect.Carrier
+import Control.Effect.Algebra
 import Control.Effect.Interpret
 import Control.Effect.Writer
 import Control.Effect.State
@@ -64,10 +64,10 @@ main = defaultMain
     ]
   ]
 
-tellLoop :: (Carrier sig m, Member (Writer (Sum Int)) sig) => Int -> m ()
+tellLoop :: (Algebra sig m, Member (Writer (Sum Int)) sig) => Int -> m ()
 tellLoop i = replicateM_ i (tell (Sum (1 :: Int)))
 
-modLoop :: (Carrier sig m, Member (State (Sum Int)) sig) => Int -> m ()
+modLoop :: (Algebra sig m, Member (State (Sum Int)) sig) => Int -> m ()
 modLoop i = replicateM_ i (modify (+ (Sum (1 :: Int))))
 
 newtype Cod m a = Cod { unCod :: forall b . (a -> m b) -> m b }
@@ -83,5 +83,5 @@ instance Applicative (Cod m) where
 instance Monad (Cod m) where
   Cod a >>= f = Cod (\ k -> a (runCod k . f))
 
-instance (Carrier sig m, Effect sig) => Carrier sig (Cod m) where
-  eff op = Cod (\ k -> eff (handle (Identity ()) (runCod (pure . Identity) . runIdentity) op) >>= k . runIdentity)
+instance (Algebra sig m, Effect sig) => Algebra sig (Cod m) where
+  alg op = Cod (\ k -> alg (handle (Identity ()) (runCod (pure . Identity) . runIdentity) op) >>= k . runIdentity)

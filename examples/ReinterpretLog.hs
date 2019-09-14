@@ -33,7 +33,7 @@ module ReinterpretLog
   , runApplication
   ) where
 
-import Control.Effect.Carrier
+import Control.Effect.Algebra
 import Control.Effect.Lift
 import Control.Effect.Reader
 import Control.Effect.Writer
@@ -65,7 +65,7 @@ renderLogMessage = \case
 
 -- The application: it logs two messages, then quits.
 application ::
-     ( Carrier sig m
+     ( Algebra sig m
      , Member (Log Message) sig
      )
   => m ()
@@ -114,7 +114,7 @@ data Log (a :: Type) (m :: Type -> Type) (k :: Type)
 
 -- Log an 'a'.
 log ::
-     ( Carrier sig m
+     ( Algebra sig m
      , Member (Log a) sig
      )
   => a
@@ -135,21 +135,21 @@ newtype LogStdoutC m a
 instance
      -- So long as the 'm' monad can interpret the 'sig' effects (and also
      -- perform IO)...
-     ( Carrier sig m
+     ( Algebra sig m
      , MonadIO m
      )
      -- ... the 'LogStdoutC m' monad can interpret 'Log String :+: sig' effects
-  => Carrier (Log String :+: sig) (LogStdoutC m) where
+  => Algebra (Log String :+: sig) (LogStdoutC m) where
 
-  eff :: (Log String :+: sig) (LogStdoutC m) a -> LogStdoutC m a
-  eff = \case
+  alg :: (Log String :+: sig) (LogStdoutC m) a -> LogStdoutC m a
+  alg = \case
     L (Log message k) ->
       LogStdoutC $ do
         liftIO (putStrLn message)
         runLogStdout k
 
     R other ->
-      LogStdoutC (eff (hmap runLogStdout other))
+      LogStdoutC (alg (hmap runLogStdout other))
 
 -- The 'LogStdoutC' runner.
 runLogStdout ::
@@ -168,17 +168,17 @@ newtype ReinterpretLogC s t m a
 instance
      -- So long as the 'm' monad can interpret the 'sig' effects, one of which
      -- is 'Log t'...
-     ( Carrier sig m
+     ( Algebra sig m
      , Member (Log t) sig
      )
      -- ... the 'ReinterpretLogC s t m' monad can interpret 'Log s :+: sig'
      -- effects
-  => Carrier (Log s :+: sig) (ReinterpretLogC s t m) where
+  => Algebra (Log s :+: sig) (ReinterpretLogC s t m) where
 
-  eff ::
+  alg ::
        (Log s :+: sig) (ReinterpretLogC s t m) a
     -> ReinterpretLogC s t m a
-  eff = \case
+  alg = \case
     L (Log s k) ->
       ReinterpretLogC $ do
         f <- ask @(s -> t)
@@ -186,7 +186,7 @@ instance
         unReinterpretLogC k
 
     R other ->
-      ReinterpretLogC (eff (R (handleCoercible other)))
+      ReinterpretLogC (alg (R (handleCoercible other)))
 
 -- The 'ReinterpretLogC' runner.
 reinterpretLog ::
@@ -206,24 +206,24 @@ newtype CollectLogMessagesC s m a
 
 instance
      -- So long as the 'm' monad can interpret the 'sig' effects...
-     ( Carrier sig m
+     ( Algebra sig m
      , Effect sig
      )
      -- ...the 'CollectLogMessagesC s m' monad can interpret 'Log s :+: sig'
      -- effects
-  => Carrier (Log s :+: sig) (CollectLogMessagesC s m) where
+  => Algebra (Log s :+: sig) (CollectLogMessagesC s m) where
 
-  eff ::
+  alg ::
        (Log s :+: sig) (CollectLogMessagesC s m) a
     -> CollectLogMessagesC s m a
-  eff = \case
+  alg = \case
     L (Log s k) ->
       CollectLogMessagesC $ do
         tell [s]
         unCollectLogMessagesC k
 
     R other ->
-      CollectLogMessagesC (eff (R (handleCoercible other)))
+      CollectLogMessagesC (alg (R (handleCoercible other)))
 
 -- The 'CollectLogMessagesC' runner.
 collectLogMessages ::

@@ -4,7 +4,7 @@ module Control.Effect.Spec
 ( spec
 ) where
 
-import Control.Effect.Carrier
+import Control.Effect.Algebra
 import Control.Effect.Error
 import Control.Effect.Fail
 import Control.Effect.Reader
@@ -25,7 +25,7 @@ inference = describe "inference" $ do
   it "can be wrapped for better type inference" $
     run (runHasEnv (runEnv "i" ((++) <$> askEnv <*> askEnv))) `shouldBe` "ii"
 
-askEnv :: (Member (Reader env) sig, Carrier sig m) => HasEnv env m env
+askEnv :: (Member (Reader env) sig, Algebra sig m) => HasEnv env m env
 askEnv = ask
 
 runEnv :: env -> HasEnv env (ReaderC env m) a -> HasEnv env m a
@@ -35,8 +35,8 @@ runEnv r = HasEnv . runReader r . runHasEnv
 newtype HasEnv env m a = HasEnv { runHasEnv :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance Carrier sig m => Carrier sig (HasEnv env m) where
-  eff = HasEnv . eff . handleCoercible
+instance Algebra sig m => Algebra sig (HasEnv env m) where
+  alg = HasEnv . alg . handleCoercible
 
 
 reinterpretation :: Spec
@@ -50,15 +50,15 @@ reinterpretReader = runReinterpretReaderC
 newtype ReinterpretReaderC r m a = ReinterpretReaderC { runReinterpretReaderC :: StateC r m a }
   deriving (Applicative, Functor, Monad, MonadFail)
 
-instance (Carrier sig m, Effect sig) => Carrier (Reader r :+: sig) (ReinterpretReaderC r m) where
-  eff (L (Ask       k)) = ReinterpretReaderC get >>= k
-  eff (L (Local f m k)) = do
+instance (Algebra sig m, Effect sig) => Algebra (Reader r :+: sig) (ReinterpretReaderC r m) where
+  alg (L (Ask       k)) = ReinterpretReaderC get >>= k
+  alg (L (Local f m k)) = do
     a <- ReinterpretReaderC get
     ReinterpretReaderC (put (f a))
     v <- m
     ReinterpretReaderC (put a)
     k v
-  eff (R other)         = ReinterpretReaderC (eff (R (handleCoercible other)))
+  alg (R other)         = ReinterpretReaderC (alg (R (handleCoercible other)))
 
 
 interposition :: Spec
@@ -76,13 +76,13 @@ interposeFail = runInterposeC
 newtype InterposeC m a = InterposeC { runInterposeC :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance (Carrier sig m, Member Fail sig) => MonadFail (InterposeC m) where
+instance (Algebra sig m, Member Fail sig) => MonadFail (InterposeC m) where
   fail s = send (Fail s)
 
-instance (Carrier sig m, Member Fail sig) => Carrier sig (InterposeC m) where
-  eff op
+instance (Algebra sig m, Member Fail sig) => Algebra sig (InterposeC m) where
+  alg op
     | Just (Fail s) <- prj op = InterposeC (send (Fail ("hello, " ++ s)))
-    | otherwise               = InterposeC (eff (handleCoercible op))
+    | otherwise               = InterposeC (alg (handleCoercible op))
 
 
 shouldSucceed :: Inspection.Result -> Expectation
@@ -100,8 +100,8 @@ fusion = describe "fusion" $ do
   it "eliminates catch and throw" $ do
     shouldSucceed $(inspectTest $ 'throwing `doesNotUse` ''ErrorC)
 
-  it "eliminates calls to eff" $ do
-    shouldSucceed $(inspectTest $ 'countDown `doesNotUse` 'eff)
+  it "eliminates calls to alg" $ do
+    shouldSucceed $(inspectTest $ 'countDown `doesNotUse` 'alg)
 
 countDown :: Int -> (Int, Int)
 countDown start = run . runState start $ go

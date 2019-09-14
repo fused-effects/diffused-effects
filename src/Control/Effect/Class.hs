@@ -24,7 +24,7 @@ class HFunctor h where
   {-# INLINE hmap #-}
 
 
--- | Thread a 'Coercible' carrier through an 'HFunctor'.
+-- | Thread a 'Coercible' Algebra through an 'HFunctor'.
 --
 --   This is applicable whenever @f@ is 'Coercible' to @g@, e.g. simple @newtype@s.
 handleCoercible :: (HFunctor sig, Functor f, Coercible f g) => sig f a -> sig g a
@@ -35,11 +35,11 @@ handleCoercible = hmap coerce
 -- | The class of effect types, which must:
 --
 --   1. Be functorial in their last two arguments, and
---   2. Support threading effects in higher-order positions through using the carrier’s suspended state.
+--   2. Support threading effects in higher-order positions through using the Algebra’s suspended state.
 --
 -- All first-order effects (those without existential occurrences of @m@) admit a default definition of 'handle' provided a 'Generic1' instance is available for the effect.
 class HFunctor sig => Effect sig where
-  -- | Handle any effects in a signature by threading the carrier’s state all the way through to the continuation.
+  -- | Handle any effects in a signature by threading the Algebra’s state all the way through to the continuation.
   handle :: (Functor f, Monad m)
          => f ()
          -> (forall x . f (m x) -> n (f x))
