@@ -8,7 +8,6 @@ module Control.Algebra.NonDet.Church
 , runNonDet
 , NonDetC(..)
   -- * Re-exports
-, oneOf
 , Algebra
 , Member
 , run
@@ -24,7 +23,6 @@ import Control.Monad.Fix
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Maybe (fromJust)
-import Data.Monoid
 
 -- | Run a 'NonDet' effect, collecting all branches’ results into an 'Alternative' functor.
 --
@@ -35,21 +33,7 @@ import Data.Monoid
 runNonDet :: (Alternative f, Applicative m) => NonDetC m a -> m (f a)
 runNonDet (NonDetC m) = m (liftA2 (<|>)) (pure . pure) (pure empty)
 
--- | Nondeterministically choose an element from a 'Foldable' collection.
--- This can be used to emulate the style of nondeterminism associated with
--- programming in the list monad:
--- @
---   pythagoreanTriples = do
---     a <- oneOf [1..10]
---     b <- oneOf [1..10]
---     c <- oneOf [1..10]
---     guard (a^2 + b^2 == c^2)
---     pure (a, b, c)
--- @
-oneOf :: (Foldable t, Alternative m) => t a -> m a
-oneOf = getAlt . foldMap (Alt . pure)
-
--- | A Algebra for 'NonDet' effects based on Ralf Hinze’s design described in [Deriving Backtracking Monad Transformers](https://www.cs.ox.ac.uk/ralf.hinze/publications/#P12).
+-- | A carrier for 'NonDet' effects based on Ralf Hinze’s design described in [Deriving Backtracking Monad Transformers](https://www.cs.ox.ac.uk/ralf.hinze/publications/#P12).
 newtype NonDetC m a = NonDetC
   { -- | A higher-order function receiving three continuations, respectively implementing '<|>', 'pure', and 'empty'.
     runNonDetC :: forall b . (m b -> m b -> m b) -> (a -> m b) -> m b -> m b
