@@ -58,15 +58,15 @@ some1 a = (:|) <$> a <*> many a
 --     guard (a^2 + b^2 == c^2)
 --     pure (a, b, c)
 -- @
-oneOf :: (Foldable t, Carrier sig m, Member Choose sig, Member Empty sig) => t a -> m a
+oneOf :: (Foldable t, Algebra sig m, Member Choose sig, Member Empty sig) => t a -> m a
 oneOf = getChoosing #. foldMap (Choosing #. pure)
 
 newtype Choosing m a = Choosing { getChoosing :: m a }
 
-instance (Carrier sig m, Member Choose sig) => Semigroup (Choosing m a) where
+instance (Algebra sig m, Member Choose sig) => Semigroup (Choosing m a) where
   Choosing m1 <> Choosing m2 = Choosing (choose m1 m2)
 
-instance (Carrier sig m, Member Choose sig, Member Empty sig) => Monoid (Choosing m a) where
+instance (Algebra sig m, Member Choose sig, Member Empty sig) => Monoid (Choosing m a) where
   mempty = Choosing (send Empty)
 
 
