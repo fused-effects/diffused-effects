@@ -2,7 +2,7 @@
 module Control.Algebra.Resource
 ( -- * Resource effect
   module Control.Effect.Resource
-  -- * Resource Algebra
+  -- * Resource carrier
 , runResource
 , ResourceC(..)
   -- * Re-exports
@@ -24,7 +24,7 @@ import           Control.Monad.IO.Unlift
 import           Control.Monad.Trans.Class
 
 -- Not exposed due to its potential to silently drop effects (#180).
-unliftResource :: (forall x . m x -> IO x) -- ^ "unlifting" function to run the Algebra in 'IO'
+unliftResource :: (forall x . m x -> IO x) -- ^ "unlifting" function to run the algebra in 'IO'
             -> ResourceC m a
             -> m a
 unliftResource handler = runReader (UnliftIO handler) . runResourceC

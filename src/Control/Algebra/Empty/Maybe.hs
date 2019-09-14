@@ -2,7 +2,7 @@
 module Control.Algebra.Empty.Maybe
 ( -- * Empty effect
   module Control.Effect.Empty
-  -- * Empty Algebra
+  -- * Empty carrier
 , runEmpty
 , EmptyC(..)
   -- * Re-exports

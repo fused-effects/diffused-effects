@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveFunctor, ExplicitForAll, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables, TypeOperators, UndecidableInstances #-}
 
 {- |
-This module provides an 'InterposeC' Algebra capable of "eavesdropping" on requests
-made to other Algebras. This is a useful capability for dynamism in deeply-nested
+This module provides an 'InterposeC' carrier capable of "eavesdropping" on requests
+made for effects handled by other algebras. This is a useful capability for dynamism in deeply-nested
 effect stacks, but can lead to complicated control flow. Be careful.
 -}
 module Control.Algebra.Interpose

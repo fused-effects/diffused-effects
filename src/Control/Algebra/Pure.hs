@@ -1,7 +1,7 @@
 module Control.Algebra.Pure
 ( -- * Pure effect
   module Control.Effect.Pure
-  -- * Pure Algebra
+  -- * Pure carrier
 , run
 , PureC(..)
 ) where

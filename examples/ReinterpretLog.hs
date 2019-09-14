@@ -4,9 +4,9 @@
 -- * First, we will define a structured log message type, which is the type our
 --   application prefers to log in.
 --
--- * Next, we will define a logging Algebra that prints strings to stdout.
+-- * Next, we will define a logging carrier that prints strings to stdout.
 --
--- * Finally, we will bridge the two with an effect Algebra that reinterprets
+-- * Finally, we will bridge the two with an effect carrier that reinterprets
 --   structured log messages as strings.
 
 
@@ -124,10 +124,10 @@ log x =
 
 
 --------------------------------------------------------------------------------
--- The logging effect Algebras
+-- The logging effect carriers
 --------------------------------------------------------------------------------
 
--- Algebra one: log strings to stdout.
+-- Carrier one: log strings to stdout.
 newtype LogStdoutC m a
   = LogStdoutC (m a)
   deriving newtype (Applicative, Functor, Monad, MonadIO)
@@ -159,7 +159,7 @@ runLogStdout (LogStdoutC m) =
   m
 
 
--- Algebra two: reinterpret a program that logs 's's into one that logs 't's
+-- Carrier two: reinterpret a program that logs 's's into one that logs 't's
 -- using a function (provided at runtime) from 's' to 't'.
 newtype ReinterpretLogC s t m a
   = ReinterpretLogC { unReinterpretLogC :: ReaderC (s -> t) m a }
@@ -198,7 +198,7 @@ reinterpretLog f =
 
 
 
--- Algebra three: collect log messages in a list. This is used for writing this
+-- Carrier three: collect log messages in a list. This is used for writing this
 -- example's test spec.
 newtype CollectLogMessagesC s m a
   = CollectLogMessagesC { unCollectLogMessagesC :: WriterC [s] m a }

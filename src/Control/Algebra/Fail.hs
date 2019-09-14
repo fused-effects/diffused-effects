@@ -2,7 +2,7 @@
 module Control.Algebra.Fail
 ( -- * Fail effect
   module Control.Effect.Fail
-  -- * Fail Algebra
+  -- * Fail carrier
 , runFail
 , FailC(..)
   -- * Re-exports

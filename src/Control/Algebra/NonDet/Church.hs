@@ -4,7 +4,7 @@ module Control.Algebra.NonDet.Church
   module Control.Effect.Choose
   -- * Empty effect
 , module Control.Effect.Empty
-  -- * NonDet Algebra
+  -- * NonDet carrier
 , runNonDet
 , NonDetC(..)
   -- * Re-exports

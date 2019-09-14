@@ -2,7 +2,7 @@
 module Control.Algebra.Resumable.Abort
 ( -- * Resumable effect
   module Control.Effect.Resumable
-  -- * Resumable Algebra
+  -- * Resumable carrier
 , runResumable
 , ResumableC(..)
 , SomeError(..)

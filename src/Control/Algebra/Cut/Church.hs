@@ -2,7 +2,7 @@
 module Control.Algebra.Cut.Church
 ( -- * Cut effect
   module Control.Effect.Cut
-  -- * Cut Algebra
+  -- * Cut carrier
 , runCut
 , runCutAll
 , CutC(..)
