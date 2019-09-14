@@ -2,7 +2,7 @@
 module Control.Algebra.Resumable.Resume
 ( -- * Resumable effect
   module Control.Effect.Resumable
-  -- * Resumable Algebra
+  -- * Resumable carrier
 , runResumable
 , ResumableC(..)
   -- * Re-exports
@@ -18,7 +18,7 @@ import Control.Monad.Trans.Class
 
 -- | Run a 'Resumable' effect, resuming uncaught errors with a given handler.
 --
---   Note that this may be less efficient than defining a specialized Algebra type and instance specifying the handler’s behaviour directly. Performance-critical code may wish to do that to maximize the opportunities for fusion and inlining.
+--   Note that this may be less efficient than defining a specialized carrier type and Algebra instance specifying the handler’s behaviour directly. Performance-critical code may wish to do that to maximize the opportunities for fusion and inlining.
 --
 --   >>> data Err a where Err :: Int -> Err Int
 --

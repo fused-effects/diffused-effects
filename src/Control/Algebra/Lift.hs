@@ -2,7 +2,7 @@
 module Control.Algebra.Lift
 ( -- * Lift effect
   module Control.Effect.Lift
-  -- * Lift Algebra
+  -- * Lift carrier
 , runM
 , LiftC(..)
   -- * Re-exports

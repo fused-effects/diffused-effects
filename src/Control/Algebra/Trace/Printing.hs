@@ -2,7 +2,7 @@
 module Control.Algebra.Trace.Printing
 ( -- * Trace effect
   module Control.Effect.Trace
-  -- * Trace Algebra
+  -- * Trace carrier
 , runTrace
 , TraceC(..)
 -- * Re-exports

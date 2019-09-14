@@ -2,7 +2,7 @@
 module Control.Algebra.Writer.Strict
 ( -- * Writer effect
   module Control.Effect.Writer
-  -- * Writer Algebra
+  -- * Writer carrier
 , runWriter
 , execWriter
 , WriterC(..)
@@ -32,7 +32,7 @@ execWriter = fmap fst . runWriter
 {-# INLINE execWriter #-}
 
 
--- | A space-efficient Algebra for 'Writer' effects.
+-- | A space-efficient carrier for 'Writer' effects.
 --
 --   This is based on a post Gabriel Gonzalez made to the Haskell mailing list: https://mail.haskell.org/pipermail/libraries/2013-March/019528.html
 newtype WriterC w m a = WriterC { runWriterC :: StateC w m a }

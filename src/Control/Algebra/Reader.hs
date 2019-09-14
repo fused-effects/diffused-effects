@@ -2,7 +2,7 @@
 module Control.Algebra.Reader
 ( -- * Reader effect
   module Control.Effect.Reader
-  -- * Reader Algebra
+  -- * Reader carrier
 , runReader
 , ReaderC(..)
   -- * Re-exports

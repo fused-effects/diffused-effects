@@ -2,7 +2,7 @@
 module Control.Algebra.Fresh.Strict
 ( -- * Fresh effect
   module Control.Effect.Fresh
-  -- * Fresh Algebra
+  -- * Fresh carrier
 , runFresh
 , FreshC(..)
   -- * Re-exports

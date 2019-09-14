@@ -2,7 +2,7 @@
 module Control.Algebra.State.Lazy
 ( -- * State effect
   module State
-  -- * Lazy state Algebra
+  -- * Lazy state carrier
 , runState
 , evalState
 , execState

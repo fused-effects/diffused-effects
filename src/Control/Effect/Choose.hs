@@ -15,6 +15,7 @@ module Control.Effect.Choose
 import Control.Algebra.Class
 import Control.Effect.Empty
 import Data.Bool (bool)
+import Data.Coerce
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics (Generic1)
 
@@ -60,7 +61,7 @@ some1 a = (:|) <$> a <*> many a
 --     pure (a, b, c)
 -- @
 oneOf :: (Foldable t, Algebra sig m, Member Choose sig, Member Empty sig) => t a -> m a
-oneOf = getChoosing . foldMap (Choosing . pure)
+oneOf = getChoosing #. foldMap (Choosing #. pure)
 
 newtype Choosing m a = Choosing { getChoosing :: m a }
 
@@ -69,3 +70,8 @@ instance (Algebra sig m, Member Choose sig) => Semigroup (Choosing m a) where
 
 instance (Algebra sig m, Member Choose sig, Member Empty sig) => Monoid (Choosing m a) where
   mempty = Choosing (send Empty)
+
+
+(#.) :: Coercible b c => (b -> c) -> (a -> b) -> (a -> c)
+(#.) _ = coerce
+{-# INLINE (#.) #-}

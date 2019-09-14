@@ -2,7 +2,7 @@
 module Control.Algebra.Cull
 ( -- * Cull effect
   module Control.Effect.Cull
-  -- * Cull Algebra
+  -- * Cull carrier
 , runCull
 , CullC(..)
   -- * Re-exports

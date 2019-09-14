@@ -2,7 +2,7 @@
 module Control.Algebra.State.Strict
 ( -- * State effect
   module Control.Effect.State
-  -- * Strict state Algebra
+  -- * Strict state carrier
 , runState
 , evalState
 , execState

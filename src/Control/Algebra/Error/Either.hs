@@ -2,7 +2,7 @@
 module Control.Algebra.Error.Either
 ( -- * Error effect
   module Control.Effect.Error
-  -- * Error Algebra
+  -- * Error carrier
 , runError
 , ErrorC(..)
   -- * Re-exports

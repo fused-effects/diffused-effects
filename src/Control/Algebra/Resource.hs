@@ -2,7 +2,7 @@
 module Control.Algebra.Resource
 ( -- * Resource effect
   module Control.Effect.Resource
-  -- * Resource Algebra
+  -- * Resource carrier
 , runResource
 , ResourceC(..)
   -- * Re-exports
