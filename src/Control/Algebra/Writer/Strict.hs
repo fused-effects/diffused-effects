@@ -12,14 +12,9 @@ module Control.Algebra.Writer.Strict
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Algebra.State.Strict
 import Control.Effect.Writer
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 
 -- | Run a 'Writer' effect with a 'Monoid'al log, producing the final log alongside the result value.
@@ -41,7 +36,7 @@ execWriter = fmap fst . runWriter
 --
 --   This is based on a post Gabriel Gonzalez made to the Haskell mailing list: https://mail.haskell.org/pipermail/libraries/2013-March/019528.html
 newtype WriterC w m a = WriterC { runWriterC :: StateC w m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadTrans)
 
 instance (Monoid w, Algebra sig m, Effect sig) => Algebra (Writer w :+: sig) (WriterC w m) where
   alg (L (Tell w     k)) = WriterC $ do

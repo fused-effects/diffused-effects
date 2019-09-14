@@ -14,13 +14,8 @@ module Control.Algebra.Interpose
 , run
 ) where
 
-import Control.Applicative
 import Control.Algebra.Class
 import Control.Algebra.Reader
-import Control.Monad (MonadPlus (..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 
 -- | 'runInterpose' takes a handler for a given effect (such as 'State' or 'Reader')
@@ -35,7 +30,7 @@ runInterpose :: (forall x . alg m x -> m x) -> InterposeC alg m a -> m a
 runInterpose handler = runReader (Handler handler) . runInterposeC
 
 newtype InterposeC alg m a = InterposeC { runInterposeC :: ReaderC (Handler alg m) m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus)
+  deriving (Applicative, Functor, Monad)
 
 instance MonadTrans (InterposeC alg) where
   lift = InterposeC . lift

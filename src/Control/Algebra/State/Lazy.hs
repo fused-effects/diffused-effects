@@ -13,13 +13,8 @@ module Control.Algebra.State.Lazy
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Effect.State as State
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 
 newtype StateC s m a = StateC { runStateC :: s -> m (s, a) }
@@ -44,26 +39,6 @@ instance Monad m => Monad (StateC s m) where
     ~(s', a) <- runStateC m s
     runStateC (k a) s'
   {-# INLINE (>>=) #-}
-
-instance (Alternative m, Monad m) => Alternative (StateC s m) where
-  empty = StateC (const empty)
-  {-# INLINE empty #-}
-  StateC l <|> StateC r = StateC (\ s -> l s <|> r s)
-  {-# INLINE (<|>) #-}
-
-instance Fail.MonadFail m => Fail.MonadFail (StateC s m) where
-  fail s = StateC (const (Fail.fail s))
-  {-# INLINE fail #-}
-
-instance MonadFix m => MonadFix (StateC s m) where
-  mfix f = StateC (\ s -> mfix (runState s . f . snd))
-  {-# INLINE mfix #-}
-
-instance MonadIO m => MonadIO (StateC s m) where
-  liftIO io = StateC (\ s -> (,) s <$> liftIO io)
-  {-# INLINE liftIO #-}
-
-instance (Alternative m, Monad m) => MonadPlus (StateC s m)
 
 instance MonadTrans (StateC s) where
   lift m = StateC (\ s -> (,) s <$> m)

@@ -13,16 +13,12 @@ module Control.Algebra.NonDet.Church
 , run
 ) where
 
-import Control.Applicative (Alternative(..), liftA2)
+import Control.Applicative (liftA2)
 import Control.Algebra.Class
 import Control.Effect.Choose
 import Control.Effect.Empty
-import Control.Monad (MonadPlus(..), join)
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
+import Control.Monad (join)
 import Control.Monad.Trans.Class
-import Data.Maybe (fromJust)
 
 -- | Run a 'NonDet' effect, collecting all branches’ results into an 'Alternative' functor.
 --
@@ -30,8 +26,8 @@ import Data.Maybe (fromJust)
 --
 --   prop> run (runNonDet (pure a)) === [a]
 --   prop> run (runNonDet (pure a)) === Just a
-runNonDet :: (Alternative f, Applicative m) => NonDetC m a -> m (f a)
-runNonDet (NonDetC m) = m (liftA2 (<|>)) (pure . pure) (pure empty)
+runNonDet :: (m b -> m b -> m b) -> (a -> m b) -> m b -> NonDetC m a -> m b
+runNonDet fork leaf nil (NonDetC m) = m fork leaf nil
 
 -- | A carrier for 'NonDet' effects based on Ralf Hinze’s design described in [Deriving Backtracking Monad Transformers](https://www.cs.ox.ac.uk/ralf.hinze/publications/#P12).
 newtype NonDetC m a = NonDetC
@@ -50,47 +46,19 @@ instance Applicative (NonDetC m) where
     f fork (\ f' -> a fork (leaf . f') nil) nil
   {-# INLINE (<*>) #-}
 
--- $
---   prop> run (runNonDet (pure a <|> (pure b <|> pure c))) === Fork (Leaf a) (Fork (Leaf b) (Leaf c))
---   prop> run (runNonDet ((pure a <|> pure b) <|> pure c)) === Fork (Fork (Leaf a) (Leaf b)) (Leaf c)
-instance Alternative (NonDetC m) where
-  empty = NonDetC (\ _ _ nil -> nil)
-  {-# INLINE empty #-}
-  NonDetC l <|> NonDetC r = NonDetC $ \ fork leaf nil -> fork (l fork leaf nil) (r fork leaf nil)
-  {-# INLINE (<|>) #-}
-
 instance Monad (NonDetC m) where
   NonDetC a >>= f = NonDetC $ \ fork leaf nil ->
     a fork (\ a' -> runNonDetC (f a') fork leaf nil) nil
   {-# INLINE (>>=) #-}
-
-instance Fail.MonadFail m => Fail.MonadFail (NonDetC m) where
-  fail s = lift (Fail.fail s)
-  {-# INLINE fail #-}
-
-instance MonadFix m => MonadFix (NonDetC m) where
-  mfix f = NonDetC $ \ fork leaf nil ->
-    mfix (\ a -> runNonDetC (f (fromJust (fold (<|>) Just Nothing a)))
-      (liftA2 Fork)
-      (pure . Leaf)
-      (pure Nil))
-    >>= fold fork leaf nil
-  {-# INLINE mfix #-}
-
-instance MonadIO m => MonadIO (NonDetC m) where
-  liftIO io = lift (liftIO io)
-  {-# INLINE liftIO #-}
-
-instance MonadPlus (NonDetC m)
 
 instance MonadTrans NonDetC where
   lift m = NonDetC (\ _ leaf _ -> m >>= leaf)
   {-# INLINE lift #-}
 
 instance (Algebra sig m, Effect sig) => Algebra (Empty :+: Choose :+: sig) (NonDetC m) where
-  alg (L Empty)          = empty
-  alg (R (L (Choose k))) = k True <|> k False
-  alg (R (R other))      = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
+  alg (L Empty)          = NonDetC (\ _ _ nil -> nil)
+  alg (R (L (Choose k))) = NonDetC $ \ fork leaf nil -> fork (runNonDetC (k True) fork leaf nil) (runNonDetC (k False) fork leaf nil)
+  alg (R (R other))      = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse (runNonDet (liftA2 Fork) (pure . Leaf) (pure Nil))) other) >>= fold fork leaf nil
   {-# INLINE alg #-}
 
 
@@ -102,12 +70,6 @@ instance Applicative BinaryTree where
   {-# INLINE pure #-}
   f <*> a = fold Fork (<$> a) Nil f
   {-# INLINE (<*>) #-}
-
-instance Alternative BinaryTree where
-  empty = Nil
-  {-# INLINE empty #-}
-  (<|>) = Fork
-  {-# INLINE (<|>) #-}
 
 instance Monad BinaryTree where
   a >>= f = fold Fork f Nil a

@@ -12,15 +12,10 @@ module Control.Algebra.Resumable.Abort
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Algebra.Error.Either
 import Control.DeepSeq
 import Control.Effect.Resumable
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Functor.Classes
 
@@ -31,7 +26,7 @@ runResumable :: ResumableC err m a -> m (Either (SomeError err) a)
 runResumable = runError . runResumableC
 
 newtype ResumableC err m a = ResumableC { runResumableC :: ErrorC (SomeError err) m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadTrans)
 
 instance (Algebra sig m, Effect sig) => Algebra (Resumable err :+: sig) (ResumableC err m) where
   alg (L (Resumable err _)) = ResumableC (throwError (SomeError err))

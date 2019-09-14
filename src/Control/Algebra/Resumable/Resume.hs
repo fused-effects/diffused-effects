@@ -11,14 +11,9 @@ module Control.Algebra.Resumable.Resume
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Algebra.Reader
 import Control.Effect.Resumable
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 
 -- | Run a 'Resumable' effect, resuming uncaught errors with a given handler.
@@ -36,7 +31,7 @@ runResumable
 runResumable with = runReader (Handler with) . runResumableC
 
 newtype ResumableC err m a = ResumableC { runResumableC :: ReaderC (Handler err m) m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus)
+  deriving (Applicative, Functor, Monad)
 
 instance MonadTrans (ResumableC err) where
   lift = ResumableC . lift

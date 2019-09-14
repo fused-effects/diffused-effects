@@ -26,7 +26,8 @@ common common
 
 library
   import:              common
-  exposed-modules:     Control.Algebra.Choose.Church
+  exposed-modules:     Control.Algebra
+                     , Control.Algebra.Choose.Church
                      , Control.Algebra.Class
                      , Control.Algebra.Cull
                      , Control.Algebra.Cut.Church

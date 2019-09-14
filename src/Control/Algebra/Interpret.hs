@@ -12,13 +12,8 @@ module Control.Algebra.Interpret
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
 import Control.Algebra.Class
 import Control.Algebra.State.Strict
-import Control.Monad (MonadPlus(..))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -98,7 +93,7 @@ runInterpretState handler state m =
 
 newtype InterpretC s (sig :: (* -> *) -> * -> *) m a =
   InterpretC { runInterpretC :: m a }
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus)
+  deriving (Applicative, Functor, Monad)
 
 
 instance MonadTrans (InterpretC s sig) where

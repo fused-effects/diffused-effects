@@ -11,13 +11,10 @@ module Control.Algebra.Error.Either
 , run
 ) where
 
-import Control.Applicative (Alternative(..), liftA2)
+import Control.Applicative (liftA2)
 import Control.Algebra.Class
 import Control.Effect.Error
-import Control.Monad (MonadPlus(..), (<=<))
-import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
+import Control.Monad ((<=<))
 import Control.Monad.Trans.Class
 
 -- | Run an 'Error' effect, returning uncaught errors in 'Left' and successful computations’ values in 'Right'.
@@ -35,29 +32,9 @@ instance Applicative m => Applicative (ErrorC e m) where
   ErrorC f <*> ErrorC a = ErrorC (liftA2 (<*>) f a)
   {-# INLINE (<*>) #-}
 
-instance Alternative m => Alternative (ErrorC e m) where
-  empty = ErrorC empty
-  {-# INLINE empty #-}
-  ErrorC l <|> ErrorC r = ErrorC (l <|> r)
-  {-# INLINE (<|>) #-}
-
 instance Monad m => Monad (ErrorC e m) where
   ErrorC a >>= f = ErrorC (a >>= either (pure . Left) (runError . f))
   {-# INLINE (>>=) #-}
-
-instance MonadFix m => MonadFix (ErrorC e m) where
-  mfix f = ErrorC (mfix (runError . either (error "mfix (ErrorC): function returned failure") f))
-  {-# INLINE mfix #-}
-
-instance MonadIO m => MonadIO (ErrorC e m) where
-  liftIO io = ErrorC (Right <$> liftIO io)
-  {-# INLINE liftIO #-}
-
-instance Fail.MonadFail m => Fail.MonadFail (ErrorC e m) where
-  fail s = ErrorC (Fail.fail s)
-  {-# INLINE fail #-}
-
-instance (Alternative m, Monad m) => MonadPlus (ErrorC e m)
 
 instance MonadTrans (ErrorC e) where
   lift = ErrorC . fmap Right
