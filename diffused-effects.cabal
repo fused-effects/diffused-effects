@@ -65,6 +65,7 @@ library
                      , Control.Effect.Resource
                      , Control.Effect.Resumable
                      , Control.Effect.State
+                     , Control.Effect.State.Named
                      , Control.Effect.Sum
                      , Control.Effect.Trace
                      , Control.Effect.Writer
