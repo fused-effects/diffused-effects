@@ -1,13 +1,16 @@
-{-# LANGUAGE DeriveGeneric, DeriveTraversable, FlexibleInstances, KindSignatures, MultiParamTypeClasses, TypeOperators #-}
+{-# LANGUAGE DataKinds, DeriveGeneric, DeriveTraversable, FlexibleInstances, FunctionalDependencies, KindSignatures, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum
 ( (:+:)(..)
 , Member(..)
 , send
+, Named(..)
+, NamedMember(..)
 ) where
 
 import Control.Algebra.Class
 import Control.Effect.Class
 import GHC.Generics (Generic1)
+import GHC.TypeLits
 
 data (f :+: g) (m :: * -> *) k
   = L (f m k)
@@ -43,3 +46,18 @@ instance {-# OVERLAPPABLE #-} Member sub sup => Member sub (sub' :+: sup) where
 send :: (Member effect sig, Algebra sig m) => effect m a -> m a
 send = alg . inj
 {-# INLINE send #-}
+
+
+newtype Named (name :: Symbol) (eff :: (* -> *) -> (* -> *)) m k = Named { getNamed :: eff m k }
+
+class NamedMember (name :: Symbol) sub sup | name sup -> sub where
+  injNamed :: Named name sub m k -> sup m k
+
+instance NamedMember name sub (Named name sub) where
+  injNamed = id
+
+instance {-# OVERLAPPABLE #-} NamedMember name sub (Named name sub :+: sup) where
+  injNamed = L
+
+instance {-# OVERLAPPABLE #-} NamedMember name sub sup => NamedMember name sub (sub' :+: sup) where
+  injNamed = R . injNamed
