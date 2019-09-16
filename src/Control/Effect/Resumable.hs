@@ -5,7 +5,7 @@ module Control.Effect.Resumable
 , throwResumable
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 
 -- | Errors which can be resumed with values of some existentially-quantified type.
 data Resumable err m k

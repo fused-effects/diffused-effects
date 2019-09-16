@@ -11,8 +11,8 @@ module Control.Algebra.Error.Either
 , run
 ) where
 
+import Control.Algebra
 import Control.Applicative (Alternative(..), liftA2)
-import Control.Algebra.Class
 import Control.Effect.Error
 import Control.Monad (MonadPlus(..), (<=<))
 import qualified Control.Monad.Fail as Fail

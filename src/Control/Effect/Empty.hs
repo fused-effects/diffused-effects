@@ -5,7 +5,7 @@ module Control.Effect.Empty
 , abort
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 import GHC.Generics (Generic1)
 
 -- | An effect modelling nondeterminism without choice.

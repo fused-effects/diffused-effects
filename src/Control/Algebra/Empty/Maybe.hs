@@ -11,8 +11,8 @@ module Control.Algebra.Empty.Maybe
 , run
 ) where
 
+import Control.Algebra
 import Control.Applicative (Alternative (..), liftA2)
-import Control.Algebra.Class
 import Control.Effect.Empty
 import Control.Monad (MonadPlus (..))
 import qualified Control.Monad.Fail as Fail

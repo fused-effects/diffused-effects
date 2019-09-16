@@ -12,9 +12,9 @@ module Control.Algebra.Resumable.Abort
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
-import Control.Algebra.Class
+import Control.Algebra
 import Control.Algebra.Error.Either
+import Control.Applicative (Alternative(..))
 import Control.DeepSeq
 import Control.Effect.Resumable
 import Control.Monad (MonadPlus(..))

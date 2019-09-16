@@ -11,10 +11,10 @@ module Control.Algebra.Cull
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
-import Control.Algebra.Class
+import Control.Algebra
 import Control.Algebra.NonDet.Church
 import Control.Algebra.Reader
+import Control.Applicative (Alternative(..))
 import Control.Effect.Cull
 import Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail

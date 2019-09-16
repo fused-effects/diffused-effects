@@ -9,7 +9,7 @@ module Control.Effect.State
 , modifyLazy
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 import GHC.Generics (Generic1)
 import Prelude hiding (fail)
 

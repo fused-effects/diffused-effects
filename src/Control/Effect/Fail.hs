@@ -4,7 +4,7 @@ module Control.Effect.Fail
   Fail(..)
 ) where
 
-import Control.Algebra.Class
+import Control.Effect.Class
 import GHC.Generics (Generic1)
 
 newtype Fail (m :: * -> *) k = Fail String

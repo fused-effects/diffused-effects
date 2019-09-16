@@ -8,7 +8,7 @@ module Control.Effect.Writer
 , censor
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 
 data Writer w m k
   = Tell w (m k)

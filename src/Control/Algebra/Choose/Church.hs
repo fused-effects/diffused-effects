@@ -11,8 +11,8 @@ module Control.Algebra.Choose.Church
 , run
 ) where
 
+import Control.Algebra
 import Control.Applicative ((<|>), liftA2)
-import Control.Algebra.Class
 import Control.Effect.Choose
 import Control.Monad (join)
 import qualified Control.Monad.Fail as Fail

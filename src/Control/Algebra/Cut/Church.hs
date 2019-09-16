@@ -12,8 +12,8 @@ module Control.Algebra.Cut.Church
 , run
 ) where
 
+import Control.Algebra
 import Control.Applicative (Alternative(..))
-import Control.Algebra.Class
 import Control.Effect.Choose
 import Control.Effect.Cut
 import Control.Effect.Empty
