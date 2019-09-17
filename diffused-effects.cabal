@@ -38,6 +38,7 @@ library
                      , Control.Algebra.Interpose
                      , Control.Algebra.Interpret
                      , Control.Algebra.Lift
+                     , Control.Algebra.Named
                      , Control.Algebra.NonDet.Church
                      , Control.Algebra.Pure
                      , Control.Algebra.Reader
