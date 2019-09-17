@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, FlexibleInstances, FunctionalDependencies, KindSignatures, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, KindSignatures, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum.Named
 ( Named(..)
 , NamedMember(..)
@@ -8,6 +8,8 @@ module Control.Effect.Sum.Named
 import Control.Algebra
 
 newtype Named (name :: k) (eff :: (* -> *) -> (* -> *)) m a = Named { getNamed :: eff m a }
+  deriving (HFunctor, Effect)
+
 
 class NamedMember (name :: k) sub sup | name sup -> sub where
   injNamed :: Named name sub m a -> sup m a
