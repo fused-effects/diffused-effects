@@ -1,2 +1,6 @@
 module Control.Effect.Reader.Named
-() where
+( -- * Reader effect
+  Reader(..)
+) where
+
+import Control.Effect.Reader (Reader(..))
