@@ -67,6 +67,7 @@ library
                      , Control.Effect.State
                      , Control.Effect.State.Named
                      , Control.Effect.Sum
+                     , Control.Effect.Sum.Named
                      , Control.Effect.Trace
                      , Control.Effect.Writer
   build-depends:       base           >= 4.9 && < 4.14
