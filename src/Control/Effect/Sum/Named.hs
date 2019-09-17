@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, FlexibleInstances, FunctionalDependencies, KindSignatures, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, FlexibleInstances, FunctionalDependencies, KindSignatures, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum.Named
 ( Named(..)
 , NamedMember(..)
@@ -6,12 +6,11 @@ module Control.Effect.Sum.Named
 ) where
 
 import Control.Algebra
-import GHC.TypeLits
 
-newtype Named (name :: Symbol) (eff :: (* -> *) -> (* -> *)) m k = Named { getNamed :: eff m k }
+newtype Named (name :: k) (eff :: (* -> *) -> (* -> *)) m a = Named { getNamed :: eff m a }
 
-class NamedMember (name :: Symbol) sub sup | name sup -> sub where
-  injNamed :: Named name sub m k -> sup m k
+class NamedMember (name :: k) sub sup | name sup -> sub where
+  injNamed :: Named name sub m a -> sup m a
 
 instance NamedMember name sub (Named name sub) where
   injNamed = id
