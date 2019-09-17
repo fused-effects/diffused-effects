@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, KindSignatures, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum.Named
 ( Named(..)
 , NamedMember(..)
