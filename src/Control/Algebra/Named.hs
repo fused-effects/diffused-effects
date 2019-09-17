@@ -1,13 +1,18 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, MultiParamTypeClasses, PolyKinds, UndecidableInstances #-}
+{-# LANGUAGE ExplicitForAll, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, PolyKinds, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Named
-( NamedC(..)
+( runNamed
+, NamedC(..)
 ) where
 
 import Control.Algebra
 import Control.Effect.Sum.Named
 
-newtype NamedC (name :: k) m a = NamedC { runNamed :: m a }
+runNamed :: NamedC name m a -> m a
+runNamed = runNamedC
+
+newtype NamedC name (m :: * -> *) a = NamedC { runNamedC :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance Algebra sig m => Algebra (Named name sig) (NamedC name m) where
-  alg = NamedC . alg . handleCoercible . getNamed
+instance (Algebra (eff :+: sig) m, HFunctor eff, HFunctor sig) => Algebra (Named name eff :+: sig) (NamedC name m) where
+  alg (L eff) = NamedC . alg . handleCoercible . L $ getNamed eff
+  alg (R eff) = NamedC . alg . handleCoercible . R $ eff
