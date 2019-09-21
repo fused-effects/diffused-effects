@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveTraversable, FlexibleInstances, KindSignatures, MultiParamTypeClasses, TypeOperators #-}
+{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveGeneric, DeriveTraversable, FlexibleInstances, MultiParamTypeClasses, PolyKinds, ScopedTypeVariables, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum
 ( (:+:)(..)
 , Member(..)
@@ -43,3 +43,46 @@ instance {-# OVERLAPPABLE #-} Member sub sup => Member sub (sub' :+: sup) where
 send :: (Member effect sig, Algebra sig m) => effect m a -> m a
 send = alg . inj
 {-# INLINE send #-}
+
+
+type family FromJust (maybe :: Maybe a) :: a where
+  FromJust ('Just a) = a
+
+type family (left :: Maybe k) <> (right :: Maybe k) :: Maybe k where
+  'Nothing <> b        = b
+  a        <> 'Nothing = a
+
+type family Prepend (s :: k) (ss :: Maybe [k]) where
+  Prepend s ('Just ss) = 'Just (s ': ss)
+  Prepend _ 'Nothing   = 'Nothing
+
+data Side = L_ | R_
+
+type family PathTo' (side :: Side) sub sup :: Maybe [Side] where
+  PathTo' s t t         = 'Just '[s]
+  PathTo' s t (l :+: r) = Prepend s (PathTo' 'L_ t l <> PathTo' 'R_ t r)
+  PathTo' _ _ _         = 'Nothing
+
+type family PathTo sub sup :: [Side] where
+  PathTo t t         = '[]
+  PathTo t (l :+: r) = FromJust (PathTo' 'L_ t l <> PathTo' 'R_ t r)
+
+class ElementAt (path :: [Side]) (sub :: (* -> *) -> (* -> *)) sup where
+  prj' :: sup m a -> Maybe (sub m a)
+
+instance ElementAt '[] t t where
+  prj' = Just
+
+instance ElementAt path t l => ElementAt ('L_ ': path) t (l :+: r) where
+  prj' (L l) = prj'  @path l
+  prj' _     = Nothing
+
+instance ElementAt path t r => ElementAt ('R_ ': path) t (l :+: r) where
+  prj' (R r) = prj'  @path r
+  prj' _     = Nothing
+
+class Element (sub :: (* -> *) -> (* -> *)) sup where
+  proj :: sup m a -> Maybe (sub m a)
+
+instance (PathTo sub sup ~ path, ElementAt path sub sup) => Element sub sup where
+  proj = prj' @path
