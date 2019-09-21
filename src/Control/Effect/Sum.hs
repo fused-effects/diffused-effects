@@ -1,7 +1,9 @@
 {-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveGeneric, DeriveTraversable, FlexibleInstances, FunctionalDependencies, PolyKinds, ScopedTypeVariables, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum
 ( (:+:)(..)
-, Member(..)
+, Member
+, inj
+, prj
 , send
 ) where
 
