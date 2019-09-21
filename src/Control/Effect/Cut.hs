@@ -7,8 +7,8 @@ module Control.Effect.Cut
 , cut
 ) where
 
+import Control.Algebra
 import Control.Applicative (Alternative(..))
-import Control.Algebra.Class
 
 -- | 'Cut' effects are used with 'Choose' to provide control over backtracking.
 data Cut m k

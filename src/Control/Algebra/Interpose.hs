@@ -14,9 +14,9 @@ module Control.Algebra.Interpose
 , run
 ) where
 
-import Control.Applicative
-import Control.Algebra.Class
+import Control.Algebra
 import Control.Algebra.Reader
+import Control.Applicative
 import Control.Monad (MonadPlus (..))
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix

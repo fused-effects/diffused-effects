@@ -12,9 +12,9 @@ module Control.Algebra.Fail
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
-import Control.Algebra.Class
+import Control.Algebra
 import Control.Algebra.Error.Either
+import Control.Applicative (Alternative(..))
 import Control.Effect.Fail
 import Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail

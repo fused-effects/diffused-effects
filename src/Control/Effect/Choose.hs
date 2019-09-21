@@ -12,7 +12,7 @@ module Control.Effect.Choose
 , Choosing(..)
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 import Control.Effect.Empty
 import Data.Bool (bool)
 import Data.Coerce

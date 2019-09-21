@@ -11,9 +11,9 @@ module Control.Algebra.Trace.Returning
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
-import Control.Algebra.Class
+import Control.Algebra
 import Control.Algebra.State.Strict
+import Control.Applicative (Alternative(..))
 import Control.Effect.Trace
 import Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail

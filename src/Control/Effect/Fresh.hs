@@ -6,7 +6,7 @@ module Control.Effect.Fresh
 , resetFresh
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 
 data Fresh m k
   = Fresh (Int -> m k)

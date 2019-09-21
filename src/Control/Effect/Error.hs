@@ -6,7 +6,7 @@ module Control.Effect.Error
 , catchError
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 
 data Error exc m k
   = Throw exc

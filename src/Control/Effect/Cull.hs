@@ -5,7 +5,7 @@ module Control.Effect.Cull
 , cull
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 
 -- | 'Cull' effects are used with 'Choose' to provide control over branching.
 data Cull m k

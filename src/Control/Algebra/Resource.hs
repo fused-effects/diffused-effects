@@ -11,9 +11,9 @@ module Control.Algebra.Resource
 , run
 ) where
 
-import           Control.Applicative (Alternative(..))
-import           Control.Algebra.Class
+import           Control.Algebra
 import           Control.Algebra.Reader
+import           Control.Applicative (Alternative(..))
 import           Control.Effect.Resource
 import qualified Control.Exception as Exc
 import           Control.Monad (MonadPlus(..))

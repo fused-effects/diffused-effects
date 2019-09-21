@@ -5,7 +5,7 @@ module Control.Effect.Trace
 , trace
 ) where
 
-import Control.Algebra.Class
+import Control.Algebra
 import GHC.Generics (Generic1)
 
 data Trace m k = Trace

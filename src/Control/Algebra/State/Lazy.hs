@@ -13,8 +13,8 @@ module Control.Algebra.State.Lazy
 , run
 ) where
 
+import Control.Algebra
 import Control.Applicative (Alternative(..))
-import Control.Algebra.Class
 import Control.Effect.State as State
 import Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail

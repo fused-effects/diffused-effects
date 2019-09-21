@@ -13,8 +13,8 @@ module Control.Algebra.NonDet.Church
 , run
 ) where
 
+import Control.Algebra
 import Control.Applicative (Alternative(..), liftA2)
-import Control.Algebra.Class
 import Control.Effect.Choose
 import Control.Effect.Empty
 import Control.Monad (MonadPlus(..), join)

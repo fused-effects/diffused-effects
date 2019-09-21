@@ -2,8 +2,10 @@
 module Control.Effect.Sum
 ( (:+:)(..)
 , Member(..)
+, send
 ) where
 
+import Control.Algebra.Class
 import Control.Effect.Class
 import GHC.Generics (Generic1)
 
@@ -35,3 +37,9 @@ instance {-# OVERLAPPABLE #-} Member sub sup => Member sub (sub' :+: sup) where
   inj = R . inj
   prj (R g) = prj g
   prj _     = Nothing
+
+
+-- | Construct a request for an effect to be interpreted by some handler later on.
+send :: (Member effect sig, Algebra sig m) => effect m a -> m a
+send = alg . inj
+{-# INLINE send #-}

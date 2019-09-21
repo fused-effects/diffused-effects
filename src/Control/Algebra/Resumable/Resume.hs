@@ -11,9 +11,9 @@ module Control.Algebra.Resumable.Resume
 , run
 ) where
 
-import Control.Applicative (Alternative(..))
-import Control.Algebra.Class
+import Control.Algebra
 import Control.Algebra.Reader
+import Control.Applicative (Alternative(..))
 import Control.Effect.Resumable
 import Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail
