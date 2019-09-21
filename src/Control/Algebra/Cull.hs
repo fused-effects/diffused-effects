@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Cull
 ( -- * Cull effect
   module Control.Effect.Cull
@@ -48,7 +48,8 @@ instance MonadTrans CullC where
   lift = CullC . lift . lift
   {-# INLINE lift #-}
 
-instance (Algebra sig m, Effect sig) => Algebra (Cull :+: NonDet :+: sig) (CullC m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (CullC m) where
+  type Signature (CullC m) = Cull :+: NonDet :+: Signature m
   alg (L (Cull m k))         = CullC (local (const True) (runCullC m)) >>= k
   alg (R (L (L Empty)))      = empty
   alg (R (L (R (Choose k)))) = k True <|> k False

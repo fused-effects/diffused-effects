@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Fail
 ( -- * Fail effect
   module Control.Effect.Fail
@@ -31,11 +31,12 @@ runFail = runError . runFailC
 newtype FailC m a = FailC { runFailC :: ErrorC String m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Algebra sig m, Effect sig) => Fail.MonadFail (FailC m) where
+instance (Algebra m, Effect (Signature m)) => Fail.MonadFail (FailC m) where
   fail s = FailC (throwError s)
   {-# INLINE fail #-}
 
-instance (Algebra sig m, Effect sig) => Algebra (Fail :+: sig) (FailC m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (FailC m) where
+  type Signature (FailC m) = Fail :+: Signature m
   alg (L (Fail s)) = Fail.fail s
   alg (R other)    = FailC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}

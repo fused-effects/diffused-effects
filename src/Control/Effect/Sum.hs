@@ -32,7 +32,7 @@ prj = prj' @(PathTo sub sup)
 
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
-send :: (Member effect sig, Algebra sig m) => effect m a -> m a
+send :: (Member effect (Signature m), Algebra m) => effect m a -> m a
 send = alg . inj
 {-# INLINE send #-}
 

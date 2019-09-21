@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Trace.Returning
 ( -- * Trace effect
   module Control.Effect.Trace
@@ -31,7 +31,8 @@ runTrace = fmap (first reverse) . runState [] . runTraceC
 newtype TraceC m a = TraceC { runTraceC :: StateC [String] m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Algebra sig m, Effect sig) => Algebra (Trace :+: sig) (TraceC m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (TraceC m) where
+  type Signature (TraceC m) = Trace :+: Signature m
   alg (L (Trace m k)) = TraceC (modify (m :)) *> k
   alg (R other)       = TraceC (alg (R (handleCoercible other)))
 

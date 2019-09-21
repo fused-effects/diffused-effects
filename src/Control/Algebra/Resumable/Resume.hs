@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, RankNTypes, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Resumable.Resume
 ( -- * Resumable effect
   module Control.Effect.Resumable
@@ -44,7 +44,8 @@ instance MonadTrans (ResumableC err) where
 
 newtype Handler err m = Handler { runHandler :: forall x . err x -> m x }
 
-instance Algebra sig m => Algebra (Resumable err :+: sig) (ResumableC err m) where
+instance Algebra m => Algebra (ResumableC err m) where
+  type Signature (ResumableC err m) = Resumable err :+: Signature m
   alg (L (Resumable err k)) = ResumableC (ReaderC (\ handler -> runHandler handler err)) >>= k
   alg (R other)             = ResumableC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}

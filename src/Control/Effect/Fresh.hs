@@ -25,11 +25,11 @@ instance Effect Fresh where
 -- | Produce a fresh (i.e. unique) 'Int'.
 --
 --   prop> run (runFresh (replicateM n fresh)) === nub (run (runFresh (replicateM n fresh)))
-fresh :: (Member Fresh sig, Algebra sig m) => m Int
+fresh :: (Member Fresh (Signature m), Algebra m) => m Int
 fresh = send (Fresh pure)
 
 -- | Reset the fresh counter after running a computation.
 --
 --   prop> run (runFresh (resetFresh (replicateM m fresh) *> replicateM n fresh)) === run (runFresh (replicateM n fresh))
-resetFresh :: (Member Fresh sig, Algebra sig m) => m a -> m a
+resetFresh :: (Member Fresh (Signature m), Algebra m) => m a -> m a
 resetFresh m = send (Reset m pure)

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, FlexibleInstances, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, FlexibleInstances, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Error.Either
 ( -- * Error effect
   module Control.Effect.Error
@@ -63,7 +63,8 @@ instance MonadTrans (ErrorC e) where
   lift = ErrorC . fmap Right
   {-# INLINE lift #-}
 
-instance (Algebra sig m, Effect sig) => Algebra (Error e :+: sig) (ErrorC e m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (ErrorC e m) where
+  type Signature (ErrorC e m) = Error e :+: Signature m
   alg (L (Throw e))     = ErrorC (pure (Left e))
   alg (L (Catch m h k)) = ErrorC (runError m >>= either (either (pure . Left) (runError . k) <=< runError . h) (runError . k))
   alg (R other)         = ErrorC (alg (handle (Right ()) (either (pure . Left) runError) other))

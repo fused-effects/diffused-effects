@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExplicitForAll, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, ExplicitForAll, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, RankNTypes, ScopedTypeVariables, TypeFamilies, TypeOperators, UndecidableInstances #-}
 
 {- |
 This module provides an 'InterposeC' carrier capable of "eavesdropping" on requests
@@ -45,8 +45,9 @@ newtype Handler alg m = Handler (forall x . alg m x -> m x)
 runHandler :: (HFunctor alg, Functor m) => Handler alg m -> alg (ReaderC (Handler alg m) m) a -> m a
 runHandler h@(Handler handler) = handler . hmap (runReader h)
 
-instance (HFunctor alg, Algebra sig m, Member alg sig) => Algebra sig (InterposeC alg m) where
-  alg (op :: sig (InterposeC alg m) a)
+instance (HFunctor alg, Algebra m, Member alg (Signature m)) => Algebra (InterposeC alg m) where
+  type Signature (InterposeC alg m) = Signature m
+  alg (op :: Signature m (InterposeC alg m) a)
     | Just (op' :: alg (InterposeC alg m) a) <- prj op = do
       handler <- InterposeC ask
       lift (runHandler handler (handleCoercible op'))

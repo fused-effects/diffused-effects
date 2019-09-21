@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Trace.Ignoring
 ( -- * Trace effect
   module Control.Effect.Trace
@@ -33,7 +33,8 @@ instance MonadTrans TraceC where
   lift = TraceC
   {-# INLINE lift #-}
 
-instance Algebra sig m => Algebra (Trace :+: sig) (TraceC m) where
+instance Algebra m => Algebra (TraceC m) where
+  type Signature (TraceC m) = Trace :+: Signature m
   alg (L trace) = traceCont trace
   alg (R other) = TraceC (alg (handleCoercible other))
   {-# INLINE alg #-}

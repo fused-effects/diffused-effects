@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE ExistentialQuantification, FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Resumable.Abort
 ( -- * Resumable effect
   module Control.Effect.Resumable
@@ -33,7 +33,8 @@ runResumable = runError . runResumableC
 newtype ResumableC err m a = ResumableC { runResumableC :: ErrorC (SomeError err) m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Algebra sig m, Effect sig) => Algebra (Resumable err :+: sig) (ResumableC err m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (ResumableC err m) where
+  type Signature (ResumableC err m) = Resumable err :+: Signature m
   alg (L (Resumable err _)) = ResumableC (throwError (SomeError err))
   alg (R other)             = ResumableC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}

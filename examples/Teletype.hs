@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveAnyClass, DeriveFunctor, DeriveGeneric, DerivingStrategies, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveAnyClass, DeriveFunctor, DeriveGeneric, DerivingStrategies, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 
 module Teletype
 ( spec
@@ -32,10 +32,10 @@ data Teletype m k
   deriving stock (Functor, Generic1)
   deriving anyclass (HFunctor, Effect)
 
-read :: (Member Teletype sig, Algebra sig m) => m String
+read :: (Member Teletype (Signature m), Algebra m) => m String
 read = send (Read pure)
 
-write :: (Member Teletype sig, Algebra sig m) => String -> m ()
+write :: (Member Teletype (Signature m), Algebra m) => String -> m ()
 write s = send (Write s (pure ()))
 
 
@@ -45,7 +45,8 @@ runTeletypeIO = runTeletypeIOC
 newtype TeletypeIOC m a = TeletypeIOC { runTeletypeIOC :: m a }
   deriving newtype (Applicative, Functor, Monad, MonadIO)
 
-instance (MonadIO m, Algebra sig m) => Algebra (Teletype :+: sig) (TeletypeIOC m) where
+instance (MonadIO m, Algebra m) => Algebra (TeletypeIOC m) where
+  type Signature (TeletypeIOC m) = Teletype :+: Signature m
   alg (L (Read    k)) = liftIO getLine      >>= k
   alg (L (Write s k)) = liftIO (putStrLn s) >>  k
   alg (R other)       = TeletypeIOC (alg (handleCoercible other))
@@ -57,7 +58,8 @@ runTeletypeRet i = runWriter . runState i . runTeletypeRetC
 newtype TeletypeRetC m a = TeletypeRetC { runTeletypeRetC :: StateC [String] (WriterC [String] m) a }
   deriving newtype (Applicative, Functor, Monad)
 
-instance (Algebra sig m, Effect sig) => Algebra (Teletype :+: sig) (TeletypeRetC m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (TeletypeRetC m) where
+  type Signature (TeletypeRetC m) = Teletype :+: Signature m
   alg (L (Read    k)) = do
     i <- TeletypeRetC get
     case i of

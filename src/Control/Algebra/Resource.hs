@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, RankNTypes, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Resource
 ( -- * Resource effect
   module Control.Effect.Resource
@@ -58,7 +58,8 @@ instance MonadTrans ResourceC where
 runUnlifting :: UnliftIO m -> ResourceC m a -> IO a
 runUnlifting h@(UnliftIO handler) = handler . runReader h . runResourceC
 
-instance (Algebra sig m, MonadIO m) => Algebra (Resource :+: sig) (ResourceC m) where
+instance (Algebra m, MonadIO m) => Algebra (ResourceC m) where
+  type Signature (ResourceC m) = Resource :+: Signature m
   alg (L (Resource acquire release use k)) = do
     handler <- ResourceC ask
     a <- liftIO (Exc.bracket

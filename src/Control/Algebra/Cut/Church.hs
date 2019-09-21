@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, FlexibleInstances, MultiParamTypeClasses, RankNTypes, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, FlexibleInstances, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Cut.Church
 ( -- * Cut effect
   module Control.Effect.Cut
@@ -76,7 +76,8 @@ instance MonadTrans CutC where
   lift m = CutC (\ cons nil _ -> m >>= flip cons nil)
   {-# INLINE lift #-}
 
-instance (Algebra sig m, Effect sig) => Algebra (Cut :+: Empty :+: Choose :+: sig) (CutC m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (CutC m) where
+  type Signature (CutC m) = Cut :+: Empty :+: Choose :+: Signature m
   alg (L Cutfail)    = CutC $ \ _    _   fail -> fail
   alg (L (Call m k)) = CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
   alg (R (L Empty))          = empty

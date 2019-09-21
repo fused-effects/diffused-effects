@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExplicitForAll, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, ExplicitForAll, FlexibleContexts, FlexibleInstances, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.State.Lazy
 ( -- * State effect
   module State
@@ -69,7 +69,8 @@ instance MonadTrans (StateC s) where
   lift m = StateC (\ s -> (,) s <$> m)
   {-# INLINE lift #-}
 
-instance (Algebra sig m, Effect sig) => Algebra (State s :+: sig) (StateC s m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (StateC s m) where
+  type Signature (StateC s m) = State s :+: Signature m
   alg (L (Get   k)) = StateC (\ s -> runState s (k s))
   alg (L (Put s k)) = StateC (\ _ -> runState s k)
   alg (R other)     = StateC (\ s -> alg (handle (s, ()) (uncurry runState) other))

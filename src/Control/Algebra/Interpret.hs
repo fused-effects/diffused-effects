@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, KindSignatures, RankNTypes, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, KindSignatures, RankNTypes, ScopedTypeVariables, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
 
 module Control.Algebra.Interpret
 ( runInterpret
@@ -105,7 +105,8 @@ instance MonadTrans (InterpretC s sig) where
   lift = InterpretC
 
 
-instance (HFunctor alg, HFunctor sig, Reifies s (Handler alg m), Monad m, Algebra sig m) => Algebra (alg :+: sig) (InterpretC s alg m) where
+instance (HFunctor alg, Reifies s (Handler alg m), Monad m, Algebra m) => Algebra (InterpretC s alg m) where
+  type Signature (InterpretC s alg m) = alg :+: Signature m
   alg (L alg) =
     runHandler (unTag (reflect @s)) alg
   alg (R other) =

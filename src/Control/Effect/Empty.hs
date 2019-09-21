@@ -20,5 +20,5 @@ instance Effect   Empty
 -- | Abort the computation.
 --
 --   prop> run (runEmpty abort) === Nothing
-abort :: (Algebra sig m, Member Empty sig) => m a
+abort :: (Algebra m, Member Empty (Signature m)) => m a
 abort = send Empty

@@ -25,7 +25,7 @@ inference = describe "inference" $ do
   it "can be wrapped for better type inference" $
     run (runHasEnv (runEnv "i" ((++) <$> askEnv <*> askEnv))) `shouldBe` "ii"
 
-askEnv :: (Member (Reader env) sig, Algebra sig m) => HasEnv env m env
+askEnv :: (Member (Reader env) sig, Algebra m) => HasEnv env m env
 askEnv = ask
 
 runEnv :: env -> HasEnv env (ReaderC env m) a -> HasEnv env m a
@@ -35,7 +35,7 @@ runEnv r = HasEnv . runReader r . runHasEnv
 newtype HasEnv env m a = HasEnv { runHasEnv :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance Algebra sig m => Algebra sig (HasEnv env m) where
+instance Algebra m => Algebra sig (HasEnv env m) where
   alg = HasEnv . alg . handleCoercible
 
 
@@ -50,7 +50,7 @@ reinterpretReader = runReinterpretReaderC
 newtype ReinterpretReaderC r m a = ReinterpretReaderC { runReinterpretReaderC :: StateC r m a }
   deriving (Applicative, Functor, Monad, MonadFail)
 
-instance (Algebra sig m, Effect sig) => Algebra (Reader r :+: sig) (ReinterpretReaderC r m) where
+instance (Algebra m, Effect sig) => Algebra (Reader r :+: sig) (ReinterpretReaderC r m) where
   alg (L (Ask       k)) = ReinterpretReaderC get >>= k
   alg (L (Local f m k)) = do
     a <- ReinterpretReaderC get
@@ -76,10 +76,10 @@ interposeFail = runInterposeC
 newtype InterposeC m a = InterposeC { runInterposeC :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance (Algebra sig m, Member Fail sig) => MonadFail (InterposeC m) where
+instance (Algebra m, Member Fail sig) => MonadFail (InterposeC m) where
   fail s = send (Fail s)
 
-instance (Algebra sig m, Member Fail sig) => Algebra sig (InterposeC m) where
+instance (Algebra m, Member Fail sig) => Algebra sig (InterposeC m) where
   alg op
     | Just (Fail s) <- prj op = InterposeC (send (Fail ("hello, " ++ s)))
     | otherwise               = InterposeC (alg (handleCoercible op))

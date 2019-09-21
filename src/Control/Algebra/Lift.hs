@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies #-}
 module Control.Algebra.Lift
 ( -- * Lift effect
   module Control.Effect.Lift
@@ -31,7 +31,8 @@ newtype LiftC m a = LiftC { runLiftC :: m a }
 instance MonadTrans LiftC where
   lift = LiftC
 
-instance Monad m => Algebra (Lift m) (LiftC m) where
+instance Monad m => Algebra (LiftC m) where
+  type Signature (LiftC m) = Lift m
   alg = LiftC . (>>= runLiftC) . unLift
 
 instance MonadUnliftIO m => MonadUnliftIO (LiftC m) where

@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum.Named
 ( Named(..)
 , NamedMember(..)
@@ -25,6 +25,6 @@ instance {-# OVERLAPPABLE #-} NamedMember name sub sup => NamedMember name sub (
 
 
 -- | Construct a request for a named effect to be interpreted by some handler later on.
-sendNamed :: forall name effect sig m a . (NamedMember name effect sig, Algebra sig m) => effect m a -> m a
+sendNamed :: forall name effect m a . (NamedMember name effect (Signature m), Algebra m) => effect m a -> m a
 sendNamed = alg . injNamed . Named @name
 {-# INLINE sendNamed #-}
