@@ -4,10 +4,8 @@ module Control.Effect.Sum
 , Member
 , inj
 , prj
-, send
 ) where
 
-import Control.Algebra.Class
 import Control.Effect.Class
 import GHC.Generics (Generic1)
 
@@ -29,12 +27,6 @@ inj = inj' @(PathTo sub sup)
 
 prj :: forall sub m a sup . Member sub sup => sup m a -> Maybe (sub m a)
 prj = prj' @(PathTo sub sup)
-
-
--- | Construct a request for an effect to be interpreted by some handler later on.
-send :: (Member effect (Signature m), Algebra m) => effect m a -> m a
-send = alg . inj
-{-# INLINE send #-}
 
 
 type family FromJust (maybe :: Maybe a) :: a where
