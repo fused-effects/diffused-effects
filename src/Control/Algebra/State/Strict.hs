@@ -8,7 +8,7 @@ module Control.Algebra.State.Strict
 , execState
 , StateC(..)
   -- * Re-exports
-, Handles
+, Has
 , run
 ) where
 

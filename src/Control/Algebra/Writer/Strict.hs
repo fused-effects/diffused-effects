@@ -7,7 +7,7 @@ module Control.Algebra.Writer.Strict
 , execWriter
 , WriterC(..)
   -- * Re-exports
-, Handles
+, Has
 , run
 ) where
 

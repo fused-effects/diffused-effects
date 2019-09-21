@@ -25,7 +25,7 @@ inference = describe "inference" $ do
   it "can be wrapped for better type inference" $
     run (runHasEnv (runEnv "i" ((++) <$> askEnv <*> askEnv))) `shouldBe` "ii"
 
-askEnv :: m `Handles` Reader env => HasEnv env m env
+askEnv :: Has (Reader env) m => HasEnv env m env
 askEnv = ask
 
 runEnv :: env -> HasEnv env (ReaderC env m) a -> HasEnv env m a
@@ -35,7 +35,8 @@ runEnv r = HasEnv . runReader r . runHasEnv
 newtype HasEnv env m a = HasEnv { runHasEnv :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance Algebra m => Algebra sig (HasEnv env m) where
+instance Algebra m => Algebra (HasEnv env m) where
+  type Signature (HasEnv env m) = Signature m
   alg = HasEnv . alg . handleCoercible
 
 
@@ -77,10 +78,10 @@ interposeFail = runInterposeC
 newtype InterposeC m a = InterposeC { runInterposeC :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance m `Handles` Fail => MonadFail (InterposeC m) where
+instance Has Fail m => MonadFail (InterposeC m) where
   fail s = send (Fail s)
 
-instance m `Handles` Fail => Algebra (InterposeC m) where
+instance Has Fail m => Algebra (InterposeC m) where
   type Signature (InterposeC m) = Signature m
   alg op
     | Just (Fail s) <- prj op = InterposeC (send (Fail ("hello, " ++ s)))

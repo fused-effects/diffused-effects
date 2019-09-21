@@ -6,7 +6,7 @@ module Control.Algebra.NonDet.Church
 , runNonDet
 , NonDetC(..)
   -- * Re-exports
-, Handles
+, Has
 , run
 ) where
 

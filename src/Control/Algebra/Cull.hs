@@ -6,7 +6,7 @@ module Control.Algebra.Cull
 , runCull
 , CullC(..)
   -- * Re-exports
-, Handles
+, Has
 , run
 ) where
 

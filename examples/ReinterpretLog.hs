@@ -64,7 +64,7 @@ renderLogMessage = \case
   Info  message -> "[info] "  ++ message
 
 -- The application: it logs two messages, then quits.
-application :: m `Handles` Log Message
+application :: Has (Log Message) m
   => m ()
 application = do
   log (Debug "debug message")
@@ -110,7 +110,7 @@ data Log (a :: Type) (m :: Type -> Type) (k :: Type)
   deriving anyclass (HFunctor, Effect)
 
 -- Log an 'a'.
-log :: m `Handles` Log a
+log :: Has (Log a) m
   => a
   -> m ()
 log x =
@@ -163,7 +163,7 @@ newtype ReinterpretLogC s t m a
 instance
      -- So long as the 'm' monad can interpret the 'Signature m' effects, one of which
      -- is 'Log t'...
-     m `Handles` Log t
+     Has (Log t) m
      -- ... the 'ReinterpretLogC s t m' monad can interpret 'Log s :+: Signature m'
      -- effects
   => Algebra (ReinterpretLogC s t m) where

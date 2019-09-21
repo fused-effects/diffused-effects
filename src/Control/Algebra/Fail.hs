@@ -2,12 +2,12 @@
 module Control.Algebra.Fail
 ( -- * Fail effect
   module Control.Effect.Fail
+, Fail.MonadFail(..)
   -- * Fail carrier
 , runFail
 , FailC(..)
   -- * Re-exports
-, Handles
-, Fail.MonadFail(..)
+, Has
 , run
 ) where
 

@@ -6,7 +6,7 @@ module Control.Algebra.Error.Either
 , runError
 , ErrorC(..)
   -- * Re-exports
-, Handles
+, Has
 , run
 ) where
 

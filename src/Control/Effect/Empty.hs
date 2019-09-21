@@ -20,5 +20,5 @@ instance Effect   Empty
 -- | Abort the computation.
 --
 --   prop> run (runEmpty abort) === Nothing
-abort :: m `Handles` Empty => m a
+abort :: Has Empty m => m a
 abort = send Empty

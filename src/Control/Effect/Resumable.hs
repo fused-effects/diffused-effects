@@ -22,7 +22,7 @@ instance Effect (Resumable err) where
 -- | Throw an error which can be resumed with a value of its result type.
 --
 --   prop> run (runResumable (throwResumable (Identity a))) === Left (SomeError (Identity a))
-throwResumable :: m `Handles` Resumable err => err a -> m a
+throwResumable :: Has (Resumable err) m => err a -> m a
 throwResumable err = send (Resumable err pure)
 
 

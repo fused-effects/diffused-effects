@@ -9,7 +9,7 @@ module Control.Algebra.Interpose
 ( InterposeC (..)
 , runInterpose
   -- * Re-exports
-, Handles
+, Has
 , run
 ) where
 
@@ -45,7 +45,7 @@ newtype Handler alg m = Handler (forall x . alg m x -> m x)
 runHandler :: (HFunctor alg, Functor m) => Handler alg m -> alg (ReaderC (Handler alg m) m) a -> m a
 runHandler h@(Handler handler) = handler . hmap (runReader h)
 
-instance (HFunctor alg, m `Handles` alg) => Algebra (InterposeC alg m) where
+instance (HFunctor alg, Has alg m) => Algebra (InterposeC alg m) where
   type Signature (InterposeC alg m) = Signature m
   alg (op :: Signature m (InterposeC alg m) a)
     | Just (op' :: alg (InterposeC alg m) a) <- prj op = do

@@ -32,10 +32,10 @@ data Teletype m k
   deriving stock (Functor, Generic1)
   deriving anyclass (HFunctor, Effect)
 
-read :: m `Handles` Teletype => m String
+read :: Has Teletype m => m String
 read = send (Read pure)
 
-write :: m `Handles` Teletype => String -> m ()
+write :: Has Teletype m => String -> m ()
 write s = send (Write s (pure ()))
 
 
