@@ -60,7 +60,7 @@ type family Prepend (s :: j -> k) (ss :: Maybe j) :: Maybe k where
 data L a
 data R a
 
-type family PathTo' (side :: * -> *) sub sup :: Maybe * where
+type family PathTo' (side :: * -> *) (sub :: (* -> *) -> (* -> *)) sup :: Maybe * where
   PathTo' s t t         = 'Just (s ())
   PathTo' s t (l :+: r) = Prepend s (PathTo' L t l <|> PathTo' R t r)
   PathTo' _ _ _         = 'Nothing
