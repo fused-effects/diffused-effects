@@ -67,20 +67,20 @@ type family PathTo sub sup :: [Side] where
   PathTo t t         = '[]
   PathTo t (l :+: r) = FromJust (PathTo' 'L_ t l <> PathTo' 'R_ t r)
 
-class ElementAt (path :: [Side]) (sub :: (* -> *) -> (* -> *)) sup where
+class MemberAt (path :: [Side]) (sub :: (* -> *) -> (* -> *)) sup where
   inj' :: sub m a -> sup m a
   prj' :: sup m a -> Maybe (sub m a)
 
-instance ElementAt '[] t t where
+instance MemberAt '[] t t where
   inj' = id
   prj' = Just
 
-instance ElementAt path t l => ElementAt ('L_ ': path) t (l :+: r) where
+instance MemberAt path t l => MemberAt ('L_ ': path) t (l :+: r) where
   inj' = L . inj' @path
   prj' (L l) = prj'  @path l
   prj' _     = Nothing
 
-instance ElementAt path t r => ElementAt ('R_ ': path) t (l :+: r) where
+instance MemberAt path t r => MemberAt ('R_ ': path) t (l :+: r) where
   inj' = R . inj' @path
   prj' (R r) = prj'  @path r
   prj' _     = Nothing
@@ -89,6 +89,6 @@ class Element (sub :: (* -> *) -> (* -> *)) sup where
   inje :: sub m a -> sup m a
   proj :: sup m a -> Maybe (sub m a)
 
-instance (PathTo sub sup ~ path, ElementAt path sub sup) => Element sub sup where
+instance (PathTo sub sup ~ path, MemberAt path sub sup) => Element sub sup where
   inje = inj' @path
   proj = prj' @path
