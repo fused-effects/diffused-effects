@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DataKinds, DeriveGeneric, DeriveTraversable, FlexibleInstances, FunctionalDependencies, PolyKinds, ScopedTypeVariables, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds, DataKinds, DeriveGeneric, DeriveTraversable, FlexibleContexts, FlexibleInstances, FunctionalDependencies, PolyKinds, ScopedTypeVariables, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum
 ( (:+:)(..)
 , Member
@@ -22,13 +22,13 @@ instance (HFunctor f, HFunctor g) => HFunctor (f :+: g)
 instance (Effect f, Effect g)     => Effect   (f :+: g)
 
 
-class Member (sub :: (* -> *) -> (* -> *)) sup where
-  inj :: sub m a -> sup m a
-  prj :: sup m a -> Maybe (sub m a)
+type Member (sub :: (* -> *) -> (* -> *)) sup = MemberAt (PathTo sub sup) sub sup
 
-instance (PathTo sub sup ~ path, MemberAt path sub sup) => Member sub sup where
-  inj = inj' @path
-  prj = prj' @path
+inj :: forall sub m a sup . Member sub sup => sub m a -> sup m a
+inj = inj' @(PathTo sub sup)
+
+prj :: forall sub m a sup . Member sub sup => sup m a -> Maybe (sub m a)
+prj = prj' @(PathTo sub sup)
 
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
