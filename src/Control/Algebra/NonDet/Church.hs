@@ -1,9 +1,7 @@
 {-# LANGUAGE DeriveTraversable, FlexibleInstances, MultiParamTypeClasses, RankNTypes, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.NonDet.Church
-( -- * Choose effect
-  module Control.Effect.Choose
-  -- * Empty effect
-, module Control.Effect.Empty
+( -- * NonDet effects
+  module Control.Effect.NonDet
   -- * NonDet carrier
 , runNonDet
 , NonDetC(..)
@@ -15,8 +13,7 @@ module Control.Algebra.NonDet.Church
 
 import Control.Algebra
 import Control.Applicative (Alternative(..), liftA2)
-import Control.Effect.Choose
-import Control.Effect.Empty
+import Control.Effect.NonDet
 import Control.Monad (MonadPlus(..), join)
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix
@@ -87,7 +84,7 @@ instance MonadTrans NonDetC where
   lift m = NonDetC (\ _ leaf _ -> m >>= leaf)
   {-# INLINE lift #-}
 
-instance (Algebra sig m, Effect sig) => Algebra ((Empty :+: Choose) :+: sig) (NonDetC m) where
+instance (Algebra sig m, Effect sig) => Algebra (NonDet :+: sig) (NonDetC m) where
   alg (L (L Empty))      = empty
   alg (L (R (Choose k))) = k True <|> k False
   alg (R other)          = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
