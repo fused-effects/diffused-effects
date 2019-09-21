@@ -49,8 +49,9 @@ type family FromJust (maybe :: Maybe a) :: a where
   FromJust ('Just a) = a
 
 type family (left :: Maybe k) <> (right :: Maybe k) :: Maybe k where
-  'Nothing <> b        = b
-  a        <> 'Nothing = a
+  'Just a <> _       = 'Just a
+  _       <> 'Just b = 'Just b
+  _       <> _       = 'Nothing
 
 type family Prepend (s :: j -> k) (ss :: Maybe j) :: Maybe k where
   Prepend s ('Just ss) = 'Just (s ss)
