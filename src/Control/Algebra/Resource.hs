@@ -6,8 +6,7 @@ module Control.Algebra.Resource
 , runResource
 , ResourceC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

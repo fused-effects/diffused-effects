@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving, TypeOperators #-}
 module Control.Effect.Fresh
 ( -- * Fresh effect
   Fresh(..)
@@ -25,11 +25,11 @@ instance Effect Fresh where
 -- | Produce a fresh (i.e. unique) 'Int'.
 --
 --   prop> run (runFresh (replicateM n fresh)) === nub (run (runFresh (replicateM n fresh)))
-fresh :: (Member Fresh (Signature m), Algebra m) => m Int
+fresh :: m `Handles` Fresh => m Int
 fresh = send (Fresh pure)
 
 -- | Reset the fresh counter after running a computation.
 --
 --   prop> run (runFresh (resetFresh (replicateM m fresh) *> replicateM n fresh)) === run (runFresh (replicateM n fresh))
-resetFresh :: (Member Fresh (Signature m), Algebra m) => m a -> m a
+resetFresh :: m `Handles` Fresh => m a -> m a
 resetFresh m = send (Reset m pure)

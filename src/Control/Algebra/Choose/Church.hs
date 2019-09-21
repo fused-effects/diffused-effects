@@ -6,8 +6,7 @@ module Control.Algebra.Choose.Church
 , runChoose
 , ChooseC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

@@ -4,7 +4,7 @@ module Control.Algebra
   module Control.Algebra.Class
 , module Control.Algebra.Pure
 , module Control.Effect.Class
-, module Control.Effect.Sum
+, (:+:)(..)
 , Handles
 , send
 ) where

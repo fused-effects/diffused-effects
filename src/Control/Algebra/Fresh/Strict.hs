@@ -6,8 +6,7 @@ module Control.Algebra.Fresh.Strict
 , runFresh
 , FreshC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

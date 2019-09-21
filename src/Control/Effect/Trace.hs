@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts #-}
+{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts, TypeOperators #-}
 module Control.Effect.Trace
 ( -- * Trace effect
   Trace(..)
@@ -18,5 +18,5 @@ instance HFunctor Trace
 instance Effect   Trace
 
 -- | Append a message to the trace log.
-trace :: (Member Trace (Signature m), Algebra m) => String -> m ()
+trace :: m `Handles` Trace => String -> m ()
 trace message = send (Trace message (pure ()))

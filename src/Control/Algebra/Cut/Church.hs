@@ -7,8 +7,7 @@ module Control.Algebra.Cut.Church
 , runCutAll
 , CutC(..)
 -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

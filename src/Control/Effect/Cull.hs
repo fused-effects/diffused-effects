@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving, TypeOperators #-}
 module Control.Effect.Cull
 ( -- * Cull effect
   Cull(..)
@@ -30,7 +30,7 @@ instance Effect Cull where
 --   prop> run (runNonDet (runCull (cull (empty  <|> pure a)))) === [a]
 --   prop> run (runNonDet (runCull (cull (pure a <|> pure b) <|> pure c))) === [a, c]
 --   prop> run (runNonDet (runCull (cull (asum (map pure (repeat a)))))) === [a]
-cull :: (Algebra m, Member Cull (Signature m)) => m a -> m a
+cull :: m `Handles` Cull => m a -> m a
 cull m = send (Cull m pure)
 
 

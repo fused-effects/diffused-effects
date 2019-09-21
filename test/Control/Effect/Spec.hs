@@ -1,10 +1,10 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, MultiWayIf, TemplateHaskell, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, MultiWayIf, TemplateHaskell, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
 {-# OPTIONS_GHC -O2 -fplugin Test.Inspection.Plugin #-}
 module Control.Effect.Spec
 ( spec
 ) where
 
-import Control.Effect.Algebra
+import Control.Algebra
 import Control.Effect.Error
 import Control.Effect.Fail
 import Control.Effect.Reader
@@ -25,7 +25,7 @@ inference = describe "inference" $ do
   it "can be wrapped for better type inference" $
     run (runHasEnv (runEnv "i" ((++) <$> askEnv <*> askEnv))) `shouldBe` "ii"
 
-askEnv :: (Member (Reader env) sig, Algebra m) => HasEnv env m env
+askEnv :: m `Handles` Reader env => HasEnv env m env
 askEnv = ask
 
 runEnv :: env -> HasEnv env (ReaderC env m) a -> HasEnv env m a
@@ -50,7 +50,8 @@ reinterpretReader = runReinterpretReaderC
 newtype ReinterpretReaderC r m a = ReinterpretReaderC { runReinterpretReaderC :: StateC r m a }
   deriving (Applicative, Functor, Monad, MonadFail)
 
-instance (Algebra m, Effect sig) => Algebra (Reader r :+: sig) (ReinterpretReaderC r m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (ReinterpretReaderC r m) where
+  type Signature (ReinterpretReaderC r m) = Reader r :+: Signature m
   alg (L (Ask       k)) = ReinterpretReaderC get >>= k
   alg (L (Local f m k)) = do
     a <- ReinterpretReaderC get
@@ -76,10 +77,11 @@ interposeFail = runInterposeC
 newtype InterposeC m a = InterposeC { runInterposeC :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance (Algebra m, Member Fail sig) => MonadFail (InterposeC m) where
+instance m `Handles` Fail => MonadFail (InterposeC m) where
   fail s = send (Fail s)
 
-instance (Algebra m, Member Fail sig) => Algebra sig (InterposeC m) where
+instance m `Handles` Fail => Algebra (InterposeC m) where
+  type Signature (InterposeC m) = Signature m
   alg op
     | Just (Fail s) <- prj op = InterposeC (send (Fail ("hello, " ++ s)))
     | otherwise               = InterposeC (alg (handleCoercible op))

@@ -6,8 +6,7 @@ module Control.Algebra.Trace.Returning
 , runTrace
 , TraceC(..)
 -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

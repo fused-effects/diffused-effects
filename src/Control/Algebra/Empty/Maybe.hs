@@ -6,8 +6,7 @@ module Control.Algebra.Empty.Maybe
 , runEmpty
 , EmptyC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

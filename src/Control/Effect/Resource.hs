@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving, TypeOperators #-}
 module Control.Effect.Resource
 ( -- * Resource effect
   Resource(..)
@@ -34,7 +34,7 @@ instance Effect Resource where
 -- if @op@ throws an exception.
 --
 -- 'bracket' is safe in the presence of asynchronous exceptions.
-bracket :: (Member Resource (Signature m), Algebra m)
+bracket :: m `Handles` Resource
         => m resource           -- ^ computation to run first ("acquire resource")
         -> (resource -> m any)  -- ^ computation to run last ("release resource")
         -> (resource -> m a)    -- ^ computation to run in-between
@@ -43,7 +43,7 @@ bracket acquire release use = send (Resource acquire release use pure)
 
 -- | Like 'bracket', but only performs the final action if there was an
 -- exception raised by the in-between computation.
-bracketOnError :: (Member Resource (Signature m), Algebra m)
+bracketOnError :: m `Handles` Resource
                => m resource           -- ^ computation to run first ("acquire resource")
                -> (resource -> m any)  -- ^ computation to run last ("release resource")
                -> (resource -> m a)    -- ^ computation to run in-between
@@ -51,14 +51,14 @@ bracketOnError :: (Member Resource (Signature m), Algebra m)
 bracketOnError acquire release use = send (OnError acquire release use pure)
 
 -- | Like 'bracket', but for the simple case of one computation to run afterward.
-finally :: (Member Resource (Signature m), Algebra m)
+finally :: m `Handles` Resource
         => m a -- ^ computation to run first
         -> m b -- ^ computation to run afterward (even if an exception was raised)
         -> m a
 finally act end = bracket (pure ()) (const end) (const act)
 
 -- | Like 'bracketOnError', but for the simple case of one computation to run afterward.
-onException :: (Member Resource (Signature m), Algebra m)
+onException :: m `Handles` Resource
         => m a -- ^ computation to run first
         -> m b -- ^ computation to run afterward if an exception was raised
         -> m a

@@ -2,7 +2,7 @@ module Control.Effect
 ( module X
 ) where
 
-import Control.Algebra          as X ((:+:), Algebra, Effect, HFunctor, Member)
+import Control.Algebra          as X (Effect, HFunctor, Handles)
 import Control.Effect.Choose    as X (Choose)
 import Control.Effect.Cull      as X (Cull)
 import Control.Effect.Cut       as X (Cut)

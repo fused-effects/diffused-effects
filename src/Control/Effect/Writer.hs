@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving, TypeOperators #-}
 module Control.Effect.Writer
 ( -- * Writer effect
   Writer(..)
@@ -32,21 +32,21 @@ instance Effect (Writer w) where
 -- | Write a value to the log.
 --
 --   prop> fst (run (runWriter (mapM_ (tell . Sum) (0 : ws)))) === foldMap Sum ws
-tell :: (Member (Writer w) (Signature m), Algebra m) => w -> m ()
+tell :: m `Handles` Writer w => w -> m ()
 tell w = send (Tell w (pure ()))
 {-# INLINE tell #-}
 
 -- | Run a computation, returning the pair of its output and its result.
 --
 --   prop> run (runWriter (fst <$ tell (Sum a) <*> listen @(Sum Integer) (tell (Sum b)))) === (Sum a <> Sum b, Sum b)
-listen :: (Member (Writer w) (Signature m), Algebra m) => m a -> m (w, a)
+listen :: m `Handles` Writer w => m a -> m (w, a)
 listen m = send (Listen m (curry pure))
 {-# INLINE listen #-}
 
 -- | Run a computation, applying a function to its output and returning the pair of the modified output and its result.
 --
 --   prop> run (runWriter (fst <$ tell (Sum a) <*> listens @(Sum Integer) (applyFun f) (tell (Sum b)))) === (Sum a <> Sum b, applyFun f (Sum b))
-listens :: (Member (Writer w) (Signature m), Algebra m) => (w -> b) -> m a -> m (b, a)
+listens :: m `Handles` Writer w => (w -> b) -> m a -> m (b, a)
 listens f m = send (Listen m (curry pure . f))
 {-# INLINE listens #-}
 
@@ -54,7 +54,7 @@ listens f m = send (Listen m (curry pure . f))
 --
 --   prop> run (execWriter (censor (applyFun f) (tell (Sum a)))) === applyFun f (Sum a)
 --   prop> run (execWriter (tell (Sum a) *> censor (applyFun f) (tell (Sum b)) *> tell (Sum c))) === (Sum a <> applyFun f (Sum b) <> Sum c)
-censor :: (Member (Writer w) (Signature m), Algebra m) => (w -> w) -> m a -> m a
+censor :: m `Handles` Writer w => (w -> w) -> m a -> m a
 censor f m = send (Censor f m pure)
 {-# INLINE censor #-}
 

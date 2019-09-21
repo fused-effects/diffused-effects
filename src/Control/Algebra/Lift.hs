@@ -6,8 +6,7 @@ module Control.Algebra.Lift
 , runM
 , LiftC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

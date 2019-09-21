@@ -6,8 +6,7 @@ module Control.Algebra.Resumable.Resume
 , runResumable
 , ResumableC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

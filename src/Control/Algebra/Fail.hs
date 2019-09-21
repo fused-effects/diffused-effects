@@ -6,8 +6,7 @@ module Control.Algebra.Fail
 , runFail
 , FailC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , Fail.MonadFail(..)
 , run
 ) where

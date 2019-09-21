@@ -3,7 +3,7 @@ module Parser
 ( spec
 ) where
 
-import Control.Effect.Algebra
+import Control.Algebra
 import Control.Effect.Cut
 import Control.Effect.NonDet
 import Control.Effect.State
@@ -76,16 +76,16 @@ data Symbol m k = Satisfy (Char -> Bool) (Char -> m k)
   deriving stock (Functor, Generic1)
   deriving anyclass (HFunctor, Effect)
 
-satisfy :: (Algebra m, Member Symbol (Signature m)) => (Char -> Bool) -> m Char
+satisfy :: m `Handles` Symbol => (Char -> Bool) -> m Char
 satisfy p = send (Satisfy p pure)
 
-char :: (Algebra m, Member Symbol (Signature m)) => Char -> m Char
+char :: m `Handles` Symbol => Char -> m Char
 char = satisfy . (==)
 
-digit :: (Algebra m, Member Symbol (Signature m)) => m Char
+digit :: m `Handles` Symbol => m Char
 digit = satisfy isDigit
 
-parens :: (Algebra m, Member Symbol (Signature m)) => m a -> m a
+parens :: m `Handles` Symbol => m a -> m a
 parens m = char '(' *> m <* char ')'
 
 
@@ -108,19 +108,19 @@ instance (Alternative m, Algebra m, Effect (Signature m)) => Algebra (ParseC m) 
   {-# INLINE alg #-}
 
 
-expr :: (Alternative m, Algebra m, Member Cut (Signature m), Member Symbol (Signature m)) => m Int
+expr :: (Alternative m, m `Handles` Cut, m `Handles` Symbol) => m Int
 expr = do
   i <- term
   call ((i +) <$ char '+' <* cut <*> expr
     <|> pure i)
 
-term :: (Alternative m, Algebra m, Member Cut (Signature m), Member Symbol (Signature m)) => m Int
+term :: (Alternative m, m `Handles` Cut, m `Handles` Symbol) => m Int
 term = do
   i <- factor
   call ((i *) <$ char '*' <* cut <*> term
     <|> pure i)
 
-factor :: (Alternative m, Algebra m, Member Cut (Signature m), Member Symbol (Signature m)) => m Int
+factor :: (Alternative m, m `Handles` Cut, m `Handles` Symbol) => m Int
 factor
   =   read <$> some digit
   <|> parens expr

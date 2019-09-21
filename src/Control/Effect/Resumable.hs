@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving, TypeOperators #-}
 module Control.Effect.Resumable
 ( -- * Resumable effect
   Resumable(..)
@@ -22,7 +22,7 @@ instance Effect (Resumable err) where
 -- | Throw an error which can be resumed with a value of its result type.
 --
 --   prop> run (runResumable (throwResumable (Identity a))) === Left (SomeError (Identity a))
-throwResumable :: (Member (Resumable err) (Signature m), Algebra m) => err a -> m a
+throwResumable :: m `Handles` Resumable err => err a -> m a
 throwResumable err = send (Resumable err pure)
 
 

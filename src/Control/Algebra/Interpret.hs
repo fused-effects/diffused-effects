@@ -7,8 +7,7 @@ module Control.Algebra.Interpret
 , Reifies
 , Handler
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

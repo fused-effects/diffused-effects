@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts #-}
+{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts, TypeOperators #-}
 module Control.Effect.Lift
 ( -- * Lift effect
   Lift(..)
@@ -17,5 +17,5 @@ instance Functor m => Effect   (Lift m)
 -- | Given a @Lift n@ constraint in a signature carried by @m@, 'sendM'
 -- promotes arbitrary actions of type @n a@ to @m a@. It is spiritually
 -- similar to @lift@ from the @MonadTrans@ typeclass.
-sendM :: (Member (Lift n) (Signature m), Algebra m, Functor n) => n a -> m a
+sendM :: (m `Handles` Lift n, Functor n) => n a -> m a
 sendM = send . Lift . fmap pure

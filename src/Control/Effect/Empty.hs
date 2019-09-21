@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts, KindSignatures #-}
+{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts, KindSignatures, TypeOperators #-}
 module Control.Effect.Empty
 ( -- * Empty effect
   Empty(..)
@@ -20,5 +20,5 @@ instance Effect   Empty
 -- | Abort the computation.
 --
 --   prop> run (runEmpty abort) === Nothing
-abort :: (Algebra m, Member Empty (Signature m)) => m a
+abort :: m `Handles` Empty => m a
 abort = send Empty

@@ -6,8 +6,7 @@ module Control.Algebra.Reader
 , runReader
 , ReaderC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

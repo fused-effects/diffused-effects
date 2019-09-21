@@ -7,8 +7,7 @@ module Control.Algebra.Resumable.Abort
 , ResumableC(..)
 , SomeError(..)
   -- * Re-exports
-, Algebra
-, Member
+, Handles
 , run
 ) where
 

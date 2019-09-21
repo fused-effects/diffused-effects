@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving #-}
+{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, StandaloneDeriving, TypeOperators #-}
 module Control.Effect.Error
 ( -- * Error effect
   Error(..)
@@ -25,7 +25,7 @@ instance Effect (Error exc) where
 -- | Throw an error, escaping the current computation up to the nearest 'catchError' (if any).
 --
 --   prop> run (runError (throwError a)) === Left @Int @Int a
-throwError :: (Member (Error exc) (Signature m), Algebra m) => exc -> m a
+throwError :: m `Handles` Error exc => exc -> m a
 throwError = send . Throw
 
 -- | Run a computation which can throw errors with a handler to run on error.
@@ -39,7 +39,7 @@ throwError = send . Throw
 --   prop> run (runError (pure a `catchError` pure)) === Right a
 --   prop> run (runError (throwError a `catchError` pure)) === Right @Int @Int a
 --   prop> run (runError (throwError a `catchError` (throwError @Int))) === Left @Int @Int a
-catchError :: (Member (Error exc) (Signature m), Algebra m) => m a -> (exc -> m a) -> m a
+catchError :: m `Handles` Error exc => m a -> (exc -> m a) -> m a
 catchError m h = send (Catch m h pure)
 
 
