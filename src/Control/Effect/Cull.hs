@@ -3,9 +3,12 @@ module Control.Effect.Cull
 ( -- * Cull effect
   Cull(..)
 , cull
+  -- * Re-exports
+, module Control.Effect.NonDet
 ) where
 
 import Control.Algebra
+import Control.Effect.NonDet
 
 -- | 'Cull' effects are used with 'Choose' to provide control over branching.
 data Cull m k
