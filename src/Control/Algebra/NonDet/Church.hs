@@ -87,10 +87,10 @@ instance MonadTrans NonDetC where
   lift m = NonDetC (\ _ leaf _ -> m >>= leaf)
   {-# INLINE lift #-}
 
-instance (Algebra sig m, Effect sig) => Algebra (Empty :+: Choose :+: sig) (NonDetC m) where
-  alg (L Empty)          = empty
-  alg (R (L (Choose k))) = k True <|> k False
-  alg (R (R other))      = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
+instance (Algebra sig m, Effect sig) => Algebra ((Empty :+: Choose) :+: sig) (NonDetC m) where
+  alg (L (L Empty))      = empty
+  alg (L (R (Choose k))) = k True <|> k False
+  alg (R other)          = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
   {-# INLINE alg #-}
 
 
