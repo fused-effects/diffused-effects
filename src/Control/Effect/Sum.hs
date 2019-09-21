@@ -48,10 +48,10 @@ send = alg . inj
 type family FromJust (maybe :: Maybe a) :: a where
   FromJust ('Just a) = a
 
-type family (left :: Maybe k) <> (right :: Maybe k) :: Maybe k where
-  'Just a <> _       = 'Just a
-  _       <> 'Just b = 'Just b
-  _       <> _       = 'Nothing
+type family (left :: Maybe k) <|> (right :: Maybe k) :: Maybe k where
+  'Just a <|> _       = 'Just a
+  _       <|> 'Just b = 'Just b
+  _       <|> _       = 'Nothing
 
 type family Prepend (s :: j -> k) (ss :: Maybe j) :: Maybe k where
   Prepend s ('Just ss) = 'Just (s ss)
@@ -62,12 +62,12 @@ data R a
 
 type family PathTo' (side :: * -> *) sub sup :: Maybe * where
   PathTo' s t t         = 'Just (s ())
-  PathTo' s t (l :+: r) = Prepend s (PathTo' L t l <> PathTo' R t r)
+  PathTo' s t (l :+: r) = Prepend s (PathTo' L t l <|> PathTo' R t r)
   PathTo' _ _ _         = 'Nothing
 
 type family PathTo sub sup where
   PathTo t t         = ()
-  PathTo t (l :+: r) = FromJust (PathTo' L t l <> PathTo' R t r)
+  PathTo t (l :+: r) = FromJust (PathTo' L t l <|> PathTo' R t r)
 
 class MemberAt path (sub :: (* -> *) -> (* -> *)) sup | path sup -> sub where
   inj' :: sub m a -> sup m a
