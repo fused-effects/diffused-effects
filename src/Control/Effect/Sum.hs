@@ -26,19 +26,9 @@ class Member (sub :: (* -> *) -> (* -> *)) sup where
   inj :: sub m a -> sup m a
   prj :: sup m a -> Maybe (sub m a)
 
-instance Member sub sub where
-  inj = id
-  prj = Just
-
-instance {-# OVERLAPPABLE #-} Member sub (sub :+: sup) where
-  inj = L . inj
-  prj (L f) = Just f
-  prj _     = Nothing
-
-instance {-# OVERLAPPABLE #-} Member sub sup => Member sub (sub' :+: sup) where
-  inj = R . inj
-  prj (R g) = prj g
-  prj _     = Nothing
+instance (PathTo sub sup ~ path, MemberAt path sub sup) => Member sub sup where
+  inj = inj' @path
+  prj = prj' @path
 
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
@@ -88,11 +78,3 @@ instance MemberAt path t r => MemberAt (R path) t (l :+: r) where
   inj' = R . inj' @path
   prj' (R r) = prj'  @path r
   prj' _     = Nothing
-
-class Element (sub :: (* -> *) -> (* -> *)) sup where
-  inje :: sub m a -> sup m a
-  proj :: sup m a -> Maybe (sub m a)
-
-instance (PathTo sub sup ~ path, MemberAt path sub sup) => Element sub sup where
-  inje = inj' @path
-  proj = prj' @path
