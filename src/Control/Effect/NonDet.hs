@@ -10,4 +10,4 @@ import Control.Effect.Choose
 import Control.Effect.Empty
 import Control.Effect.Sum
 
-type NonDet = Choose :+: Empty
+type NonDet = Empty :+: Choose
