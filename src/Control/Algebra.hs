@@ -2,9 +2,9 @@
 module Control.Algebra
 ( -- * Re-exports
   module Control.Algebra.Class
+, module Control.Algebra.Pure
 , module Control.Effect.Class
 , module Control.Effect.Sum
-, run
 , Handles
 , send
 ) where
