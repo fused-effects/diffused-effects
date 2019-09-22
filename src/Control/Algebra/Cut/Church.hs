@@ -2,6 +2,8 @@
 module Control.Algebra.Cut.Church
 ( -- * Cut effect
   module Control.Effect.Cut
+  -- * NonDet effects
+, module Control.Effect.NonDet
   -- * Cut carrier
 , runCut
 , runCutAll
@@ -13,9 +15,8 @@ module Control.Algebra.Cut.Church
 
 import Control.Algebra
 import Control.Applicative (Alternative(..))
-import Control.Effect.Choose
 import Control.Effect.Cut
-import Control.Effect.Empty
+import Control.Effect.NonDet
 import Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix
@@ -76,10 +77,10 @@ instance MonadTrans CutC where
   {-# INLINE lift #-}
 
 instance (Algebra m, Effect (Signature m)) => Algebra (CutC m) where
-  type Signature (CutC m) = Cut :+: Empty :+: Choose :+: Signature m
+  type Signature (CutC m) = Cut :+: NonDet :+: Signature m
   alg (L Cutfail)    = CutC $ \ _    _   fail -> fail
   alg (L (Call m k)) = CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
-  alg (R (L Empty))          = empty
-  alg (R (R (L (Choose k)))) = k True <|> k False
-  alg (R (R (R other)))      = CutC $ \ cons nil _ -> alg (handle [()] (fmap concat . traverse runCutAll) other) >>= foldr cons nil
+  alg (R (L (L Empty)))      = empty
+  alg (R (L (R (Choose k)))) = k True <|> k False
+  alg (R (R other))          = CutC $ \ cons nil _ -> alg (handle [()] (fmap concat . traverse runCutAll) other) >>= foldr cons nil
   {-# INLINE alg #-}
