@@ -3,10 +3,10 @@ module Main
 ( main
 ) where
 
-import Control.Effect.Algebra
-import Control.Effect.Interpret
-import Control.Effect.Writer
-import Control.Effect.State
+import Control.Algebra
+import Control.Algebra.Interpret
+import Control.Algebra.State.Strict
+import Control.Algebra.Writer.Strict
 import Control.Monad (ap, replicateM_)
 import Data.Functor.Identity
 import Data.Monoid (Sum(..))
