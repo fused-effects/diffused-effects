@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds, DataKinds, DeriveGeneric, DeriveTraversable, FlexibleContexts, FlexibleInstances, FunctionalDependencies, PolyKinds, ScopedTypeVariables, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds, DataKinds, DeriveGeneric, DeriveTraversable, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, PolyKinds, ScopedTypeVariables, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum
 ( (:+:)(..)
 , Member
@@ -53,7 +53,7 @@ type family PathTo sub sup where
   PathTo t t         = ()
   PathTo t (l :+: r) = FromJust (PathTo' L t l <|> PathTo' R t r)
 
-class MemberAt path (sub :: (* -> *) -> (* -> *)) sup | path sup -> sub where
+class MemberAt path (sub :: (* -> *) -> (* -> *)) sup where
   inj' :: sub m a -> sup m a
   prj' :: sup m a -> Maybe (sub m a)
 
