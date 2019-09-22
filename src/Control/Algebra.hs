@@ -14,9 +14,9 @@ import Control.Algebra.Pure
 import Control.Effect.Class
 import Control.Effect.Sum
 
-type Has effect m = (Member effect (Signature m), Algebra m)
+type Has eff m = (Member eff (Signature m), Algebra m)
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
-send :: Has effect m => effect m a -> m a
+send :: Has eff m => eff m a -> m a
 send = alg . inj
 {-# INLINE send #-}
