@@ -23,5 +23,5 @@ send = alg . inj
 
 
 class (Algebra m, Member eff sig) => HasIn sig eff m
-instance {-# OVERLAPPABLE #-} (Algebra m, Member eff (l :+: r)) => HasIn (l :+: r) eff m
 instance {-# OVERLAPPABLE #-} Algebra m => HasIn eff eff m
+instance {-# OVERLAPPABLE #-} (Algebra m, Member eff (l :+: r)) => HasIn (l :+: r) eff m
