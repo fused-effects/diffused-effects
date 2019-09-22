@@ -1,14 +1,11 @@
-{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds, DataKinds, DeriveGeneric, DeriveTraversable, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, PolyKinds, ScopedTypeVariables, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveGeneric, DeriveTraversable, FlexibleInstances, KindSignatures, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum
 ( (:+:)(..)
-, Member
-, inj
-, prj
+, Member(..)
 ) where
 
 import Control.Effect.Class
 import GHC.Generics (Generic1)
-import GHC.TypeLits (ErrorMessage(..), TypeError)
 
 data (f :+: g) (m :: * -> *) k
   = L (f m k)
@@ -21,65 +18,35 @@ instance (HFunctor f, HFunctor g) => HFunctor (f :+: g)
 instance (Effect f, Effect g)     => Effect   (f :+: g)
 
 
-type Member (sub :: (* -> *) -> (* -> *)) sup = MemberAt (PathTo sub sup) sub sup
+class Member (sub :: (* -> *) -> (* -> *)) sup where
+  inj :: sub m a -> sup m a
+  prj :: sup m a -> Maybe (sub m a)
 
-inj :: forall sub m a sup . Member sub sup => sub m a -> sup m a
-inj = inj' @(PathTo sub sup)
+instance Member sub sub where
+  inj = id
+  prj = Just
 
-prj :: forall sub m a sup . Member sub sup => sup m a -> Maybe (sub m a)
-prj = prj' @(PathTo sub sup)
+instance {-# OVERLAPPABLE #-}
+         Member sub (l1 :+: l2 :+: r)
+      => Member sub ((l1 :+: l2) :+: r) where
+  inj = reassoc . inj where
+    reassoc (L l)     = L (L l)
+    reassoc (R (L l)) = L (R l)
+    reassoc (R (R r)) = R r
+  prj = prj . reassoc where
+    reassoc (L (L l)) = L l
+    reassoc (L (R l)) = R (L l)
+    reassoc (R r)     = R (R r)
 
+instance {-# OVERLAPPABLE #-}
+         Member sub (sub :+: r) where
+  inj = L
+  prj (L l) = Just l
+  prj _     = Nothing
 
-type family FromMaybe (x :: a) (maybe :: Maybe a) :: a where
-  FromMaybe _ ('Just a) = a
-  FromMaybe a 'Nothing  = a
-
-type family (left :: Maybe k) <|> (right :: Maybe k) :: Maybe k where
-  'Just a <|> _       = 'Just a
-  _       <|> 'Just b = 'Just b
-  _       <|> _       = 'Nothing
-
-type family Prepend (s :: j -> k) (ss :: Maybe j) :: Maybe k where
-  Prepend s ('Just ss) = 'Just (s ss)
-  Prepend _ 'Nothing   = 'Nothing
-
-data L a
-data R a
-data Err
-
-type family PathTo' (side :: * -> *) (sub :: (* -> *) -> (* -> *)) sup :: Maybe * where
-  PathTo' s t t         = 'Just (s ())
-  PathTo' s t (l :+: r) = Prepend s (PathTo' L t l <|> PathTo' R t r)
-  PathTo' _ _ _         = 'Nothing
-
-type family PathTo sub sup where
-  PathTo t t         = ()
-  PathTo t (l :+: r) = FromMaybe Err (PathTo' L t l <|> PathTo' R t r)
-  PathTo _ _         = Err
-
-class MemberAt path (sub :: (* -> *) -> (* -> *)) sup where
-  inj' :: sub m a -> sup m a
-  prj' :: sup m a -> Maybe (sub m a)
-
-instance MemberAt () t t where
-  inj' = id
-  prj' = Just
-
-instance MemberAt path t l => MemberAt (L path) t (l :+: r) where
-  inj' = L . inj' @path
-  prj' (L l) = prj'  @path l
-  prj' _     = Nothing
-
-instance MemberAt path t r => MemberAt (R path) t (l :+: r) where
-  inj' = R . inj' @path
-  prj' (R r) = prj'  @path r
-  prj' _     = Nothing
-
-type family ShowTree t where
-  ShowTree (l :+: r) = ShowTree l ':<>: 'Text ", " ':<>: ShowTree r
-  ShowTree t         = 'ShowType t
-
-instance TypeError ('ShowType t ':<>: 'Text " is not among the handled effects (" ':<>: ShowTree u ':<>: 'Text ")")
-      => MemberAt Err t u where
-  inj' _ = undefined
-  prj' _ = undefined
+instance {-# OVERLAPPABLE #-}
+         Member sub r
+      => Member sub (l :+: r) where
+  inj = R . inj
+  prj (R r) = prj r
+  prj _     = Nothing
