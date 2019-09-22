@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveFunctor, FlexibleContexts, FlexibleInstances, LambdaCase, MultiParamTypeClasses, RankNTypes,
-             TypeApplications, TypeOperators, UndecidableInstances #-}
+             TypeApplications, UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- Based largely on the implementation by Sreekar Shastry,

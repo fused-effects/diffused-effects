@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts, TypeOperators #-}
+{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts #-}
 module Control.Effect.Trace
 ( -- * Trace effect
   Trace(..)

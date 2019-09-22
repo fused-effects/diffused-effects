@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, FlexibleContexts, FlexibleInstances, LambdaCase, RankNTypes, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, FlexibleContexts, FlexibleInstances, LambdaCase, RankNTypes, TypeApplications, TypeFamilies, UndecidableInstances #-}
 module Main
 ( main
 ) where
