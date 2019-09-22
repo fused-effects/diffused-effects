@@ -4,9 +4,9 @@ module Parser
 ) where
 
 import Control.Algebra
-import Control.Effect.Cut
-import Control.Effect.NonDet
-import Control.Effect.State
+import Control.Algebra.Cut.Church
+import Control.Algebra.NonDet.Church
+import Control.Algebra.State.Strict
 import Control.Monad (replicateM)
 import Data.Char
 import Data.List (intercalate)
@@ -98,7 +98,7 @@ newtype ParseC m a = ParseC { runParseC :: StateC String m a }
   deriving newtype (Alternative, Applicative, Functor, Monad)
 
 instance (Alternative m, Algebra m, Effect (Signature m)) => Algebra (ParseC m) where
-  type Signature (ParserC m) = Symbol :+: Signature m
+  type Signature (ParseC m) = Symbol :+: Signature m
   alg (L (Satisfy p k)) = do
     input <- ParseC get
     case input of
