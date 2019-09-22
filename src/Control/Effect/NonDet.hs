@@ -9,7 +9,7 @@ module Control.Effect.NonDet
 
 import Control.Applicative (Alternative(..))
 import Control.Effect.Choose hiding (many, some)
-import Control.Effect.Empty
+import Control.Effect.Empty hiding (empty)
 import Control.Effect.Sum
 
 type NonDet = Empty :+: Choose

@@ -2,7 +2,7 @@
 module Control.Effect.Empty
 ( -- * Empty effect
   Empty(..)
-, abort
+, empty
 ) where
 
 import Control.Algebra
@@ -19,6 +19,6 @@ instance Effect   Empty
 
 -- | Abort the computation.
 --
---   prop> run (runEmpty abort) === Nothing
-abort :: Has Empty m => m a
-abort = send Empty
+--   prop> run (runEmpty empty) === Nothing
+empty :: Has Empty m => m a
+empty = send Empty
