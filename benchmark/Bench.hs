@@ -64,10 +64,10 @@ main = defaultMain
     ]
   ]
 
-tellLoop :: Has Writer (Sum Int) => Int -> m ()
+tellLoop :: Has (Writer (Sum Int)) m => Int -> m ()
 tellLoop i = replicateM_ i (tell (Sum (1 :: Int)))
 
-modLoop :: Has (State (Sum Int)) => Int -> m ()
+modLoop :: Has (State (Sum Int)) m => Int -> m ()
 modLoop i = replicateM_ i (modify (+ (Sum (1 :: Int))))
 
 newtype Cod m a = Cod { unCod :: forall b . (a -> m b) -> m b }
