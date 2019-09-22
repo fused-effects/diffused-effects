@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Fresh.Strict
 ( -- * Fresh effect
   module Control.Effect.Fresh
@@ -6,8 +6,7 @@ module Control.Algebra.Fresh.Strict
 , runFresh
 , FreshC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Has
 , run
 ) where
 
@@ -31,7 +30,8 @@ runFresh = evalState 0 . runFreshC
 newtype FreshC m a = FreshC { runFreshC :: StateC Int m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Algebra sig m, Effect sig) => Algebra (Fresh :+: sig) (FreshC m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (FreshC m) where
+  type Signature (FreshC m) = Fresh :+: Signature m
   alg (L (Fresh   k)) = FreshC $ do
     i <- get
     put (succ i)

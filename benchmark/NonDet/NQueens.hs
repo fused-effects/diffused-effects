@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveFunctor, FlexibleContexts, FlexibleInstances, LambdaCase, MultiParamTypeClasses, RankNTypes,
-             TypeApplications, TypeOperators, UndecidableInstances #-}
+             TypeApplications, UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- Based largely on the implementation by Sreekar Shastry,
@@ -8,8 +8,7 @@
 module NonDet.NQueens (runQueens, benchmark) where
 
 import Control.Applicative
-import Control.Effect
-import Control.Effect.NonDet
+import Control.Algebra.NonDet.Church
 import Control.Monad
 import Data.Foldable
 import Data.List
@@ -36,7 +35,7 @@ isSafeIn (i,j) qs = null (diags (i,j) `intersect` underThreat)
     qs' = zip [1..length qs] qs
     underThreat = qs' >>= diags
 
-addOne :: (Member NonDet sig, Algebra sig m, Alternative m) => Int -> Board -> m Board
+addOne :: (Alternative m, Monad m) => Int -> Board -> m Board
 addOne n curr = do
   let i = length curr + 1
   let choose = asum . fmap pure
@@ -44,7 +43,7 @@ addOne n curr = do
   guard ((i, j) `isSafeIn` curr)
   pure (curr ++ [j])
 
-queens :: (Member NonDet sig, Algebra sig m, Alternative m) => Int -> m Board
+queens :: (Alternative m, Monad m) => Int -> m Board
 queens n = foldl' (>>=) (pure empty) (replicate n (addOne n))
 
 runQueens :: Int -> [Board]

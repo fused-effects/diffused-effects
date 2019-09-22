@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, ScopedTypeVariables, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, ScopedTypeVariables, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Writer.Strict
 ( -- * Writer effect
   module Control.Effect.Writer
@@ -7,8 +7,7 @@ module Control.Algebra.Writer.Strict
 , execWriter
 , WriterC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Has
 , run
 ) where
 
@@ -43,7 +42,8 @@ execWriter = fmap fst . runWriter
 newtype WriterC w m a = WriterC { runWriterC :: StateC w m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Monoid w, Algebra sig m, Effect sig) => Algebra (Writer w :+: sig) (WriterC w m) where
+instance (Monoid w, Algebra m, Effect (Signature m)) => Algebra (WriterC w m) where
+  type Signature (WriterC w m) = Writer w :+: Signature m
   alg (L (Tell w     k)) = WriterC $ do
     modify (`mappend` w)
     runWriterC k

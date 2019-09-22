@@ -1,4 +1,4 @@
-{-# LANGUAGE EmptyCase, MultiParamTypeClasses #-}
+{-# LANGUAGE EmptyCase, TypeFamilies #-}
 module Control.Algebra.Pure
 ( -- * Pure effect
   module Control.Effect.Pure
@@ -54,6 +54,7 @@ instance MonadFix PureC where
   mfix f = PureC (fix (runPureC . f))
   {-# INLINE mfix #-}
 
-instance Algebra Pure PureC where
+instance Algebra PureC where
+  type Signature PureC = Pure
   alg v = case v of {}
   {-# INLINE alg #-}

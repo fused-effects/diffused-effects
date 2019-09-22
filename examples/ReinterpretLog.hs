@@ -20,10 +20,10 @@
 {-# LANGUAGE InstanceSigs               #-}
 {-# LANGUAGE KindSignatures             #-}
 {-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
@@ -33,10 +33,10 @@ module ReinterpretLog
   , runApplication
   ) where
 
-import Control.Effect.Algebra
-import Control.Effect.Lift
-import Control.Effect.Reader
-import Control.Effect.Writer
+import Control.Algebra
+import Control.Algebra.Lift
+import Control.Algebra.Reader
+import Control.Algebra.Writer.Strict
 import Control.Monad.IO.Class (MonadIO(..))
 import Data.Function          ((&))
 import Data.Kind              (Type)
@@ -64,10 +64,7 @@ renderLogMessage = \case
   Info  message -> "[info] "  ++ message
 
 -- The application: it logs two messages, then quits.
-application ::
-     ( Algebra sig m
-     , Member (Log Message) sig
-     )
+application :: Has (Log Message) m
   => m ()
 application = do
   log (Debug "debug message")
@@ -113,10 +110,7 @@ data Log (a :: Type) (m :: Type -> Type) (k :: Type)
   deriving anyclass (HFunctor, Effect)
 
 -- Log an 'a'.
-log ::
-     ( Algebra sig m
-     , Member (Log a) sig
-     )
+log :: Has (Log a) m
   => a
   -> m ()
 log x =
@@ -133,15 +127,16 @@ newtype LogStdoutC m a
   deriving newtype (Applicative, Functor, Monad, MonadIO)
 
 instance
-     -- So long as the 'm' monad can interpret the 'sig' effects (and also
+     -- So long as the 'm' monad can interpret the 'Signature m' effects (and also
      -- perform IO)...
-     ( Algebra sig m
+     ( Algebra m
      , MonadIO m
      )
-     -- ... the 'LogStdoutC m' monad can interpret 'Log String :+: sig' effects
-  => Algebra (Log String :+: sig) (LogStdoutC m) where
+     -- ... the 'LogStdoutC m' monad can interpret 'Log String :+: Signature m' effects
+  => Algebra (LogStdoutC m) where
+  type Signature (LogStdoutC m) = Log String :+: Signature m
 
-  alg :: (Log String :+: sig) (LogStdoutC m) a -> LogStdoutC m a
+  alg :: (Log String :+: Signature m) (LogStdoutC m) a -> LogStdoutC m a
   alg = \case
     L (Log message k) ->
       LogStdoutC $ do
@@ -166,17 +161,16 @@ newtype ReinterpretLogC s t m a
   deriving newtype (Applicative, Functor, Monad, MonadIO)
 
 instance
-     -- So long as the 'm' monad can interpret the 'sig' effects, one of which
+     -- So long as the 'm' monad can interpret the 'Signature m' effects, one of which
      -- is 'Log t'...
-     ( Algebra sig m
-     , Member (Log t) sig
-     )
-     -- ... the 'ReinterpretLogC s t m' monad can interpret 'Log s :+: sig'
+     Has (Log t) m
+     -- ... the 'ReinterpretLogC s t m' monad can interpret 'Log s :+: Signature m'
      -- effects
-  => Algebra (Log s :+: sig) (ReinterpretLogC s t m) where
+  => Algebra (ReinterpretLogC s t m) where
+  type Signature (ReinterpretLogC s t m) = Log s :+: Signature m
 
   alg ::
-       (Log s :+: sig) (ReinterpretLogC s t m) a
+       (Log s :+: Signature m) (ReinterpretLogC s t m) a
     -> ReinterpretLogC s t m a
   alg = \case
     L (Log s k) ->
@@ -205,16 +199,17 @@ newtype CollectLogMessagesC s m a
   deriving newtype (Applicative, Functor, Monad)
 
 instance
-     -- So long as the 'm' monad can interpret the 'sig' effects...
-     ( Algebra sig m
-     , Effect sig
+     -- So long as the 'm' monad can interpret the 'Signature m' effects...
+     ( Algebra m
+     , Effect (Signature m)
      )
-     -- ...the 'CollectLogMessagesC s m' monad can interpret 'Log s :+: sig'
+     -- ...the 'CollectLogMessagesC s m' monad can interpret 'Log s :+: Signature m'
      -- effects
-  => Algebra (Log s :+: sig) (CollectLogMessagesC s m) where
+  => Algebra (CollectLogMessagesC s m) where
+  type Signature (CollectLogMessagesC s m) = Log s :+: Signature m
 
   alg ::
-       (Log s :+: sig) (CollectLogMessagesC s m) a
+       (Log s :+: Signature m) (CollectLogMessagesC s m) a
     -> CollectLogMessagesC s m a
   alg = \case
     L (Log s k) ->

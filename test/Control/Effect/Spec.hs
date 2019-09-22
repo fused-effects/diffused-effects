@@ -1,14 +1,15 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, MultiWayIf, TemplateHaskell, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, MultiWayIf, TemplateHaskell, TypeApplications, TypeFamilies, TypeOperators, UndecidableInstances #-}
 {-# OPTIONS_GHC -O2 -fplugin Test.Inspection.Plugin #-}
 module Control.Effect.Spec
 ( spec
 ) where
 
-import Control.Effect.Algebra
-import Control.Effect.Error
-import Control.Effect.Fail
-import Control.Effect.Reader
-import Control.Effect.State
+import Control.Algebra
+import Control.Algebra.Error.Either
+import Control.Algebra.Fail
+import Control.Algebra.Reader
+import Control.Algebra.State.Strict
+import Control.Effect.Sum
 import Prelude hiding (fail)
 import Test.Hspec
 import Test.Inspection as Inspection
@@ -25,7 +26,7 @@ inference = describe "inference" $ do
   it "can be wrapped for better type inference" $
     run (runHasEnv (runEnv "i" ((++) <$> askEnv <*> askEnv))) `shouldBe` "ii"
 
-askEnv :: (Member (Reader env) sig, Algebra sig m) => HasEnv env m env
+askEnv :: Has (Reader env) m => HasEnv env m env
 askEnv = ask
 
 runEnv :: env -> HasEnv env (ReaderC env m) a -> HasEnv env m a
@@ -35,7 +36,8 @@ runEnv r = HasEnv . runReader r . runHasEnv
 newtype HasEnv env m a = HasEnv { runHasEnv :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance Algebra sig m => Algebra sig (HasEnv env m) where
+instance Algebra m => Algebra (HasEnv env m) where
+  type Signature (HasEnv env m) = Signature m
   alg = HasEnv . alg . handleCoercible
 
 
@@ -50,7 +52,8 @@ reinterpretReader = runReinterpretReaderC
 newtype ReinterpretReaderC r m a = ReinterpretReaderC { runReinterpretReaderC :: StateC r m a }
   deriving (Applicative, Functor, Monad, MonadFail)
 
-instance (Algebra sig m, Effect sig) => Algebra (Reader r :+: sig) (ReinterpretReaderC r m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (ReinterpretReaderC r m) where
+  type Signature (ReinterpretReaderC r m) = Reader r :+: Signature m
   alg (L (Ask       k)) = ReinterpretReaderC get >>= k
   alg (L (Local f m k)) = do
     a <- ReinterpretReaderC get
@@ -76,10 +79,11 @@ interposeFail = runInterposeC
 newtype InterposeC m a = InterposeC { runInterposeC :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance (Algebra sig m, Member Fail sig) => MonadFail (InterposeC m) where
+instance Has Fail m => MonadFail (InterposeC m) where
   fail s = send (Fail s)
 
-instance (Algebra sig m, Member Fail sig) => Algebra sig (InterposeC m) where
+instance Has Fail m => Algebra (InterposeC m) where
+  type Signature (InterposeC m) = Signature m
   alg op
     | Just (Fail s) <- prj op = InterposeC (send (Fail ("hello, " ++ s)))
     | otherwise               = InterposeC (alg (handleCoercible op))

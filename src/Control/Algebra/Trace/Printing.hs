@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Trace.Printing
 ( -- * Trace effect
   module Control.Effect.Trace
@@ -6,8 +6,7 @@ module Control.Algebra.Trace.Printing
 , runTrace
 , TraceC(..)
 -- * Re-exports
-, Algebra
-, Member
+, Has
 , run
 ) where
 
@@ -32,7 +31,8 @@ instance MonadTrans TraceC where
   lift = TraceC
   {-# INLINE lift #-}
 
-instance (MonadIO m, Algebra sig m) => Algebra (Trace :+: sig) (TraceC m) where
+instance (MonadIO m, Algebra m) => Algebra (TraceC m) where
+  type Signature (TraceC m) = Trace :+: Signature m
   alg (L (Trace s k)) = liftIO (hPutStrLn stderr s) *> k
   alg (R other)       = TraceC (alg (handleCoercible other))
   {-# INLINE alg #-}

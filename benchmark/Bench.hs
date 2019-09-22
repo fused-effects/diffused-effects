@@ -1,12 +1,12 @@
-{-# LANGUAGE DeriveFunctor, FlexibleContexts, FlexibleInstances, LambdaCase, MultiParamTypeClasses, RankNTypes, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, FlexibleContexts, FlexibleInstances, LambdaCase, RankNTypes, TypeApplications, TypeFamilies, UndecidableInstances #-}
 module Main
 ( main
 ) where
 
-import Control.Effect.Algebra
-import Control.Effect.Interpret
-import Control.Effect.Writer
-import Control.Effect.State
+import Control.Algebra
+import Control.Algebra.Interpret
+import Control.Algebra.State.Strict
+import Control.Algebra.Writer.Strict
 import Control.Monad (ap, replicateM_)
 import Data.Functor.Identity
 import Data.Monoid (Sum(..))
@@ -64,10 +64,10 @@ main = defaultMain
     ]
   ]
 
-tellLoop :: (Algebra sig m, Member (Writer (Sum Int)) sig) => Int -> m ()
+tellLoop :: Has (Writer (Sum Int)) m => Int -> m ()
 tellLoop i = replicateM_ i (tell (Sum (1 :: Int)))
 
-modLoop :: (Algebra sig m, Member (State (Sum Int)) sig) => Int -> m ()
+modLoop :: Has (State (Sum Int)) m => Int -> m ()
 modLoop i = replicateM_ i (modify (+ (Sum (1 :: Int))))
 
 newtype Cod m a = Cod { unCod :: forall b . (a -> m b) -> m b }
@@ -83,5 +83,6 @@ instance Applicative (Cod m) where
 instance Monad (Cod m) where
   Cod a >>= f = Cod (\ k -> a (runCod k . f))
 
-instance (Algebra sig m, Effect sig) => Algebra sig (Cod m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (Cod m) where
+  type Signature (Cod m) = Signature m
   alg op = Cod (\ k -> alg (handle (Identity ()) (runCod (pure . Identity) . runIdentity) op) >>= k . runIdentity)

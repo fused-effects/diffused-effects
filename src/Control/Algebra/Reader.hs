@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, FlexibleInstances, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, FlexibleInstances, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Reader
 ( -- * Reader effect
   module Control.Effect.Reader
@@ -6,8 +6,7 @@ module Control.Algebra.Reader
 , runReader
 , ReaderC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Has
 , run
 ) where
 
@@ -75,7 +74,8 @@ instance MonadUnliftIO m => MonadUnliftIO (ReaderC r m) where
   withRunInIO inner = ReaderC $ \r -> withRunInIO $ \go -> inner (go . runReader r)
   {-# INLINE withRunInIO #-}
 
-instance Algebra sig m => Algebra (Reader r :+: sig) (ReaderC r m) where
+instance Algebra m => Algebra (ReaderC r m) where
+  type Signature (ReaderC r m) = Reader r :+: Signature m
   alg (L (Ask       k)) = ReaderC (\ r -> runReader r (k r))
   alg (L (Local f m k)) = ReaderC (\ r -> runReader (f r) m) >>= k
   alg (R other)         = ReaderC (\ r -> alg (hmap (runReader r) other))

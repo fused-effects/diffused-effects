@@ -4,10 +4,12 @@ module Control.Effect.NonDet
   module Control.Effect.Choose
 , module Control.Effect.Empty
 , NonDet
+, Alternative(..)
 ) where
 
-import Control.Effect.Choose
-import Control.Effect.Empty
+import Control.Applicative (Alternative(..))
+import Control.Effect.Choose hiding ((<|>), many, some)
+import Control.Effect.Empty hiding (empty)
 import Control.Effect.Sum
 
 type NonDet = Empty :+: Choose

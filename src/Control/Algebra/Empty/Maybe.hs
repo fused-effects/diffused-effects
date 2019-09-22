@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, FlexibleInstances, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, FlexibleInstances, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Empty.Maybe
 ( -- * Empty effect
   module Control.Effect.Empty
@@ -6,8 +6,7 @@ module Control.Algebra.Empty.Maybe
 , runEmpty
 , EmptyC(..)
   -- * Re-exports
-, Algebra
-, Member
+, Has
 , run
 ) where
 
@@ -66,7 +65,8 @@ instance MonadTrans EmptyC where
   lift = EmptyC . fmap Just
   {-# INLINE lift #-}
 
-instance (Algebra sig m, Effect sig) => Algebra (Empty :+: sig) (EmptyC m) where
+instance (Algebra m, Effect (Signature m)) => Algebra (EmptyC m) where
+  type Signature (EmptyC m) = Empty :+: Signature m
   alg (L Empty) = EmptyC (pure Nothing)
   alg (R other) = EmptyC (alg (handle (Just ()) (maybe (pure Nothing) runEmptyC) other))
   {-# INLINE alg #-}

@@ -1,4 +1,4 @@
-{-# LANGUAGE ExplicitForAll, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, PolyKinds, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE ExplicitForAll, FlexibleInstances, GeneralizedNewtypeDeriving, PolyKinds, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Control.Algebra.Named
 ( runNamed
 , NamedC(..)
@@ -13,6 +13,13 @@ runNamed = runNamedC
 newtype NamedC name (m :: * -> *) a = NamedC { runNamedC :: m a }
   deriving (Applicative, Functor, Monad)
 
-instance (Algebra (eff :+: sig) m, HFunctor eff, HFunctor sig) => Algebra (Named name eff :+: sig) (NamedC name m) where
+type family Lhs a where
+  Lhs (a :+: _) = a
+
+type family Rhs a where
+  Rhs (_ :+: b) = b
+
+instance (Algebra m, Signature m ~ (eff :+: sig), HFunctor eff, HFunctor sig) => Algebra (NamedC name m) where
+  type Signature (NamedC name m) = Named name (Lhs (Signature m)) :+: Rhs (Signature m)
   alg (L eff) = NamedC . alg . handleCoercible . L $ getNamed eff
   alg (R eff) = NamedC . alg . handleCoercible . R $ eff

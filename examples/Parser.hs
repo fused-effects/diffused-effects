@@ -1,12 +1,12 @@
-{-# LANGUAGE DeriveAnyClass, DeriveGeneric, DeriveTraversable, DerivingStrategies, ExistentialQuantification, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, StandaloneDeriving, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveAnyClass, DeriveGeneric, DeriveTraversable, DerivingStrategies, ExistentialQuantification, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, StandaloneDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Parser
 ( spec
 ) where
 
-import Control.Effect.Algebra
-import Control.Effect.Cut
-import Control.Effect.NonDet
-import Control.Effect.State
+import Control.Algebra
+import Control.Algebra.Cut.Church
+import Control.Algebra.NonDet.Church
+import Control.Algebra.State.Strict
 import Control.Monad (replicateM)
 import Data.Char
 import Data.List (intercalate)
@@ -76,16 +76,16 @@ data Symbol m k = Satisfy (Char -> Bool) (Char -> m k)
   deriving stock (Functor, Generic1)
   deriving anyclass (HFunctor, Effect)
 
-satisfy :: (Algebra sig m, Member Symbol sig) => (Char -> Bool) -> m Char
+satisfy :: Has Symbol m => (Char -> Bool) -> m Char
 satisfy p = send (Satisfy p pure)
 
-char :: (Algebra sig m, Member Symbol sig) => Char -> m Char
+char :: Has Symbol m => Char -> m Char
 char = satisfy . (==)
 
-digit :: (Algebra sig m, Member Symbol sig) => m Char
+digit :: Has Symbol m => m Char
 digit = satisfy isDigit
 
-parens :: (Algebra sig m, Member Symbol sig) => m a -> m a
+parens :: Has Symbol m => m a -> m a
 parens m = char '(' *> m <* char ')'
 
 
@@ -97,7 +97,8 @@ parse input = (>>= exhaustive) . runState input . runParseC
 newtype ParseC m a = ParseC { runParseC :: StateC String m a }
   deriving newtype (Alternative, Applicative, Functor, Monad)
 
-instance (Alternative m, Algebra sig m, Effect sig) => Algebra (Symbol :+: sig) (ParseC m) where
+instance (Alternative m, Algebra m, Effect (Signature m)) => Algebra (ParseC m) where
+  type Signature (ParseC m) = Symbol :+: Signature m
   alg (L (Satisfy p k)) = do
     input <- ParseC get
     case input of
@@ -107,19 +108,19 @@ instance (Alternative m, Algebra sig m, Effect sig) => Algebra (Symbol :+: sig) 
   {-# INLINE alg #-}
 
 
-expr :: (Alternative m, Algebra sig m, Member Cut sig, Member Symbol sig) => m Int
+expr :: (Alternative m, Has Cut m, Has Symbol m) => m Int
 expr = do
   i <- term
   call ((i +) <$ char '+' <* cut <*> expr
     <|> pure i)
 
-term :: (Alternative m, Algebra sig m, Member Cut sig, Member Symbol sig) => m Int
+term :: (Alternative m, Has Cut m, Has Symbol m) => m Int
 term = do
   i <- factor
   call ((i *) <$ char '*' <* cut <*> term
     <|> pure i)
 
-factor :: (Alternative m, Algebra sig m, Member Cut sig, Member Symbol sig) => m Int
+factor :: (Alternative m, Has Cut m, Has Symbol m) => m Int
 factor
   =   read <$> some digit
   <|> parens expr

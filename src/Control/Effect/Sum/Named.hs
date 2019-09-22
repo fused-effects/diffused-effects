@@ -1,7 +1,8 @@
-{-# LANGUAGE AllowAmbiguousTypes, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GeneralizedNewtypeDeriving, PolyKinds, ScopedTypeVariables, TypeApplications, TypeOperators, UndecidableInstances #-}
 module Control.Effect.Sum.Named
 ( Named(..)
 , NamedMember(..)
+, HasNamed
 , sendNamed
 ) where
 
@@ -24,7 +25,14 @@ instance {-# OVERLAPPABLE #-} NamedMember name sub sup => NamedMember name sub (
   injNamed = R . injNamed
 
 
+type HasNamed name eff m = (Algebra m, HasNamedIn name (Signature m) eff)
+
 -- | Construct a request for a named effect to be interpreted by some handler later on.
-sendNamed :: forall name effect sig m a . (NamedMember name effect sig, Algebra sig m) => effect m a -> m a
+sendNamed :: forall name eff m a . HasNamed name eff m => eff m a -> m a
 sendNamed = alg . injNamed . Named @name
 {-# INLINE sendNamed #-}
+
+
+class NamedMember name eff sig => HasNamedIn name sig eff
+instance {-# OVERLAPPABLE #-} HasNamedIn name (Named name eff) eff
+instance {-# OVERLAPPABLE #-} NamedMember name eff (l :+: r) => HasNamedIn name (l :+: r) eff
