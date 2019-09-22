@@ -5,10 +5,11 @@ module Control.Effect.Spec
 ) where
 
 import Control.Algebra
-import Control.Effect.Error
-import Control.Effect.Fail
-import Control.Effect.Reader
-import Control.Effect.State
+import Control.Algebra.Error.Either
+import Control.Algebra.Fail
+import Control.Algebra.Reader
+import Control.Algebra.State.Strict
+import Control.Effect.Sum
 import Prelude hiding (fail)
 import Test.Hspec
 import Test.Inspection as Inspection

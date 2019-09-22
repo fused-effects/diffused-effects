@@ -2,9 +2,9 @@ module Control.Effect.NonDet.Spec
 ( spec
 ) where
 
-import Control.Effect.Error
-import Control.Effect.NonDet
-import Control.Effect.State
+import Control.Algebra.Error.Either
+import Control.Algebra.NonDet.Church
+import Control.Algebra.State.Strict
 import Test.Hspec
 
 spec :: Spec
