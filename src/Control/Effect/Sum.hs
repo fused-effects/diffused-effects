@@ -75,7 +75,11 @@ instance MemberAt path t r => MemberAt (R path) t (l :+: r) where
   prj' (R r) = prj'  @path r
   prj' _     = Nothing
 
-instance TypeError ('ShowType t ':<>: 'Text " is not a member of " ':<>: 'ShowType u)
+type family ShowTree t where
+  ShowTree (l :+: r) = ShowTree l ':<>: 'Text ", " ':<>: ShowTree r
+  ShowTree t         = 'ShowType t
+
+instance TypeError ('ShowType t ':<>: 'Text " is not among the handled effects (" ':<>: ShowTree u ':<>: 'Text ")")
       => MemberAt Err t u where
   inj' _ = undefined
   prj' _ = undefined
