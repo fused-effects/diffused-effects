@@ -57,8 +57,6 @@ type family PathTo sub sup where
   PathTo t (l :+: r) = FromMaybe Err (PathTo' L t l <|> PathTo' R t r)
   PathTo _ _         = Err
 
-type Parens t = 'Text "(" ':<>: t ':<>: 'Text ")"
-
 class MemberAt path (sub :: (* -> *) -> (* -> *)) sup where
   inj' :: sub m a -> sup m a
   prj' :: sup m a -> Maybe (sub m a)
@@ -77,7 +75,7 @@ instance MemberAt path t r => MemberAt (R path) t (l :+: r) where
   prj' (R r) = prj'  @path r
   prj' _     = Nothing
 
-instance TypeError (Parens ('ShowType t) ':<>: 'Text " is not a member of " ':<>: Parens ('ShowType u))
+instance TypeError ('ShowType t ':<>: 'Text " is not a member of " ':<>: 'ShowType u)
       => MemberAt Err t u where
   inj' _ = undefined
   prj' _ = undefined
