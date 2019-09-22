@@ -45,7 +45,7 @@ type family Prepend (s :: j -> k) (ss :: Maybe j) :: Maybe k where
 
 data L a
 data R a
-data E a
+data Err
 
 type family PathTo' (side :: * -> *) (sub :: (* -> *) -> (* -> *)) sup :: Maybe * where
   PathTo' s t t         = 'Just (s ())
@@ -54,8 +54,8 @@ type family PathTo' (side :: * -> *) (sub :: (* -> *) -> (* -> *)) sup :: Maybe 
 
 type family PathTo sub sup where
   PathTo t t         = ()
-  PathTo t (l :+: r) = FromMaybe (E (Parens ('ShowType t) ':<>: 'Text " is not a member of " ':<>: Parens ('ShowType (l :+: r)))) (PathTo' L t l <|> PathTo' R t r)
-  PathTo t s         = E (Parens ('ShowType t) ':<>: 'Text " is not a member of " ':<>: Parens ('ShowType s))
+  PathTo t (l :+: r) = FromMaybe Err (PathTo' L t l <|> PathTo' R t r)
+  PathTo _ _         = Err
 
 type Parens t = 'Text "(" ':<>: t ':<>: 'Text ")"
 
@@ -77,6 +77,7 @@ instance MemberAt path t r => MemberAt (R path) t (l :+: r) where
   prj' (R r) = prj'  @path r
   prj' _     = Nothing
 
-instance TypeError err => MemberAt (E err) t u where
+instance TypeError (Parens ('ShowType t) ':<>: 'Text " is not a member of " ':<>: Parens ('ShowType u))
+      => MemberAt Err t u where
   inj' _ = undefined
   prj' _ = undefined
