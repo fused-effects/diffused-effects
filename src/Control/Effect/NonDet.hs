@@ -8,7 +8,7 @@ module Control.Effect.NonDet
 ) where
 
 import Control.Applicative (Alternative(..))
-import Control.Effect.Choose hiding (many, some)
+import Control.Effect.Choose hiding ((<|>), many, some)
 import Control.Effect.Empty hiding (empty)
 import Control.Effect.Sum
 

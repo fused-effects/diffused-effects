@@ -2,7 +2,7 @@
 module Control.Effect.Choose
 ( -- * Choose effect
   Choose(..)
-, choose
+, (<|>)
 , optional
 , many
 , some
@@ -27,16 +27,18 @@ instance HFunctor Choose
 instance Effect   Choose
 
 -- | Nondeterministically choose between two computations.
-choose :: Has Choose m => m a -> m a -> m a
-choose a b = send (Choose (bool b a))
+(<|>) :: Has Choose m => m a -> m a -> m a
+(<|>) a b = send (Choose (bool b a))
+
+infixl 3 <|>
 
 -- | Select between 'Just' the result of an operation, and 'Nothing'.
 optional :: Has Choose m => m a -> m (Maybe a)
-optional a = choose (Just <$> a) (pure Nothing)
+optional a = Just <$> a <|> pure Nothing
 
 -- | Zero or more.
 many :: Has Choose m => m a -> m [a]
-many a = go where go = choose ((:) <$> a <*> go) (pure [])
+many a = go where go = (:) <$> a <*> go <|> pure []
 
 -- | One or more.
 some :: Has Choose m => m a -> m [a]
@@ -64,7 +66,7 @@ oneOf = getChoosing #. foldMap (Choosing #. pure)
 newtype Choosing m a = Choosing { getChoosing :: m a }
 
 instance Has Choose m => Semigroup (Choosing m a) where
-  Choosing m1 <> Choosing m2 = Choosing (choose m1 m2)
+  Choosing m1 <> Choosing m2 = Choosing (m1 <|> m2)
 
 instance (Has Choose m, Has Empty m) => Monoid (Choosing m a) where
   mempty = Choosing (send Empty)
