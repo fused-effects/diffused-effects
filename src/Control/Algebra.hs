@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, TypeOperators #-}
+{-# LANGUAGE ConstraintKinds, FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
 module Control.Algebra
 ( -- * Re-exports
   module Control.Algebra.Class
@@ -14,7 +14,7 @@ import Control.Algebra.Pure
 import Control.Effect.Class
 import Control.Effect.Sum
 
-type Has eff m = HasIn (Signature m) eff m
+type Has eff m = (Algebra m, HasIn (Signature m) eff)
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
 send :: Has eff m => eff m a -> m a
@@ -22,6 +22,6 @@ send = alg . inj
 {-# INLINE send #-}
 
 
-class (Algebra m, Member eff sig) => HasIn sig eff m
-instance {-# OVERLAPPABLE #-} Algebra m => HasIn eff eff m
-instance {-# OVERLAPPABLE #-} (Algebra m, Member eff (l :+: r)) => HasIn (l :+: r) eff m
+class Member eff sig => HasIn sig eff
+instance {-# OVERLAPPABLE #-} HasIn eff eff
+instance {-# OVERLAPPABLE #-} Member eff (l :+: r) => HasIn (l :+: r) eff
