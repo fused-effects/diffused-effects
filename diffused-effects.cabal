@@ -58,7 +58,6 @@ library
     Control.Algebra.Trace.Printing
     Control.Algebra.Trace.Returning
     Control.Algebra.Writer.Strict
-    Control.Effect
     Control.Effect.Choose
     Control.Effect.Class
     Control.Effect.Cull
