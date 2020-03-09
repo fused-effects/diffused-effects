@@ -93,18 +93,6 @@ test-suite test
   hs-source-dirs:      test
 
 
-benchmark benchmark
-  import:             common
-  type:               exitcode-stdio-1.0
-  main-is:            Bench.hs
-  other-modules:      NonDet.NQueens
-  build-depends:      base >= 4.9 && < 4.14
-                    , diffused-effects
-                    , gauge
-  hs-source-dirs:     benchmark
-  ghc-options:        -threaded -rtsopts "-with-rtsopts=-N -A4m -n2m"
-
-
 source-repository head
   type:     git
   location: https://github.com/fused-effects/diffused-effects
