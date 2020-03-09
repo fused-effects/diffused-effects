@@ -39,7 +39,6 @@ library
   exposed-modules:
     Control.Algebra
     Control.Algebra.Choose.Church
-    Control.Algebra.Class
     Control.Algebra.Cull
     Control.Algebra.Cut.Church
     Control.Algebra.Empty.Maybe
