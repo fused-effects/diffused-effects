@@ -6,6 +6,7 @@ module Control.Algebra.Class
 ) where
 
 import Control.Effect.Catch.Internal
+import Control.Effect.Choose.Internal
 import Control.Effect.Class
 import Control.Effect.Empty.Internal
 import Control.Effect.Error.Internal
@@ -13,6 +14,7 @@ import Control.Effect.Reader.Internal
 import Control.Effect.Sum
 import Control.Effect.Throw.Internal
 import Control.Monad (join)
+import Data.List.NonEmpty (NonEmpty)
 
 class (HFunctor (Signature m), Monad m) => Algebra m where
   type Signature m :: (* -> *) -> (* -> *)
@@ -37,3 +39,8 @@ instance Algebra ((->) r) where
   alg = \case
     Ask       k -> join k
     Local f m k -> m . f >>= k
+
+instance Algebra NonEmpty where
+  type Signature NonEmpty = Choose
+
+  alg (Choose m) = m True <> m False
