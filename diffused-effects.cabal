@@ -46,7 +46,6 @@ library
     Control.Algebra.Error.Either
     Control.Algebra.Fail
     Control.Algebra.Fresh.Strict
-    Control.Algebra.Interpret
     Control.Algebra.Lift
     Control.Algebra.Named
     Control.Algebra.NonDet.Church
