@@ -43,6 +43,7 @@ import           Effect.Writer.Internal
 
 type f ~> g = forall x . f x -> g x
 
+
 class Monad m => Algebra m where
   type Sig m :: (* -> *) -> (* -> *)
 
