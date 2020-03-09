@@ -1,6 +1,5 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
@@ -70,7 +69,7 @@ run = runIdentity
 {-# INLINE run #-}
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
-send :: (Member eff (Sig m), Algebra m) => eff m a -> m a
+send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
 send = fmap runIdentity <$> alg (Identity ()) (fmap Identity . runIdentity) . inj
 {-# INLINE send #-}
 

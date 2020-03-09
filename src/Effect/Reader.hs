@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module Effect.Reader
 ( -- * Reader effect
   Reader(..)

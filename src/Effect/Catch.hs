@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module Effect.Catch
 ( -- * Catch effect
   Catch(..)

@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module Effect.Empty
 ( -- * Empty effect
   Empty(..)

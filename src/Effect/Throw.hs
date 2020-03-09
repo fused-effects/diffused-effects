@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module Effect.Throw
 ( -- * Throw effect
   Throw(..)

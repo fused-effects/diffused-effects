@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module Effect.Writer
 ( -- * Writer effect
   Writer(..)
