@@ -6,9 +6,6 @@ module Control.Algebra.Writer.Strict
 , runWriter
 , execWriter
 , WriterC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import Control.Algebra
