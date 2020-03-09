@@ -48,12 +48,12 @@ instance Monad (NonDetT m) where
     a fork (\ a' -> runNonDetT (f a') fork leaf nil) nil
   {-# INLINE (>>=) #-}
 
-instance (Algebra m, MonadFix m) => MonadFix (NonDetT m) where
+instance MonadFix m => MonadFix (NonDetT m) where
   mfix f = NonDetT $ \ fork leaf nil ->
     mfix (runNonDetA . f . head)
     >>= runNonDet fork leaf nil . foldr
-      (\ a _ -> pure a <|> mfix (liftAll . fmap tail . runNonDetA . f))
-      empty
+      (\ a _ -> NonDetT (\ fork leaf nil -> fork (leaf a) (runNonDet fork leaf nil (mfix (liftAll . fmap tail . runNonDetA . f)))))
+      (NonDetT (\ _ _ nil -> nil))
     where
     liftAll m = NonDetT $ \ fork leaf nil -> m >>= foldr (fork . leaf) nil
   {-# INLINE mfix #-}

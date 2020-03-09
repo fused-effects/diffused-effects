@@ -2,7 +2,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -39,9 +38,7 @@ runCullM leaf = runCull (liftA2 mappend) (pure . leaf) (pure mempty)
 
 -- | @since 1.0.0.0
 newtype CullT m a = CullT { runCullT :: ReaderT Bool (NonDetT m) a }
-  deriving (Applicative, Functor, Monad)
-
-deriving instance (Algebra m, MonadFix m) => MonadFix (CullT m)
+  deriving (Applicative, Functor, Monad, MonadFix)
 
 instance MonadTrans CullT where
   lift = CullT . lift . lift
