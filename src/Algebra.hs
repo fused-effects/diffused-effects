@@ -51,6 +51,7 @@ class Monad m => Algebra m where
 
   alg :: Functor ctx => ctx () -> (forall x . ctx (n x) -> m (ctx x)) -> Sig m n a -> m (ctx a)
 
+
 type Has eff m = (Members eff (Sig m), Algebra m)
 
 
