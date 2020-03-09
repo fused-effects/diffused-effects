@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
@@ -8,6 +9,7 @@
 module Algebra
 ( Algebra(..)
 , (:+:)(..)
+, (:.:)(..)
 , Has
 , run
 , send
@@ -45,6 +47,9 @@ class (HFunctor (Sig m), Monad m) => Algebra m where
   alg :: Sig m m a -> m a
 
 type Has eff m = (Members eff (Sig m), Algebra m)
+
+newtype (f :.: g) a = C { runC :: f (g a) }
+  deriving (Foldable, Functor, Traversable)
 
 run :: Identity a -> a
 run = runIdentity
