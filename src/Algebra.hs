@@ -195,5 +195,4 @@ instance (Algebra m, Monoid w) => Algebra (Writer.Strict.WriterT w m) where
     L (Listen m k)   -> Writer.Strict.listen (hdl (m <$ ctx)) >>= hdl . uncurry (fmap . k) . swap
     L (Censor f m k) -> Writer.Strict.censor f (hdl (m <$ ctx)) >>= hdl . fmap k
     R other          -> Writer.Strict.WriterT $ swap <$> thread (mempty, ctx) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Strict.runWriterT (hdl x)) other
-
   {-# INLINE alg #-}
