@@ -15,15 +15,21 @@ import           Control.Effect.Error.Internal
 import           Control.Effect.Lift.Internal
 import           Control.Effect.NonDet.Internal
 import           Control.Effect.Reader.Internal
+import           Control.Effect.State.Internal
 import           Control.Effect.Sum
 import           Control.Effect.Throw.Internal
 import           Control.Effect.Writer.Internal
 import           Control.Monad (join)
 import qualified Control.Monad.Trans.Except as Except
 import qualified Control.Monad.Trans.Reader as Reader
+import qualified Control.Monad.Trans.State.Lazy as State.Lazy
+import qualified Control.Monad.Trans.State.Strict as State.Strict
+import qualified Control.Monad.Trans.Writer.Lazy as Writer.Lazy
+import qualified Control.Monad.Trans.Writer.Strict as Writer.Strict
 import           Data.Coerce (coerce)
 import           Data.Functor.Identity
 import           Data.List.NonEmpty (NonEmpty)
+import           Data.Tuple (swap)
 
 class (HFunctor (Signature m), Monad m) => Algebra m where
   type Signature m :: (* -> *) -> (* -> *)
@@ -93,3 +99,33 @@ instance Algebra m => Algebra (Reader.ReaderT r m) where
   alg (L (Ask       k)) = Reader.ask >>= k
   alg (L (Local f m k)) = Reader.local f m >>= k
   alg (R other)         = Reader.ReaderT $ \ r -> alg (hmap (`Reader.runReaderT` r) other)
+
+instance (Algebra m, Effect (Signature m)) => Algebra (State.Lazy.StateT s m) where
+  type Signature (State.Lazy.StateT s m) = State s :+: Signature m
+
+  alg (L (Get   k)) = State.Lazy.get >>= k
+  alg (L (Put s k)) = State.Lazy.put s *> k
+  alg (R other)     = State.Lazy.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Lazy.runStateT x s) other)
+
+instance (Algebra m, Effect (Signature m)) => Algebra (State.Strict.StateT s m) where
+  type Signature (State.Strict.StateT s m) = State s :+: Signature m
+
+  alg (L (Get   k)) = State.Strict.get >>= k
+  alg (L (Put s k)) = State.Strict.put s *> k
+  alg (R other)     = State.Strict.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Strict.runStateT x s) other)
+
+instance (Algebra m, Effect (Signature m), Monoid w) => Algebra (Writer.Lazy.WriterT w m) where
+  type Signature (Writer.Lazy.WriterT w m) = Writer w :+: Signature m
+
+  alg (L (Tell w k))     = Writer.Lazy.tell w *> k
+  alg (L (Listen m k))   = Writer.Lazy.listen m >>= uncurry (flip k)
+  alg (L (Censor f m k)) = Writer.Lazy.censor f m >>= k
+  alg (R other)          = Writer.Lazy.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Lazy.runWriterT x) other)
+
+instance (Algebra m, Effect (Signature m), Monoid w) => Algebra (Writer.Strict.WriterT w m) where
+  type Signature (Writer.Strict.WriterT w m) = Writer w :+: Signature m
+
+  alg (L (Tell w k))     = Writer.Strict.tell w *> k
+  alg (L (Listen m k))   = Writer.Strict.listen m >>= uncurry (flip k)
+  alg (L (Censor f m k)) = Writer.Strict.censor f m >>= k
+  alg (R other)          = Writer.Strict.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Strict.runWriterT x) other)
