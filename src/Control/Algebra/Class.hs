@@ -58,6 +58,6 @@ instance Monoid w => Algebra ((,) w) where
   type Signature ((,) w) = Writer w
 
   alg = \case
-    Tell w     k -> let              (w', k') = k     in (mappend w w', k')
+    Tell w     k -> join (w, k)
     Listen m   k -> let (w, a) = m ; (w', a') = k w a in (mappend w w', a')
     Censor f m k -> let (w, a) = m ; (w', a') = k   a in (mappend (f w) w', a')
