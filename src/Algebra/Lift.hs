@@ -3,7 +3,7 @@
 module Algebra.Lift
 ( -- * Lift carrier
   runLift
-, LiftC(..)
+, LiftT(..)
   -- * Lift effect
 , module Effect.Lift
 ) where
@@ -13,16 +13,16 @@ import Control.Monad.Fix
 import Control.Monad.Trans.Class
 import Effect.Lift
 
-runLift :: LiftC m a -> m a
-runLift (LiftC m) = m
+runLift :: LiftT m a -> m a
+runLift (LiftT m) = m
 
-newtype LiftC m a = LiftC (m a)
+newtype LiftT m a = LiftT (m a)
   deriving (Applicative, Functor, Monad, MonadFix)
 
-instance MonadTrans LiftC where
-  lift = LiftC
+instance MonadTrans LiftT where
+  lift = LiftT
 
-instance Monad m => Algebra (LiftC m) where
-  type Sig (LiftC m) = Lift m
+instance Monad m => Algebra (LiftT m) where
+  type Sig (LiftT m) = Lift m
 
-  alg ctx hdl (LiftWith with k) = LiftC (with ctx (runLift . hdl)) >>= hdl . fmap k
+  alg ctx hdl (LiftWith with k) = LiftT (with ctx (runLift . hdl)) >>= hdl . fmap k
