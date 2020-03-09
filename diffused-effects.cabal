@@ -92,15 +92,6 @@ test-suite test
                      , inspection-testing ^>= 0.4
   hs-source-dirs:      test
 
-test-suite doctest
-  import:              common
-  type:                exitcode-stdio-1.0
-  main-is:             Doctest.hs
-  build-depends:       base     >= 4.9 && < 4.14
-                     , doctest  >= 0.7 && < 1
-                     , diffused-effects
-  hs-source-dirs:      test
-
 
 benchmark benchmark
   import:             common
