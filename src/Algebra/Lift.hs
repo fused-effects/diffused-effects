@@ -16,7 +16,7 @@ import Effect.Lift
 runLift :: LiftT m a -> m a
 runLift (LiftT m) = m
 
-newtype LiftT m a = LiftT (m a)
+newtype LiftT m a = LiftT { runLiftT :: m a }
   deriving (Applicative, Functor, Monad, MonadFix)
 
 instance MonadTrans LiftT where
