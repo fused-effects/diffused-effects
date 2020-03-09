@@ -38,7 +38,7 @@ runCullM :: (Applicative m, Monoid b) => (a -> b) -> CullT m a -> m b
 runCullM leaf = runCull (liftA2 mappend) (pure . leaf) (pure mempty)
 
 -- | @since 1.0.0.0
-newtype CullT m a = CullT { runCullT :: ReaderT Bool (NonDetC m) a }
+newtype CullT m a = CullT { runCullT :: ReaderT Bool (NonDetT m) a }
   deriving (Applicative, Functor, Monad)
 
 deriving instance (Algebra m, MonadFix m) => MonadFix (CullT m)
@@ -57,7 +57,7 @@ instance Algebra m => Algebra (CullT m) where
       let CullT l = hdl (k False <$ ctx)
           CullT r = hdl (k True  <$ ctx)
       if cull then
-        NonDetC $ \ fork leaf nil ->
+        NonDetT $ \ fork leaf nil ->
           runNonDet fork leaf (runNonDet fork leaf nil (runReaderT r cull)) (runReaderT l cull)
       else
         runReaderT l cull <|> runReaderT r cull
