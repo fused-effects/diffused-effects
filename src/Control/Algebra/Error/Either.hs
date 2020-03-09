@@ -5,9 +5,6 @@ module Control.Algebra.Error.Either
   -- * Error carrier
 , runError
 , ErrorC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import Control.Algebra
@@ -64,7 +61,7 @@ instance MonadTrans (ErrorC e) where
 
 instance (Algebra m, Effect (Signature m)) => Algebra (ErrorC e m) where
   type Signature (ErrorC e m) = Error e :+: Signature m
-  alg (L (Throw e))     = ErrorC (pure (Left e))
-  alg (L (Catch m h k)) = ErrorC (runError m >>= either (either (pure . Left) (runError . k) <=< runError . h) (runError . k))
+  alg (L (L (Throw e)))     = ErrorC (pure (Left e))
+  alg (L (R (Catch m h k))) = ErrorC (runError m >>= either (either (pure . Left) (runError . k) <=< runError . h) (runError . k))
   alg (R other)         = ErrorC (alg (handle (Right ()) (either (pure . Left) runError) other))
   {-# INLINE alg #-}
