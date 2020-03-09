@@ -50,8 +50,10 @@ class Monad m => Algebra m where
 
 type Has eff m = (Members eff (Sig m), Algebra m)
 
+
 newtype (f :.: g) a = C { runC :: f (g a) }
   deriving (Foldable, Functor, Traversable)
+
 
 thread :: (Functor ctx1, Functor ctx2, Algebra m) => ctx1 (ctx2 ()) -> (forall x . ctx1 (ctx2 (n x)) -> m (ctx1 (ctx2 x))) -> Sig m n a -> m (ctx1 (ctx2 a))
 thread ctx hdl = fmap runC . alg (C ctx) (fmap C . hdl . runC)
