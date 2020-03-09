@@ -5,9 +5,6 @@ module Control.Algebra.Reader
   -- * Reader carrier
 , runReader
 , ReaderC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import Control.Algebra
