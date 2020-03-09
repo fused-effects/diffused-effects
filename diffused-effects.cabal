@@ -80,19 +80,6 @@ library
   hs-source-dirs:      src
 
 
-test-suite test
-  import:              common
-  type:                exitcode-stdio-1.0
-  main-is:             Spec.hs
-  other-modules:       Control.Effect.Spec
-                     , Control.Effect.NonDet.Spec
-  build-depends:       base                >= 4.9 && < 4.14
-                     , diffused-effects
-                     , hspec               >= 2.4.1
-                     , inspection-testing ^>= 0.4
-  hs-source-dirs:      test
-
-
 source-repository head
   type:     git
   location: https://github.com/fused-effects/diffused-effects
