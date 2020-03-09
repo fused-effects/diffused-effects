@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -65,16 +66,16 @@ instance MonadTrans CutC where
   lift m = CutC (\ cons nil _ -> m >>= flip cons nil)
   {-# INLINE lift #-}
 
-instance (Algebra m, Effect (Sig m)) => Algebra (CutC m) where
+instance Algebra m => Algebra (CutC m) where
   type Sig (CutC m) = Cut :+: NonDet :+: Sig m
 
-  alg = \case
+  alg (ctx :: ctx ()) (hdl :: forall x . ctx (n x) -> CutC m (ctx x)) = \case
     L Cutfail    -> CutC $ \ _    _   fail -> fail
-    L (Call m k) -> CutC $ \ cons nil fail -> runCut (\ a as -> runCut cons as fail (k a)) nil nil m
+    L (Call m k) -> CutC $ \ cons nil fail -> runCut (\ a as -> runCut cons as fail (hdl (fmap k a))) nil nil (hdl (m <$ ctx))
     R (L (L Empty))      -> CutC $ \ _ nil _ -> nil
-    R (L (R (Choose k))) -> CutC $ \ cons nil fail -> runCut cons (runCut cons nil fail (k False)) fail (k True)
-    R (R other)          -> CutC $ \ cons nil fail -> alg (handle (pure ()) dst other) >>= runIdentity . runCut (coerce cons) (coerce nil) (coerce fail)
+    R (L (R (Choose k))) -> CutC $ \ cons nil fail -> runCut cons (runCut cons nil fail (hdl (k False <$ ctx))) fail (hdl (k True <$ ctx))
+    R (R other)          -> CutC $ \ cons nil fail -> thread (pure ctx) dst other >>= runIdentity . runCut (coerce cons) (coerce nil) (coerce fail)
     where
-    dst :: Applicative m => CutC Identity (CutC m a) -> m (CutC Identity a)
-    dst = runIdentity . runCut (fmap . liftA2 (<|>) . runCut (fmap . (<|>) . pure) (pure empty) (pure cutfail)) (pure (pure empty)) (pure (pure cutfail))
+    dst :: CutC Identity (ctx (n a)) -> m (CutC Identity (ctx a))
+    dst = runIdentity . runCut (fmap . liftA2 (<|>) . runCut (fmap . (<|>) . pure) (pure empty) (pure cutfail) . hdl) (pure (pure empty)) (pure (pure cutfail))
   {-# INLINE alg #-}

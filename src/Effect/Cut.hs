@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ExistentialQuantification, FlexibleContexts, GeneralizedNewtypeDeriving, StandaloneDeriving #-}
+{-# LANGUAGE ExistentialQuantification #-}
 module Effect.Cut
 ( -- * Cut effect
   Cut(..)
@@ -14,18 +14,6 @@ import Control.Applicative (Alternative(..))
 data Cut m k
   = Cutfail
   | forall a . Call (m a) (a -> m k)
-
-deriving instance Functor m => Functor (Cut m)
-
-instance HFunctor Cut where
-  hmap _ Cutfail    = Cutfail
-  hmap f (Call m k) = Call (f m) (f . k)
-  {-# INLINE hmap #-}
-
-instance Effect Cut where
-  handle _     _       Cutfail    = Cutfail
-  handle state handler (Call m k) = Call (handler (m <$ state)) (handler . fmap k)
-  {-# INLINE handle #-}
 
 -- | Fail the current branch, and prevent backtracking within the nearest enclosing 'call' (if any).
 --

@@ -11,7 +11,6 @@ module Algebra.Lift
 import Algebra
 import Control.Monad.Fix
 import Control.Monad.Trans.Class
-import Data.Functor.Identity
 import Effect.Lift
 
 runLift :: LiftC m a -> m a
@@ -26,4 +25,4 @@ instance MonadTrans LiftC where
 instance Monad m => Algebra (LiftC m) where
   type Sig (LiftC m) = Lift m
 
-  alg (LiftWith with k) = LiftC (with (Identity ()) (fmap Identity . runLift . runIdentity)) >>= k . runIdentity
+  alg ctx hdl (LiftWith with k) = LiftC (with ctx (runLift . hdl)) >>= hdl . fmap k

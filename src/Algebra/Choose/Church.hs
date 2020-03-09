@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -62,13 +63,13 @@ instance MonadTrans ChooseC where
   lift m = ChooseC (\ _ leaf -> m >>= leaf)
   {-# INLINE lift #-}
 
-instance (Algebra m, Effect (Sig m)) => Algebra (ChooseC m) where
+instance Algebra m => Algebra (ChooseC m) where
   type Sig (ChooseC m) = Choose :+: Sig m
 
-  alg = \case
-    L (Choose k) -> ChooseC $ \ fork leaf -> fork (runChoose fork leaf (k True)) (runChoose fork leaf (k False))
-    R other      -> ChooseC $ \ fork leaf -> alg (handle (pure ()) dst other) >>= runIdentity . runChoose (coerce fork) (coerce leaf)
+  alg (ctx :: ctx ()) (hdl :: forall x . ctx (n x) -> ChooseC m (ctx x)) = \case
+    L (Choose k) -> ChooseC $ \ fork leaf -> fork (runChoose fork leaf (hdl (k True <$ ctx))) (runChoose fork leaf (hdl (k False <$ ctx)))
+    R other      -> ChooseC $ \ fork leaf -> thread (pure ctx) dst other >>= runIdentity . runChoose (coerce fork) (coerce leaf)
     where
-    dst :: Applicative m => ChooseC Identity (ChooseC m a) -> m (ChooseC Identity a)
-    dst = runIdentity . runChoose (liftA2 (liftA2 (<|>))) (pure . runChoose (liftA2 (<|>)) (pure . pure))
+    dst :: ChooseC Identity (ctx (n a)) -> m (ChooseC Identity (ctx a))
+    dst = runIdentity . runChoose (liftA2 (liftA2 (<|>))) (pure . runChoose (liftA2 (<|>)) (pure . pure) . hdl)
   {-# INLINE alg #-}

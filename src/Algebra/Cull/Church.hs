@@ -11,7 +11,7 @@ module Algebra.Cull.Church
   runCull
 , runCullA
 , runCullM
-, CullC(..)
+, CullC(CullC)
   -- * Cull effect
 , module Effect.Cull
   -- * NonDet effects
@@ -38,28 +38,28 @@ runCullM :: (Applicative m, Monoid b) => (a -> b) -> CullC m a -> m b
 runCullM leaf = runCull (liftA2 mappend) (pure . leaf) (pure mempty)
 
 -- | @since 1.0.0.0
-newtype CullC m a = CullC (ReaderT Bool (NonDetC m) a)
+newtype CullC m a = CullC { runCullC :: ReaderT Bool (NonDetC m) a }
   deriving (Applicative, Functor, Monad)
 
-deriving instance (Algebra m, Effect (Sig m), MonadFix m) => MonadFix (CullC m)
+deriving instance (Algebra m, MonadFix m) => MonadFix (CullC m)
 
 instance MonadTrans CullC where
   lift = CullC . lift . lift
   {-# INLINE lift #-}
 
-instance (Algebra m, Effect (Sig m)) => Algebra (CullC m) where
+instance Algebra m => Algebra (CullC m) where
   type Sig (CullC m) = Cull :+: NonDet :+: Sig m
 
-  alg = \case
-    L (Cull (CullC m) k) -> CullC (local (const True) m) >>= k
+  alg ctx hdl = \case
+    L (Cull m k)         -> CullC (local (const True) (runCullC (hdl (m <$ ctx)))) >>= hdl . fmap k
     R (L (L Empty))      -> CullC empty
     R (L (R (Choose k))) -> CullC $ ReaderT $ \ cull -> do
-      let CullC l = k False
-          CullC r = k True
+      let CullC l = hdl (k False <$ ctx)
+          CullC r = hdl (k True  <$ ctx)
       if cull then
         NonDetC $ \ fork leaf nil ->
           runNonDet fork leaf (runNonDet fork leaf nil (runReaderT r cull)) (runReaderT l cull)
       else
         runReaderT l cull <|> runReaderT r cull
-    R (R other)          -> CullC (alg (R (R (handleCoercible other))))
+    R (R other)          -> CullC (alg ctx (runCullC . hdl) (R (R other)))
   {-# INLINE alg #-}

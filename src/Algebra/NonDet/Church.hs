@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -47,7 +48,7 @@ instance Monad (NonDetC m) where
     a fork (\ a' -> runNonDetC (f a') fork leaf nil) nil
   {-# INLINE (>>=) #-}
 
-instance (Algebra m, Effect (Sig m), MonadFix m) => MonadFix (NonDetC m) where
+instance (Algebra m, MonadFix m) => MonadFix (NonDetC m) where
   mfix f = NonDetC $ \ fork leaf nil ->
     mfix (runNonDetA . f . head)
     >>= runNonDet fork leaf nil . foldr
@@ -61,14 +62,14 @@ instance MonadTrans NonDetC where
   lift m = NonDetC (\ _ leaf _ -> m >>= leaf)
   {-# INLINE lift #-}
 
-instance (Algebra m, Effect (Sig m)) => Algebra (NonDetC m) where
+instance Algebra m => Algebra (NonDetC m) where
   type Sig (NonDetC m) = NonDet :+: Sig m
 
-  alg = \case
-    L (L Empty)      -> empty
-    L (R (Choose k)) -> k True <|> k False
-    R other          -> NonDetC $ \ fork leaf nil -> alg (handle (pure ()) dst other) >>= runIdentity . runNonDet (coerce fork) (coerce leaf) (coerce nil)
+  alg (ctx :: ctx ()) (hdl :: forall x . ctx (n x) -> NonDetC m (ctx x)) = \case
+    L (L Empty)      -> NonDetC (\ _ _ nil -> nil)
+    L (R (Choose k)) -> NonDetC $ \ fork leaf nil -> fork (runNonDet fork leaf nil (hdl (k True <$ ctx))) (runNonDet fork leaf nil (hdl (k False <$ ctx)))
+    R other          -> NonDetC $ \ fork leaf nil -> thread (pure ctx) dst other >>= runIdentity . runNonDet (coerce fork) (coerce leaf) (coerce nil)
     where
-    dst :: Applicative m => NonDetC Identity (NonDetC m a) -> m (NonDetC Identity a)
-    dst = runIdentity . runNonDet (liftA2 (liftA2 (<|>))) (Identity . runNonDetND) (pure (pure empty))
+    dst :: NonDetC Identity (ctx (n a)) -> m (NonDetC Identity (ctx a))
+    dst = runIdentity . runNonDet (liftA2 (liftA2 (<|>))) (Identity . runNonDetND . hdl) (pure (pure empty))
   {-# INLINE alg #-}
