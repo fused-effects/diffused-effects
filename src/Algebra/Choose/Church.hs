@@ -11,7 +11,7 @@ module Algebra.Choose.Church
 ( -- * Choose carrier
   runChoose
 , runChooseS
-, ChooseC(..)
+, ChooseT(..)
   -- * Choose effect
 , module Effect.Choose
 ) where
@@ -27,49 +27,49 @@ import qualified Data.Semigroup as S
 import           Effect.Choose
 import           Prelude hiding (head, tail)
 
-runChoose :: (m b -> m b -> m b) -> (a -> m b) -> ChooseC m a -> m b
-runChoose fork leaf (ChooseC runChooseC) = runChooseC fork leaf
+runChoose :: (m b -> m b -> m b) -> (a -> m b) -> ChooseT m a -> m b
+runChoose fork leaf (ChooseT runChooseT) = runChooseT fork leaf
 
-runChooseS :: (S.Semigroup b, Applicative m) => (a -> m b) -> ChooseC m a -> m b
+runChooseS :: (S.Semigroup b, Applicative m) => (a -> m b) -> ChooseT m a -> m b
 runChooseS = runChoose (liftA2 (S.<>))
 
-newtype ChooseC m a = ChooseC (forall b . (m b -> m b -> m b) -> (a -> m b) -> m b)
+newtype ChooseT m a = ChooseT (forall b . (m b -> m b -> m b) -> (a -> m b) -> m b)
   deriving (Functor)
 
-instance Applicative (ChooseC m) where
-  pure a = ChooseC (\ _ leaf -> leaf a)
+instance Applicative (ChooseT m) where
+  pure a = ChooseT (\ _ leaf -> leaf a)
   {-# INLINE pure #-}
-  ChooseC f <*> ChooseC a = ChooseC $ \ fork leaf ->
+  ChooseT f <*> ChooseT a = ChooseT $ \ fork leaf ->
     f fork (\ f' -> a fork (leaf . f'))
   {-# INLINE (<*>) #-}
 
-instance Monad (ChooseC m) where
-  ChooseC a >>= f = ChooseC $ \ fork leaf ->
+instance Monad (ChooseT m) where
+  ChooseT a >>= f = ChooseT $ \ fork leaf ->
     a fork (runChoose fork leaf . f)
   {-# INLINE (>>=) #-}
 
 -- | Separate fixpoints are computed for each branch.
-instance MonadFix m => MonadFix (ChooseC m) where
-  mfix f = ChooseC $ \ fork leaf ->
+instance MonadFix m => MonadFix (ChooseT m) where
+  mfix f = ChooseT $ \ fork leaf ->
     mfix (runChooseS (pure . pure) . f . head)
     >>= \case
       a:|[] -> leaf a
       a:|_  -> leaf a `fork` runChoose fork leaf (mfix (liftAll . fmap tail . runChooseS (pure . pure) . f))
       where
-    liftAll m = ChooseC $ \ fork leaf -> m >>= foldr1 fork . fmap leaf
+    liftAll m = ChooseT $ \ fork leaf -> m >>= foldr1 fork . fmap leaf
   {-# INLINE mfix #-}
 
-instance MonadTrans ChooseC where
-  lift m = ChooseC (\ _ leaf -> m >>= leaf)
+instance MonadTrans ChooseT where
+  lift m = ChooseT (\ _ leaf -> m >>= leaf)
   {-# INLINE lift #-}
 
-instance Algebra m => Algebra (ChooseC m) where
-  type Sig (ChooseC m) = Choose :+: Sig m
+instance Algebra m => Algebra (ChooseT m) where
+  type Sig (ChooseT m) = Choose :+: Sig m
 
-  alg (ctx :: ctx ()) (hdl :: forall x . ctx (n x) -> ChooseC m (ctx x)) = \case
-    L (Choose k) -> ChooseC $ \ fork leaf -> fork (runChoose fork leaf (hdl (k True <$ ctx))) (runChoose fork leaf (hdl (k False <$ ctx)))
-    R other      -> ChooseC $ \ fork leaf -> thread (pure ctx) dst other >>= runIdentity . runChoose (coerce fork) (coerce leaf)
+  alg (ctx :: ctx ()) (hdl :: forall x . ctx (n x) -> ChooseT m (ctx x)) = \case
+    L (Choose k) -> ChooseT $ \ fork leaf -> fork (runChoose fork leaf (hdl (k True <$ ctx))) (runChoose fork leaf (hdl (k False <$ ctx)))
+    R other      -> ChooseT $ \ fork leaf -> thread (pure ctx) dst other >>= runIdentity . runChoose (coerce fork) (coerce leaf)
     where
-    dst :: ChooseC Identity (ctx (n a)) -> m (ChooseC Identity (ctx a))
+    dst :: ChooseT Identity (ctx (n a)) -> m (ChooseT Identity (ctx a))
     dst = runIdentity . runChoose (liftA2 (liftA2 (<|>))) (pure . runChoose (liftA2 (<|>)) (pure . pure) . hdl)
   {-# INLINE alg #-}
