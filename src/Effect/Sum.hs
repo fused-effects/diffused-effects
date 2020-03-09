@@ -8,11 +8,11 @@
 module Effect.Sum
 ( -- * Membership
   Member(..)
-, type L
-, type R
 , Members
   -- * Sums
 , (:+:)(..)
+, type L
+, type R
 , reassociateSumL
 ) where
 
