@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Control.Algebra.Class
 ( Algebra(..)
 ) where
@@ -17,6 +19,7 @@ import Control.Effect.Sum
 import Control.Effect.Throw.Internal
 import Control.Effect.Writer.Internal
 import Control.Monad (join)
+import qualified Control.Monad.Trans.Except as Except
 import Data.Coerce (coerce)
 import Data.Functor.Identity
 import Data.List.NonEmpty (NonEmpty)
@@ -74,3 +77,11 @@ instance Algebra Identity where
   type Signature Identity = Lift Identity
 
   alg (LiftWith with k) = with (Identity ()) coerce >>= k . runIdentity
+
+
+instance (Algebra m, Effect (Signature m)) => Algebra (Except.ExceptT e m) where
+  type Signature (Except.ExceptT e m) = Error e :+: Signature m
+
+  alg (L (L (Throw e)))     = Except.throwE e
+  alg (L (R (Catch m h k))) = Except.catchE m h >>= k
+  alg (R other)             = Except.ExceptT $ alg (handle (Right ()) (either (pure . Left) Except.runExceptT) other)
