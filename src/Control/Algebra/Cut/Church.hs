@@ -13,7 +13,6 @@ module Control.Algebra.Cut.Church
 import Control.Algebra
 import Control.Effect.Cut
 import Control.Effect.NonDet
-import Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix
 import Control.Monad.IO.Class

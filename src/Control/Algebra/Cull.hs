@@ -11,7 +11,6 @@ import Control.Algebra
 import Control.Algebra.NonDet.Church
 import Control.Algebra.Reader
 import Control.Effect.Cull
-import Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail
 import Control.Monad.Fix
 import Control.Monad.IO.Class
