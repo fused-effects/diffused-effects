@@ -10,12 +10,15 @@ import Control.Effect.Choose.Internal
 import Control.Effect.Class
 import Control.Effect.Empty.Internal
 import Control.Effect.Error.Internal
+import Control.Effect.Lift.Internal
 import Control.Effect.NonDet.Internal
 import Control.Effect.Reader.Internal
 import Control.Effect.Sum
 import Control.Effect.Throw.Internal
 import Control.Effect.Writer.Internal
 import Control.Monad (join)
+import Data.Coerce (coerce)
+import Data.Functor.Identity
 import Data.List.NonEmpty (NonEmpty)
 
 class (HFunctor (Signature m), Monad m) => Algebra m where
@@ -61,3 +64,8 @@ instance Monoid w => Algebra ((,) w) where
     Tell w     k -> join (w, k)
     Listen m   k -> let (w, a) = m ; (w', a') = k w a in (mappend w w', a')
     Censor f m k -> let (w, a) = m ; (w', a') = k   a in (mappend (f w) w', a')
+
+instance Algebra Identity where
+  type Signature Identity = Lift Identity
+
+  alg (LiftWith with k) = with (Identity ()) coerce >>= k . runIdentity
