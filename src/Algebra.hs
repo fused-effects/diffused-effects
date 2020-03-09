@@ -8,7 +8,8 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Algebra
-( Algebra(..)
+( type (~>)
+, Algebra(..)
 , (:+:)(..)
 , (:.:)(..)
 , Has
@@ -39,6 +40,8 @@ import           Effect.State.Internal
 import           Effect.Sum
 import           Effect.Throw.Internal
 import           Effect.Writer.Internal
+
+type f ~> g = forall x . f x -> g x
 
 class Monad m => Algebra m where
   type Sig m :: (* -> *) -> (* -> *)
