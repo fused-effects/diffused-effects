@@ -14,7 +14,7 @@ import Control.Algebra.Pure
 import Control.Effect.Class
 import Control.Effect.Sum
 
-type Has eff m = (Algebra m, HasIn (Signature m) eff)
+type Has eff m = (Algebra m, HasIn (Sig m) eff)
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
 send :: Has eff m => eff m a -> m a

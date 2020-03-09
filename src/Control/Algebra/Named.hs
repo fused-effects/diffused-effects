@@ -19,7 +19,7 @@ type family Lhs a where
 type family Rhs a where
   Rhs (_ :+: b) = b
 
-instance (Algebra m, Signature m ~ (eff :+: sig), HFunctor eff, HFunctor sig) => Algebra (NamedC name m) where
-  type Signature (NamedC name m) = Named name (Lhs (Signature m)) :+: Rhs (Signature m)
+instance (Algebra m, Sig m ~ (eff :+: sig), HFunctor eff, HFunctor sig) => Algebra (NamedC name m) where
+  type Sig (NamedC name m) = Named name (Lhs (Sig m)) :+: Rhs (Sig m)
   alg (L eff) = NamedC . alg . handleCoercible . L $ getNamed eff
   alg (R eff) = NamedC . alg . handleCoercible . R $ eff

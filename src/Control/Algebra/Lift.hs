@@ -28,6 +28,6 @@ instance MonadTrans LiftC where
   lift = LiftC
 
 instance Monad m => Algebra (LiftC m) where
-  type Signature (LiftC m) = Lift m
+  type Sig (LiftC m) = Lift m
 
   alg (LiftWith with k) = LiftC (with (Identity ()) (fmap Identity . runLift . runIdentity)) >>= k . runIdentity

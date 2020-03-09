@@ -25,7 +25,7 @@ instance {-# OVERLAPPABLE #-} NamedMember name sub sup => NamedMember name sub (
   injNamed = R . injNamed
 
 
-type HasNamed name eff m = (Algebra m, HasNamedIn name (Signature m) eff)
+type HasNamed name eff m = (Algebra m, HasNamedIn name (Sig m) eff)
 
 -- | Construct a request for a named effect to be interpreted by some handler later on.
 sendNamed :: forall name eff m a . HasNamed name eff m => eff m a -> m a

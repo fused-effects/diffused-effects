@@ -71,8 +71,8 @@ instance MonadTrans CutC where
   lift m = CutC (\ cons nil _ -> m >>= flip cons nil)
   {-# INLINE lift #-}
 
-instance (Algebra m, Effect (Signature m)) => Algebra (CutC m) where
-  type Signature (CutC m) = Cut :+: NonDet :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (CutC m) where
+  type Sig (CutC m) = Cut :+: NonDet :+: Sig m
   alg (L Cutfail)    = CutC $ \ _    _   fail -> fail
   alg (L (Call m k)) = CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
   alg (R (L (L Empty)))      = empty

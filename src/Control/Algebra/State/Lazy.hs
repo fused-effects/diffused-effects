@@ -70,8 +70,8 @@ instance MonadTrans (StateC s) where
   lift m = StateC (\ s -> (,) s <$> m)
   {-# INLINE lift #-}
 
-instance (Algebra m, Effect (Signature m)) => Algebra (StateC s m) where
-  type Signature (StateC s m) = State s :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (StateC s m) where
+  type Sig (StateC s m) = State s :+: Sig m
   alg (L (Get   k)) = StateC (\ s -> runState s (k s))
   alg (L (Put s k)) = StateC (\ _ -> runState s k)
   alg (R other)     = StateC (\ s -> alg (handle (s, ()) (uncurry runState) other))

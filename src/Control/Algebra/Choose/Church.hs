@@ -59,8 +59,8 @@ instance MonadTrans ChooseC where
   lift m = ChooseC (\ _ leaf -> m >>= leaf)
   {-# INLINE lift #-}
 
-instance (Algebra m, Effect (Signature m)) => Algebra (ChooseC m) where
-  type Signature (ChooseC m) = Choose :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (ChooseC m) where
+  type Sig (ChooseC m) = Choose :+: Sig m
   alg (L (Choose k)) = ChooseC $ \ fork leaf -> fork (runChooseC (k True) fork leaf) (runChooseC (k False) fork leaf)
   alg (R other)      = ChooseC $ \ fork leaf -> alg (handle (Leaf ()) (fmap join . traverse (runChoose (liftA2 Fork) (pure . Leaf))) other) >>= fold fork leaf
   {-# INLINE alg #-}

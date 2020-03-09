@@ -45,8 +45,8 @@ execWriter = fmap fst . runWriter
 newtype WriterC w m a = WriterC { runWriterC :: StateC w m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Monoid w, Algebra m, Effect (Signature m)) => Algebra (WriterC w m) where
-  type Signature (WriterC w m) = Writer w :+: Signature m
+instance (Monoid w, Algebra m, Effect (Sig m)) => Algebra (WriterC w m) where
+  type Sig (WriterC w m) = Writer w :+: Sig m
   alg (L (Tell w     k)) = WriterC $ do
     modify (`mappend` w)
     runWriterC k

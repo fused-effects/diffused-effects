@@ -62,8 +62,8 @@ instance MonadTrans EmptyC where
   lift = EmptyC . fmap Just
   {-# INLINE lift #-}
 
-instance (Algebra m, Effect (Signature m)) => Algebra (EmptyC m) where
-  type Signature (EmptyC m) = Empty :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (EmptyC m) where
+  type Sig (EmptyC m) = Empty :+: Sig m
   alg (L Empty) = EmptyC (pure Nothing)
   alg (R other) = EmptyC (alg (handle (Just ()) (maybe (pure Nothing) runEmptyC) other))
   {-# INLINE alg #-}

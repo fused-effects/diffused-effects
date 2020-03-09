@@ -31,44 +31,44 @@ import           Data.Functor.Identity
 import           Data.List.NonEmpty (NonEmpty)
 import           Data.Tuple (swap)
 
-class (HFunctor (Signature m), Monad m) => Algebra m where
-  type Signature m :: (* -> *) -> (* -> *)
+class (HFunctor (Sig m), Monad m) => Algebra m where
+  type Sig m :: (* -> *) -> (* -> *)
 
-  alg :: Signature m m a -> m a
+  alg :: Sig m m a -> m a
 
 instance Algebra Maybe where
-  type Signature Maybe = Empty
+  type Sig Maybe = Empty
 
   alg Empty = Nothing
 
 instance Algebra (Either e) where
-  type Signature (Either e) = Error e
+  type Sig (Either e) = Error e
 
   alg = \case
     L (Throw e)     -> Left e
     R (Catch m h k) -> either h pure m >>= k
 
 instance Algebra ((->) r) where
-  type Signature ((->) r) = Reader r
+  type Sig ((->) r) = Reader r
 
   alg = \case
     Ask       k -> join k
     Local f m k -> m . f >>= k
 
 instance Algebra NonEmpty where
-  type Signature NonEmpty = Choose
+  type Sig NonEmpty = Choose
 
   alg (Choose m) = m True <> m False
 
 instance Algebra [] where
-  type Signature [] = NonDet
+  type Sig [] = NonDet
 
   alg = \case
     L Empty      -> []
     R (Choose m) -> m True <> m False
 
 instance Monoid w => Algebra ((,) w) where
-  type Signature ((,) w) = Writer w
+  type Sig ((,) w) = Writer w
 
   alg = \case
     Tell w     k -> join (w, k)
@@ -76,18 +76,18 @@ instance Monoid w => Algebra ((,) w) where
     Censor f m k -> let (w, a) = m ; (w', a') = k   a in (mappend (f w) w', a')
 
 instance Algebra IO where
-  type Signature IO = Lift IO
+  type Sig IO = Lift IO
 
   alg (LiftWith with k) = with (Identity ()) coerce >>= k . runIdentity
 
 instance Algebra Identity where
-  type Signature Identity = Lift Identity
+  type Sig Identity = Lift Identity
 
   alg (LiftWith with k) = with (Identity ()) coerce >>= k . runIdentity
 
 
-instance (Algebra m, Effect (Signature m)) => Algebra (Except.ExceptT e m) where
-  type Signature (Except.ExceptT e m) = Error e :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (Except.ExceptT e m) where
+  type Sig (Except.ExceptT e m) = Error e :+: Sig m
 
   alg = \case
     L (L (Throw e))     -> Except.throwE e
@@ -95,31 +95,31 @@ instance (Algebra m, Effect (Signature m)) => Algebra (Except.ExceptT e m) where
     R other             -> Except.ExceptT $ alg (handle (Right ()) (either (pure . Left) Except.runExceptT) other)
 
 instance Algebra m => Algebra (Reader.ReaderT r m) where
-  type Signature (Reader.ReaderT r m) = Reader r :+: Signature m
+  type Sig (Reader.ReaderT r m) = Reader r :+: Sig m
 
   alg = \case
     L (Ask       k) -> Reader.ask >>= k
     L (Local f m k) -> Reader.local f m >>= k
     R other         -> Reader.ReaderT $ \ r -> alg (hmap (`Reader.runReaderT` r) other)
 
-instance (Algebra m, Effect (Signature m)) => Algebra (State.Lazy.StateT s m) where
-  type Signature (State.Lazy.StateT s m) = State s :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (State.Lazy.StateT s m) where
+  type Sig (State.Lazy.StateT s m) = State s :+: Sig m
 
   alg = \case
     L (Get   k) -> State.Lazy.get >>= k
     L (Put s k) -> State.Lazy.put s *> k
     R other     -> State.Lazy.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Lazy.runStateT x s) other)
 
-instance (Algebra m, Effect (Signature m)) => Algebra (State.Strict.StateT s m) where
-  type Signature (State.Strict.StateT s m) = State s :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (State.Strict.StateT s m) where
+  type Sig (State.Strict.StateT s m) = State s :+: Sig m
 
   alg = \case
     L (Get   k) -> State.Strict.get >>= k
     L (Put s k) -> State.Strict.put s *> k
     R other     -> State.Strict.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Strict.runStateT x s) other)
 
-instance (Algebra m, Effect (Signature m), Monoid w) => Algebra (Writer.Lazy.WriterT w m) where
-  type Signature (Writer.Lazy.WriterT w m) = Writer w :+: Signature m
+instance (Algebra m, Effect (Sig m), Monoid w) => Algebra (Writer.Lazy.WriterT w m) where
+  type Sig (Writer.Lazy.WriterT w m) = Writer w :+: Sig m
 
   alg = \case
     L (Tell w k)     -> Writer.Lazy.tell w *> k
@@ -127,8 +127,8 @@ instance (Algebra m, Effect (Signature m), Monoid w) => Algebra (Writer.Lazy.Wri
     L (Censor f m k) -> Writer.Lazy.censor f m >>= k
     R other          -> Writer.Lazy.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Lazy.runWriterT x) other)
 
-instance (Algebra m, Effect (Signature m), Monoid w) => Algebra (Writer.Strict.WriterT w m) where
-  type Signature (Writer.Strict.WriterT w m) = Writer w :+: Signature m
+instance (Algebra m, Effect (Sig m), Monoid w) => Algebra (Writer.Strict.WriterT w m) where
+  type Sig (Writer.Strict.WriterT w m) = Writer w :+: Sig m
 
   alg = \case
     L (Tell w k)     -> Writer.Strict.tell w *> k

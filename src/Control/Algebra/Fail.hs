@@ -35,12 +35,12 @@ runFail = runExceptT . runFailC
 newtype FailC m a = FailC { runFailC :: ExceptT String m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Algebra m, Effect (Signature m)) => Fail.MonadFail (FailC m) where
+instance (Algebra m, Effect (Sig m)) => Fail.MonadFail (FailC m) where
   fail s = FailC (throwError s)
   {-# INLINE fail #-}
 
-instance (Algebra m, Effect (Signature m)) => Algebra (FailC m) where
-  type Signature (FailC m) = Fail :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (FailC m) where
+  type Sig (FailC m) = Fail :+: Sig m
   alg (L (Fail s)) = Fail.fail s
   alg (R other)    = FailC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}

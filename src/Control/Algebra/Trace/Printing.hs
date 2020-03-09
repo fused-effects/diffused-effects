@@ -32,7 +32,7 @@ instance MonadTrans TraceC where
   {-# INLINE lift #-}
 
 instance (MonadIO m, Algebra m) => Algebra (TraceC m) where
-  type Signature (TraceC m) = Trace :+: Signature m
+  type Sig (TraceC m) = Trace :+: Sig m
   alg (L (Trace s k)) = liftIO (hPutStrLn stderr s) *> k
   alg (R other)       = TraceC (alg (handleCoercible other))
   {-# INLINE alg #-}

@@ -33,7 +33,7 @@ instance MonadTrans TraceC where
   {-# INLINE lift #-}
 
 instance Algebra m => Algebra (TraceC m) where
-  type Signature (TraceC m) = Trace :+: Signature m
+  type Sig (TraceC m) = Trace :+: Sig m
   alg (L trace) = traceCont trace
   alg (R other) = TraceC (alg (handleCoercible other))
   {-# INLINE alg #-}

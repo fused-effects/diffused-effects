@@ -30,7 +30,7 @@ runTrace = fmap (first reverse) . runState [] . runTraceC
 newtype TraceC m a = TraceC { runTraceC :: StateC [String] m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Algebra m, Effect (Signature m)) => Algebra (TraceC m) where
-  type Signature (TraceC m) = Trace :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (TraceC m) where
+  type Sig (TraceC m) = Trace :+: Sig m
   alg (L (Trace m k)) = TraceC (modify (m :)) *> k
   alg (R other)       = TraceC (alg (R (handleCoercible other)))

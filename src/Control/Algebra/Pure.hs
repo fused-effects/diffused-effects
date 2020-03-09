@@ -55,6 +55,6 @@ instance MonadFix PureC where
   {-# INLINE mfix #-}
 
 instance Algebra PureC where
-  type Signature PureC = Pure
+  type Sig PureC = Pure
   alg v = case v of {}
   {-# INLINE alg #-}

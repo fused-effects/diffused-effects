@@ -30,8 +30,8 @@ runFresh = evalState 0 . runFreshC
 newtype FreshC m a = FreshC { runFreshC :: StateC Int m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
-instance (Algebra m, Effect (Signature m)) => Algebra (FreshC m) where
-  type Signature (FreshC m) = Fresh :+: Signature m
+instance (Algebra m, Effect (Sig m)) => Algebra (FreshC m) where
+  type Sig (FreshC m) = Fresh :+: Sig m
   alg (L (Fresh   k)) = FreshC $ do
     i <- get
     put (succ i)
