@@ -49,7 +49,6 @@ library
     Control.Algebra.Named
     Control.Algebra.NonDet.Church
     Control.Algebra.Pure
-    Control.Algebra.Reader
     Control.Algebra.State.Lazy
     Control.Algebra.State.Strict
     Control.Algebra.Trace.Ignoring

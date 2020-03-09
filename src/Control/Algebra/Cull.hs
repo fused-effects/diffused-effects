@@ -1,4 +1,8 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Control.Algebra.Cull
 ( -- * Cull effect
   module Control.Effect.Cull
@@ -7,33 +11,33 @@ module Control.Algebra.Cull
 , CullC(..)
 ) where
 
-import Control.Algebra
-import Control.Algebra.NonDet.Church
-import Control.Algebra.Reader
-import Control.Effect.Cull
+import           Control.Algebra
+import           Control.Algebra.NonDet.Church
+import           Control.Effect.Cull
 import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+import           Control.Monad.Fix
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
 
 -- | Run a 'Cull' effect. Branches outside of any 'cull' block will not be pruned.
 --
 --   prop> run (runNonDet (runCull (pure a <|> pure b))) === [a, b]
 runCull :: Alternative m => CullC m a -> m a
-runCull (CullC m) = runNonDetC (runReader False m) (<|>) pure empty
+runCull (CullC m) = runNonDetC (runReaderT m False) (<|>) pure empty
 
-newtype CullC m a = CullC { runCullC :: ReaderC Bool (NonDetC m) a }
+newtype CullC m a = CullC { runCullC :: ReaderT Bool (NonDetC m) a }
   deriving (Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO)
 
 instance Alternative (CullC m) where
   empty = CullC empty
   {-# INLINE empty #-}
-  l <|> r = CullC $ ReaderC $ \ cull ->
+  l <|> r = CullC $ ReaderT $ \ cull ->
     if cull then
       NonDetC $ \ fork leaf nil ->
-        runNonDetC (runReader cull (runCullC l)) fork leaf (runNonDetC (runReader cull (runCullC r)) fork leaf nil)
+        runNonDetC (runReaderT (runCullC l) cull) fork leaf (runNonDetC (runReaderT (runCullC r) cull) fork leaf nil)
     else
-      runReader cull (runCullC l) <|> runReader cull (runCullC r)
+      runReaderT (runCullC l) cull <|> runReaderT (runCullC r) cull
   {-# INLINE (<|>) #-}
 
 instance MonadPlus (CullC m)
