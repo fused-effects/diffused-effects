@@ -33,7 +33,7 @@ runChoose fork leaf (ChooseT runChooseT) = runChooseT fork leaf
 runChooseS :: (S.Semigroup b, Applicative m) => (a -> m b) -> ChooseT m a -> m b
 runChooseS = runChoose (liftA2 (S.<>))
 
-newtype ChooseT m a = ChooseT (forall b . (m b -> m b -> m b) -> (a -> m b) -> m b)
+newtype ChooseT m a = ChooseT { runChooseT :: forall b . (m b -> m b -> m b) -> (a -> m b) -> m b }
   deriving (Functor)
 
 instance Applicative (ChooseT m) where
