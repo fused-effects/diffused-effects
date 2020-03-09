@@ -8,21 +8,17 @@ module Algebra.Lift
 , module Effect.Lift
 ) where
 
-import           Algebra
-import           Control.Applicative (Alternative)
-import           Effect.Lift
-import           Control.Monad (MonadPlus)
-import qualified Control.Monad.Fail as Fail
-import           Control.Monad.Fix
-import           Control.Monad.IO.Class
-import           Control.Monad.Trans.Class
-import           Data.Functor.Identity
+import Algebra
+import Control.Monad.Fix
+import Control.Monad.Trans.Class
+import Data.Functor.Identity
+import Effect.Lift
 
 runLift :: LiftC m a -> m a
 runLift (LiftC m) = m
 
 newtype LiftC m a = LiftC (m a)
-  deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus)
+  deriving (Applicative, Functor, Monad, MonadFix)
 
 instance MonadTrans LiftC where
   lift = LiftC

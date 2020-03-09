@@ -5,30 +5,19 @@ module Effect.NonDet
 , module Effect.Empty
 , oneOf
 , foldMapA
-  -- * Re-exports
-, Alternative(..)
-, Algebra
-, Has
-, MonadPlus(..)
-, guard
-, optional
-, run
 ) where
 
 import Algebra
-import Control.Applicative (Alternative(..), optional)
-import Effect.Choose (Choose(..))
-import Effect.Empty (Empty(..))
+import Effect.Choose
+import Effect.Empty
 import Effect.NonDet.Internal (NonDet)
-import Control.Monad (MonadPlus(..), guard)
 import Data.Coerce
-import Data.Monoid (Alt(..))
 
-oneOf :: (Foldable t, Alternative m) => t a -> m a
+oneOf :: (Foldable t, Has NonDet m) => t a -> m a
 oneOf = foldMapA pure
 
-foldMapA :: (Foldable t, Alternative m) => (a -> m b) -> t a -> m b
-foldMapA f = getAlt #. foldMap (Alt #. f)
+foldMapA :: (Foldable t, Has NonDet m) => (a -> m b) -> t a -> m b
+foldMapA f = getChoosing #. foldMap (Choosing #. f)
 
 
 -- | Compose a function operationally equivalent to 'id' on the left.

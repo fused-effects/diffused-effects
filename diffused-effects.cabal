@@ -39,7 +39,7 @@ library
   exposed-modules:
     Algebra
     Algebra.Choose.Church
-    Algebra.Cull
+    Algebra.Cull.Church
     Algebra.Cut.Church
     Algebra.Fail
     Algebra.Lift
