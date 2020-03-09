@@ -3,6 +3,7 @@ module Effect.Writer
 ( -- * Writer effect
   Writer(..)
 , tell
+, writer
 , listen
 , listens
 , censor
@@ -18,6 +19,10 @@ import Effect.Writer.Internal (Writer(..))
 tell :: Has (Writer w) m => w -> m ()
 tell w = send (Tell w (pure ()))
 {-# INLINE tell #-}
+
+writer :: Has (Writer w) m => (w, a) -> m a
+writer ~(w, a) = send (Tell w (pure a))
+{-# INLINE writer #-}
 
 listen :: Has (Writer w) m => m a -> m (w, a)
 listen m = send (Listen m (curry pure))
