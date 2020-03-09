@@ -2,19 +2,23 @@
 module Control.Algebra
 ( -- * Re-exports
   module Control.Algebra.Class
-, module Control.Algebra.Pure
 , module Control.Effect.Class
 , (:+:)(..)
 , Has
+, run
 , send
 ) where
 
 import Control.Algebra.Class
-import Control.Algebra.Pure
 import Control.Effect.Class
 import Control.Effect.Sum
+import Data.Functor.Identity
 
 type Has eff m = (Algebra m, HasIn (Sig m) eff)
+
+run :: Identity a -> a
+run = runIdentity
+{-# INLINE run #-}
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
 send :: Has eff m => eff m a -> m a
