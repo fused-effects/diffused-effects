@@ -41,7 +41,6 @@ library
     Algebra.Choose.Church
     Algebra.Cull
     Algebra.Cut.Church
-    Algebra.Empty.Maybe
     Algebra.Fail
     Algebra.Fresh.Strict
     Algebra.Lift
