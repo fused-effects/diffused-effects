@@ -8,7 +8,6 @@ module Control.Effect.State.Named
 , modifyLazy
 ) where
 
-import Control.Algebra
 import Control.Effect.Sum.Named
 import Control.Effect.State (State(..))
 

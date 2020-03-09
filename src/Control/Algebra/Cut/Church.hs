@@ -14,7 +14,6 @@ module Control.Algebra.Cut.Church
 ) where
 
 import Control.Algebra
-import Control.Applicative (Alternative(..))
 import Control.Effect.Cut
 import Control.Effect.NonDet
 import Control.Monad (MonadPlus(..))

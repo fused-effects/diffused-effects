@@ -11,7 +11,7 @@ module Control.Algebra.NonDet.Church
 ) where
 
 import Control.Algebra
-import Control.Applicative (Alternative(..), liftA2)
+import Control.Applicative (liftA2)
 import Control.Effect.NonDet
 import Control.Monad (MonadPlus(..), join)
 import qualified Control.Monad.Fail as Fail

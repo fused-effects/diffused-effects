@@ -29,7 +29,7 @@ type HasNamed name eff m = (Algebra m, HasNamedIn name (Signature m) eff)
 
 -- | Construct a request for a named effect to be interpreted by some handler later on.
 sendNamed :: forall name eff m a . HasNamed name eff m => eff m a -> m a
-sendNamed = alg . injNamed . Named @name
+sendNamed = alg . injNamed . Named @_ @name
 {-# INLINE sendNamed #-}
 
 
