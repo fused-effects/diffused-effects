@@ -5,9 +5,6 @@ module Control.Algebra.Empty.Maybe
   -- * Empty carrier
 , runEmpty
 , EmptyC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import Control.Algebra

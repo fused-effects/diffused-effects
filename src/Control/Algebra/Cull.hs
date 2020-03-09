@@ -5,9 +5,6 @@ module Control.Algebra.Cull
   -- * Cull carrier
 , runCull
 , CullC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import Control.Algebra

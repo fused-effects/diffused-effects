@@ -5,9 +5,6 @@ module Control.Algebra.NonDet.Church
   -- * NonDet carrier
 , runNonDet
 , NonDetC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import Control.Algebra

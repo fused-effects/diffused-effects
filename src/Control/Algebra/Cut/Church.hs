@@ -8,9 +8,6 @@ module Control.Algebra.Cut.Church
 , runCut
 , runCutAll
 , CutC(..)
--- * Re-exports
-, Has
-, run
 ) where
 
 import Control.Algebra
