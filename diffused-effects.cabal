@@ -42,7 +42,6 @@ library
     Algebra.Cull
     Algebra.Cut.Church
     Algebra.Fail
-    Algebra.Fresh.Strict
     Algebra.Lift
     Algebra.NonDet.Church
     Effect.Catch
@@ -53,7 +52,6 @@ library
     Effect.Empty
     Effect.Error
     Effect.Fail
-    Effect.Fresh
     Effect.Lift
     Effect.NonDet
     Effect.Reader
