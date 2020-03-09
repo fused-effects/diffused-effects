@@ -49,12 +49,9 @@ library
     Control.Algebra.Named
     Control.Algebra.NonDet.Church
     Control.Algebra.Pure
-    Control.Algebra.State.Lazy
-    Control.Algebra.State.Strict
     Control.Algebra.Trace.Ignoring
     Control.Algebra.Trace.Printing
     Control.Algebra.Trace.Returning
-    Control.Algebra.Writer.Strict
     Control.Effect.Catch
     Control.Effect.Choose
     Control.Effect.Class

@@ -11,7 +11,7 @@ module Control.Algebra.Fresh.Strict
 ) where
 
 import Control.Algebra
-import Control.Algebra.State.Strict
+import Control.Monad.Trans.State.Strict
 import Control.Applicative (Alternative(..))
 import Control.Effect.Fresh
 import Control.Monad (MonadPlus(..))
@@ -24,10 +24,10 @@ import Control.Monad.Trans.Class
 --
 --   prop> run (runFresh (replicateM n fresh)) === [0..pred n]
 --   prop> run (runFresh (replicateM n fresh *> pure b)) === b
-runFresh :: Functor m => FreshC m a -> m a
-runFresh = evalState 0 . runFreshC
+runFresh :: Monad m => FreshC m a -> m a
+runFresh = (`evalStateT` 0) . runFreshC
 
-newtype FreshC m a = FreshC { runFreshC :: StateC Int m a }
+newtype FreshC m a = FreshC { runFreshC :: StateT Int m a }
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
 instance (Algebra m, Effect (Sig m)) => Algebra (FreshC m) where
