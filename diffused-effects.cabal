@@ -41,7 +41,7 @@ library
     Algebra.Choose.Church
     Algebra.Cull.Church
     Algebra.Cut.Church
-    Algebra.Fail
+    Algebra.Fail.Either
     Algebra.NonDet.Church
     Effect.Catch
     Effect.Choose

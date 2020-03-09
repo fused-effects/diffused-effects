@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Algebra.Fail
+module Algebra.Fail.Either
 ( -- * Fail effect
   module Effect.Fail
   -- * Fail carrier
