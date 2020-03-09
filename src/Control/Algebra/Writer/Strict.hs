@@ -1,4 +1,10 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, ScopedTypeVariables, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Control.Algebra.Writer.Strict
 ( -- * Writer effect
   module Control.Effect.Writer
@@ -8,15 +14,15 @@ module Control.Algebra.Writer.Strict
 , WriterC(..)
 ) where
 
-import Control.Algebra
-import Control.Algebra.State.Strict
-import Control.Applicative (Alternative(..))
-import Control.Effect.Writer
-import Control.Monad (MonadPlus(..))
+import           Control.Algebra
+import           Control.Algebra.State.Strict
+import           Control.Applicative (Alternative(..))
+import           Control.Effect.Writer
+import           Control.Monad (MonadPlus(..), join)
 import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+import           Control.Monad.Fix
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
 
 -- | Run a 'Writer' effect with a 'Monoid'al log, producing the final log alongside the result value.
 --
@@ -45,15 +51,12 @@ instance (Monoid w, Algebra m, Effect (Signature m)) => Algebra (WriterC w m) wh
     modify (`mappend` w)
     runWriterC k
   alg (L (Listen   m k)) = WriterC $ do
-    w <- get
-    put (mempty :: w)
+    w <- state (mempty,)
     a <- runWriterC m
-    w' <- get
-    modify (mappend (w :: w))
+    w' <- state (join ((,) . mappend w))
     runWriterC (k w' a)
   alg (L (Censor f m k)) = WriterC $ do
-    w <- get
-    put (mempty :: w)
+    w <- state (mempty,)
     a <- runWriterC m
     modify (mappend w . f)
     runWriterC (k a)
