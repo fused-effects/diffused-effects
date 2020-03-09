@@ -9,7 +9,7 @@ module Algebra.Fail
   module Effect.Fail
   -- * Fail carrier
 , runFail
-, FailC(..)
+, FailT(..)
   -- * Re-exports
 , Has
 , run
@@ -22,16 +22,16 @@ import Control.Monad.Trans.Except
 import Effect.Fail
 import Effect.Throw
 
-runFail :: FailC m a -> m (Either String a)
-runFail = runExceptT . runFailC
+runFail :: FailT m a -> m (Either String a)
+runFail = runExceptT . runFailT
 
-newtype FailC m a = FailC { runFailC :: ExceptT String m a }
+newtype FailT m a = FailT { runFailT :: ExceptT String m a }
   deriving (Applicative, Functor, Monad, MonadFix, MonadTrans)
 
-instance Algebra m => Algebra (FailC m) where
-  type Sig (FailC m) = Fail :+: Sig m
+instance Algebra m => Algebra (FailT m) where
+  type Sig (FailT m) = Fail :+: Sig m
 
   alg ctx hdl = \case
-    L (Fail s) -> FailC (throwError s)
-    R other    -> FailC (alg ctx (runFailC . hdl) (R other))
+    L (Fail s) -> FailT (throwError s)
+    R other    -> FailT (alg ctx (runFailT . hdl) (R other))
   {-# INLINE alg #-}
