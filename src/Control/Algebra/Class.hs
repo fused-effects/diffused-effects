@@ -10,6 +10,7 @@ import Control.Effect.Choose.Internal
 import Control.Effect.Class
 import Control.Effect.Empty.Internal
 import Control.Effect.Error.Internal
+import Control.Effect.NonDet.Internal
 import Control.Effect.Reader.Internal
 import Control.Effect.Sum
 import Control.Effect.Throw.Internal
@@ -44,3 +45,10 @@ instance Algebra NonEmpty where
   type Signature NonEmpty = Choose
 
   alg (Choose m) = m True <> m False
+
+instance Algebra [] where
+  type Signature [] = NonDet
+
+  alg = \case
+    L Empty      -> []
+    R (Choose m) -> m True <> m False
