@@ -20,6 +20,7 @@ import           Control.Effect.Throw.Internal
 import           Control.Effect.Writer.Internal
 import           Control.Monad (join)
 import qualified Control.Monad.Trans.Except as Except
+import qualified Control.Monad.Trans.Reader as Reader
 import           Data.Coerce (coerce)
 import           Data.Functor.Identity
 import           Data.List.NonEmpty (NonEmpty)
@@ -85,3 +86,10 @@ instance (Algebra m, Effect (Signature m)) => Algebra (Except.ExceptT e m) where
   alg (L (L (Throw e)))     = Except.throwE e
   alg (L (R (Catch m h k))) = Except.catchE m h >>= k
   alg (R other)             = Except.ExceptT $ alg (handle (Right ()) (either (pure . Left) Except.runExceptT) other)
+
+instance Algebra m => Algebra (Reader.ReaderT r m) where
+  type Signature (Reader.ReaderT r m) = Reader r :+: Signature m
+
+  alg (L (Ask       k)) = Reader.ask >>= k
+  alg (L (Local f m k)) = Reader.local f m >>= k
+  alg (R other)         = Reader.ReaderT $ \ r -> alg (hmap (`Reader.runReaderT` r) other)
