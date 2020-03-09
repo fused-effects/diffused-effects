@@ -1,21 +1,28 @@
-{-# LANGUAGE DeriveFunctor, DeriveGeneric, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
 module Control.Effect.Lift
 ( -- * Lift effect
   Lift(..)
 , sendM
+, sendIO
+, liftWith
+  -- * Re-exports
+, Algebra
+, Has
+, run
 ) where
 
 import Control.Algebra
-import GHC.Generics
+import Control.Effect.Lift.Internal (Lift(..))
 
-newtype Lift sig m k = Lift { unLift :: sig (m k) }
-  deriving (Functor, Generic1)
-
-instance Functor m => HFunctor (Lift m)
-instance Functor m => Effect   (Lift m)
-
--- | Given a @Lift n@ constraint in a signature carried by @m@, 'sendM'
--- promotes arbitrary actions of type @n a@ to @m a@. It is spiritually
--- similar to @lift@ from the @MonadTrans@ typeclass.
 sendM :: (Has (Lift n) m, Functor n) => n a -> m a
-sendM = send . Lift . fmap pure
+sendM m = send (LiftWith (\ ctx _ -> (<$ ctx) <$> m) pure)
+
+sendIO :: Has (Lift IO) m => IO a -> m a
+sendIO = sendM
+
+liftWith
+  :: Has (Lift n) m
+  => (forall ctx . Functor ctx => ctx () -> (forall a . ctx (m a) -> n (ctx a)) -> n (ctx a))
+  -> m a
+liftWith with = send (LiftWith with pure)

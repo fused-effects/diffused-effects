@@ -1,29 +1,27 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
 module Control.Algebra.Lift
-( -- * Lift effect
-  module Control.Effect.Lift
-  -- * Lift carrier
-, runM
+( -- * Lift carrier
+  runLift
 , LiftC(..)
-  -- * Re-exports
-, Has
-, run
+  -- * Lift effect
+, module Control.Effect.Lift
 ) where
 
-import Control.Algebra
-import Control.Applicative (Alternative(..))
-import Control.Effect.Lift
-import Control.Monad (MonadPlus(..))
+import           Control.Algebra
+import           Control.Applicative (Alternative)
+import           Control.Effect.Lift
+import           Control.Monad (MonadPlus)
 import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+import           Control.Monad.Fix
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Data.Functor.Identity
 
--- | Extract a 'Lift'ed 'Monad'ic action from an effectful computation.
-runM :: LiftC m a -> m a
-runM = runLiftC
+runLift :: LiftC m a -> m a
+runLift (LiftC m) = m
 
-newtype LiftC m a = LiftC { runLiftC :: m a }
+newtype LiftC m a = LiftC (m a)
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadFix, MonadIO, MonadPlus)
 
 instance MonadTrans LiftC where
@@ -31,4 +29,5 @@ instance MonadTrans LiftC where
 
 instance Monad m => Algebra (LiftC m) where
   type Signature (LiftC m) = Lift m
-  alg = LiftC . (>>= runLiftC) . unLift
+
+  alg (LiftWith with k) = LiftC (with (Identity ()) (fmap Identity . runLift . runIdentity)) >>= k . runIdentity
