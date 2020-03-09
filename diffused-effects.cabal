@@ -51,6 +51,7 @@ library
     Effect.Empty
     Effect.Error
     Effect.Fail
+    Effect.Labelled
     Effect.Lift
     Effect.NonDet
     Effect.Reader
