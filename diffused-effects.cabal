@@ -57,6 +57,7 @@ library
     Control.Algebra.Trace.Printing
     Control.Algebra.Trace.Returning
     Control.Algebra.Writer.Strict
+    Control.Effect.Catch
     Control.Effect.Choose
     Control.Effect.Class
     Control.Effect.Cull
@@ -74,6 +75,7 @@ library
     Control.Effect.State.Named
     Control.Effect.Sum
     Control.Effect.Sum.Named
+    Control.Effect.Throw
     Control.Effect.Trace
     Control.Effect.Writer
   other-modules:
