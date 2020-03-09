@@ -38,7 +38,7 @@ runCutA = runCut (fmap . (Alt.<|>) . pure) (pure Alt.empty) (pure Alt.empty)
 runCutM :: (Applicative m, Monoid b) => (a -> b) -> CutT m a -> m b
 runCutM leaf = runCut (fmap . mappend . leaf) (pure mempty) (pure mempty)
 
-newtype CutT m a = CutT (forall b . (a -> m b -> m b) -> m b -> m b -> m b)
+newtype CutT m a = CutT { runCutT :: forall b . (a -> m b -> m b) -> m b -> m b -> m b }
   deriving (Functor)
 
 instance Applicative (CutT m) where
