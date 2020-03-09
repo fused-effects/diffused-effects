@@ -48,7 +48,6 @@ library
     Control.Algebra.Lift
     Control.Algebra.Named
     Control.Algebra.NonDet.Church
-    Control.Algebra.Pure
     Control.Algebra.Trace.Ignoring
     Control.Algebra.Trace.Printing
     Control.Algebra.Trace.Returning
@@ -63,7 +62,6 @@ library
     Control.Effect.Fresh
     Control.Effect.Lift
     Control.Effect.NonDet
-    Control.Effect.Pure
     Control.Effect.Reader
     Control.Effect.Reader.Named
     Control.Effect.State
