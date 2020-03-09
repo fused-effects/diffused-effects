@@ -14,18 +14,13 @@ import Control.Effect.Class
 import Control.Effect.Sum
 import Data.Functor.Identity
 
-type Has eff m = (Algebra m, HasIn (Sig m) eff)
+type Has eff m = (Members eff (Sig m), Algebra m)
 
 run :: Identity a -> a
 run = runIdentity
 {-# INLINE run #-}
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
-send :: Has eff m => eff m a -> m a
+send :: (Member eff (Sig m), Algebra m) => eff m a -> m a
 send = alg . inj
 {-# INLINE send #-}
-
-
-class Member eff sig => HasIn sig eff
-instance {-# OVERLAPPABLE #-} HasIn eff eff
-instance {-# OVERLAPPABLE #-} Member eff (l :+: r) => HasIn (l :+: r) eff

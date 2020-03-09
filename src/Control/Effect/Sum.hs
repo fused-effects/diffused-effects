@@ -1,10 +1,23 @@
-{-# LANGUAGE DeriveGeneric, DeriveTraversable, FlexibleInstances, KindSignatures, MultiParamTypeClasses, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Control.Effect.Sum
-( (:+:)(..)
-, Member(..)
+( -- * Membership
+  Member(..)
+, Members
+  -- * Sums
+, (:+:)(..)
+, reassociateSumL
 ) where
 
 import Control.Effect.Class
+import Data.Kind (Constraint)
 import GHC.Generics (Generic1)
 
 data (f :+: g) (m :: * -> *) k
@@ -20,33 +33,37 @@ instance (Effect f, Effect g)     => Effect   (f :+: g)
 
 class Member (sub :: (* -> *) -> (* -> *)) sup where
   inj :: sub m a -> sup m a
-  prj :: sup m a -> Maybe (sub m a)
 
-instance Member sub sub where
+instance Member t t where
   inj = id
-  prj = Just
+  {-# INLINE inj #-}
 
 instance {-# OVERLAPPABLE #-}
-         Member sub (l1 :+: l2 :+: r)
-      => Member sub ((l1 :+: l2) :+: r) where
-  inj = reassoc . inj where
-    reassoc (L l)     = L (L l)
-    reassoc (R (L l)) = L (R l)
-    reassoc (R (R r)) = R r
-  prj = prj . reassoc where
-    reassoc (L (L l)) = L l
-    reassoc (L (R l)) = R (L l)
-    reassoc (R r)     = R (R r)
+         Member t (l1 :+: l2 :+: r)
+      => Member t ((l1 :+: l2) :+: r) where
+  inj = reassociateSumL . inj
+  {-# INLINE inj #-}
 
 instance {-# OVERLAPPABLE #-}
-         Member sub (sub :+: r) where
+         Member l (l :+: r) where
   inj = L
-  prj (L l) = Just l
-  prj _     = Nothing
+  {-# INLINE inj #-}
 
 instance {-# OVERLAPPABLE #-}
-         Member sub r
-      => Member sub (l :+: r) where
+         Member l r
+      => Member l (l' :+: r) where
   inj = R . inj
-  prj (R r) = prj r
-  prj _     = Nothing
+  {-# INLINE inj #-}
+
+
+reassociateSumL :: (l1 :+: l2 :+: r) m a -> ((l1 :+: l2) :+: r) m a
+reassociateSumL = \case
+  L l     -> L (L l)
+  R (L l) -> L (R l)
+  R (R r) -> R r
+{-# INLINE reassociateSumL #-}
+
+
+type family Members sub sup :: Constraint where
+  Members (l :+: r) u = (Members l u, Members r u)
+  Members t         u = Member t u
