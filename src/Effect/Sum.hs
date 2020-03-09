@@ -9,6 +9,7 @@ module Effect.Sum
 ( -- * Membership
   Member(..)
 , type L
+, type R
 , Members
   -- * Sums
 , (:+:)(..)
@@ -60,6 +61,9 @@ reassociateSumL = \case
 
 type family L f where
   L (l :+: _) = l
+
+type family R f where
+  R (_ :+: r) = r
 
 
 type family Members sub sup :: Constraint where
