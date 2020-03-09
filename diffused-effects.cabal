@@ -42,7 +42,6 @@ library
     Algebra.Cull.Church
     Algebra.Cut.Church
     Algebra.Fail
-    Algebra.Lift
     Algebra.NonDet.Church
     Effect.Catch
     Effect.Choose

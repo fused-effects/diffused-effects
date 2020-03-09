@@ -14,11 +14,13 @@ module Algebra
 , Has
 , thread
 , run
+, runLift
 , send
 ) where
 
 import           Control.Monad (join)
 import qualified Control.Monad.Trans.Except as Except
+import qualified Control.Monad.Trans.Identity as Identity
 import qualified Control.Monad.Trans.Maybe as Maybe
 import qualified Control.Monad.Trans.Reader as Reader
 import qualified Control.Monad.Trans.State.Lazy as State.Lazy
@@ -67,6 +69,11 @@ thread ctx hdl = fmap runC . alg (C ctx) (fmap C . hdl . runC)
 run :: Identity a -> a
 run = runIdentity
 {-# INLINE run #-}
+
+runLift :: Identity.IdentityT m a -> m a
+runLift = Identity.runIdentityT
+{-# INLINE runLift #-}
+
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
 send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
@@ -131,6 +138,11 @@ instance Algebra Identity where
   alg ctx hdl (LiftWith with k) = with ctx hdl >>= hdl . fmap k
   {-# INLINE alg #-}
 
+
+instance Monad m => Algebra (Identity.IdentityT m) where
+  type Sig (Identity.IdentityT m) = Lift m
+
+  alg ctx hdl (LiftWith with k) = Identity.IdentityT (with ctx (Identity.runIdentityT . hdl)) >>= hdl . fmap k
 
 instance Algebra m => Algebra (Maybe.MaybeT m) where
   type Sig (Maybe.MaybeT m) = Empty :+: Sig m
