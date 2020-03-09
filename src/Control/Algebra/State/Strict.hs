@@ -13,9 +13,6 @@ module Control.Algebra.State.Strict
 , evalState
 , execState
 , StateC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import           Control.Algebra

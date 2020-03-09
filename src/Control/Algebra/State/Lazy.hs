@@ -12,9 +12,6 @@ module Control.Algebra.State.Lazy
 , evalState
 , execState
 , StateC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import           Control.Algebra
