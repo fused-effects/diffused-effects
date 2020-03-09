@@ -11,7 +11,7 @@ module Algebra.Cull.Church
   runCull
 , runCullA
 , runCullM
-, CullC(CullC)
+, CullC(..)
   -- * Cull effect
 , module Effect.Cull
   -- * NonDet effects
