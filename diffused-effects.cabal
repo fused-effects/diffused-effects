@@ -72,7 +72,6 @@ library
     Effect.Writer.Internal
   build-depends:
     , base           >= 4.9 && < 4.14
-    , deepseq       ^>= 1.4.3
     , transformers
   hs-source-dirs: src
 
