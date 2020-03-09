@@ -41,10 +41,3 @@ asks f = send (Ask (pure . f))
 --   prop> run (runReader a ((,,) <$> ask <*> local (applyFun f) ask <*> ask)) === (a, applyFun f a, a)
 local :: Has (Reader r) m => (r -> r) -> m a -> m a
 local f m = send (Local f m pure)
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure
--- >>> import Control.Algebra.Reader

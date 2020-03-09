@@ -68,9 +68,3 @@ instance (Algebra m, Effect (Signature m)) => Algebra (ErrorC e m) where
   alg (L (Catch m h k)) = ErrorC (runError m >>= either (either (pure . Left) (runError . k) <=< runError . h) (runError . k))
   alg (R other)         = ErrorC (alg (handle (Right ()) (either (pure . Left) runError) other))
   {-# INLINE alg #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> :seti -XTypeApplications
--- >>> import Test.QuickCheck

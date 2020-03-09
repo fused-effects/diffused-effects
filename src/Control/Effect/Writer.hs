@@ -57,11 +57,3 @@ listens f m = send (Listen m (curry pure . f))
 censor :: Has (Writer w) m => (w -> w) -> m a -> m a
 censor f m = send (Censor f m pure)
 {-# INLINE censor #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> :seti -XTypeApplications
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure
--- >>> import Data.Semigroup (Semigroup(..), Sum(..))

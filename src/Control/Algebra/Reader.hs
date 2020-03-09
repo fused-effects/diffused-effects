@@ -80,9 +80,3 @@ instance Algebra m => Algebra (ReaderC r m) where
   alg (L (Local f m k)) = ReaderC (\ r -> runReader (f r) m) >>= k
   alg (R other)         = ReaderC (\ r -> alg (hmap (runReader r) other))
   {-# INLINE alg #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure

@@ -110,9 +110,3 @@ instance (HFunctor alg, Reifies s (Handler alg m), Monad m, Algebra m) => Algebr
     runHandler (unTag (reflect @s)) alg
   alg (R other) =
     InterpretC (alg (handleCoercible other))
-
-
--- $setup
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure
--- >>> import Control.Effect.State

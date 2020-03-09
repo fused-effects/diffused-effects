@@ -52,9 +52,3 @@ instance (HFunctor alg, Has alg m) => Algebra (InterposeC alg m) where
       handler <- InterposeC ask
       lift (runHandler handler (handleCoercible op'))
     | otherwise = InterposeC (ReaderC (\ handler -> alg (hmap (runReader handler . runInterposeC) op)))
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure
--- >>> import Control.Effect.State

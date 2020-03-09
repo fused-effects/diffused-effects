@@ -70,7 +70,3 @@ instance (Algebra m, Effect (Signature m)) => Algebra (EmptyC m) where
   alg (L Empty) = EmptyC (pure Nothing)
   alg (R other) = EmptyC (alg (handle (Just ()) (maybe (pure Nothing) runEmptyC) other))
   {-# INLINE alg #-}
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck

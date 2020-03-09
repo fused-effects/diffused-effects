@@ -95,9 +95,3 @@ instance (Algebra m, Effect (Signature m)) => Algebra (StateC s m) where
   alg (L (Put s k)) = StateC (\ _ -> runState s k)
   alg (R other)     = StateC (\ s -> alg (handle (s, ()) (uncurry runState) other))
   {-# INLINE alg #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure

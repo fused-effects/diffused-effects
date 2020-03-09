@@ -34,8 +34,3 @@ instance (Algebra m, Effect (Signature m)) => Algebra (TraceC m) where
   type Signature (TraceC m) = Trace :+: Signature m
   alg (L (Trace m k)) = TraceC (modify (m :)) *> k
   alg (R other)       = TraceC (alg (R (handleCoercible other)))
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck

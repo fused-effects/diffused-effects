@@ -43,11 +43,3 @@ instance (Algebra m, Effect (Signature m)) => Algebra (FreshC m) where
     runFreshC (k a)
   alg (R other)       = FreshC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure
--- >>> import Control.Monad (replicateM)
--- >>> import Data.List (nub)

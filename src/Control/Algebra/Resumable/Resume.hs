@@ -48,13 +48,3 @@ instance Algebra m => Algebra (ResumableC err m) where
   alg (L (Resumable err k)) = ResumableC (ReaderC (\ handler -> runHandler handler err)) >>= k
   alg (R other)             = ResumableC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> :seti -XGADTs
--- >>> :seti -XTypeApplications
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure
--- >>> import Data.Functor.Const
--- >>> import Data.Functor.Identity

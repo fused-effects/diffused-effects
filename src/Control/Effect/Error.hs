@@ -41,10 +41,3 @@ throwError = send . Throw
 --   prop> run (runError (throwError a `catchError` (throwError @Int))) === Left @Int @Int a
 catchError :: Has (Error exc) m => m a -> (exc -> m a) -> m a
 catchError m h = send (Catch m h pure)
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> :seti -XTypeApplications
--- >>> import Test.QuickCheck
--- >>> import Control.Algebra.Error

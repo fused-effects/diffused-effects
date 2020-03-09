@@ -37,8 +37,3 @@ instance Algebra m => Algebra (TraceC m) where
   alg (L trace) = traceCont trace
   alg (R other) = TraceC (alg (handleCoercible other))
   {-# INLINE alg #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck

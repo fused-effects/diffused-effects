@@ -24,13 +24,3 @@ instance Effect (Resumable err) where
 --   prop> run (runResumable (throwResumable (Identity a))) === Left (SomeError (Identity a))
 throwResumable :: Has (Resumable err) m => err a -> m a
 throwResumable err = send (Resumable err pure)
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> :seti -XGADTs
--- >>> :seti -XTypeApplications
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure
--- >>> import Data.Functor.Const
--- >>> import Data.Functor.Identity

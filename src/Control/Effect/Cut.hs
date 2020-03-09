@@ -52,11 +52,3 @@ call m = send (Call m pure)
 cut :: (Alternative m, Has Cut m) => m ()
 cut = pure () <|> cutfail
 {-# INLINE cut #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Cull
--- >>> import Control.Effect.NonDet
--- >>> import Control.Effect.Pure

@@ -39,9 +39,3 @@ instance (Algebra m, Effect (Signature m)) => Algebra (FailC m) where
   alg (L (Fail s)) = Fail.fail s
   alg (R other)    = FailC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure

@@ -117,10 +117,3 @@ fold fork leaf nil = go where
   go (Leaf a)   = leaf a
   go (Fork a b) = fork (go a) (go b)
 {-# INLINE fold #-}
-
-
--- $setup
--- >>> :seti -XFlexibleContexts
--- >>> import Test.QuickCheck
--- >>> import Control.Effect.Pure
--- >>> import Data.Foldable (asum)
