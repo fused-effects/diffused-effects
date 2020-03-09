@@ -5,9 +5,6 @@ module Control.Algebra.Choose.Church
   -- * Choose carrier
 , runChoose
 , ChooseC(..)
-  -- * Re-exports
-, Has
-, run
 ) where
 
 import Control.Algebra
