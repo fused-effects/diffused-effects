@@ -65,6 +65,11 @@ instance Monoid w => Algebra ((,) w) where
     Listen m   k -> let (w, a) = m ; (w', a') = k w a in (mappend w w', a')
     Censor f m k -> let (w, a) = m ; (w', a') = k   a in (mappend (f w) w', a')
 
+instance Algebra IO where
+  type Signature IO = Lift IO
+
+  alg (LiftWith with k) = with (Identity ()) coerce >>= k . runIdentity
+
 instance Algebra Identity where
   type Signature Identity = Lift Identity
 
