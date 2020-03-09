@@ -7,22 +7,22 @@ module Control.Algebra.Class
 ( Algebra(..)
 ) where
 
-import Control.Effect.Catch.Internal
-import Control.Effect.Choose.Internal
-import Control.Effect.Class
-import Control.Effect.Empty.Internal
-import Control.Effect.Error.Internal
-import Control.Effect.Lift.Internal
-import Control.Effect.NonDet.Internal
-import Control.Effect.Reader.Internal
-import Control.Effect.Sum
-import Control.Effect.Throw.Internal
-import Control.Effect.Writer.Internal
-import Control.Monad (join)
+import           Control.Effect.Catch.Internal
+import           Control.Effect.Choose.Internal
+import           Control.Effect.Class
+import           Control.Effect.Empty.Internal
+import           Control.Effect.Error.Internal
+import           Control.Effect.Lift.Internal
+import           Control.Effect.NonDet.Internal
+import           Control.Effect.Reader.Internal
+import           Control.Effect.Sum
+import           Control.Effect.Throw.Internal
+import           Control.Effect.Writer.Internal
+import           Control.Monad (join)
 import qualified Control.Monad.Trans.Except as Except
-import Data.Coerce (coerce)
-import Data.Functor.Identity
-import Data.List.NonEmpty (NonEmpty)
+import           Data.Coerce (coerce)
+import           Data.Functor.Identity
+import           Data.List.NonEmpty (NonEmpty)
 
 class (HFunctor (Signature m), Monad m) => Algebra m where
   type Signature m :: (* -> *) -> (* -> *)
