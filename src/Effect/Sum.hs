@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
@@ -6,7 +5,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-
 module Effect.Sum
 ( -- * Membership
   Member(..)
@@ -16,19 +14,14 @@ module Effect.Sum
 , reassociateSumL
 ) where
 
-import Effect.Class
 import Data.Kind (Constraint)
-import GHC.Generics (Generic1)
 
 data (f :+: g) (m :: * -> *) k
   = L (f m k)
   | R (g m k)
-  deriving (Eq, Foldable, Functor, Generic1, Ord, Show, Traversable)
+  deriving (Eq, Foldable, Functor, Ord, Show, Traversable)
 
 infixr 4 :+:
-
-instance (HFunctor f, HFunctor g) => HFunctor (f :+: g)
-instance (Effect f, Effect g)     => Effect   (f :+: g)
 
 
 class Member (sub :: (* -> *) -> (* -> *)) sup where

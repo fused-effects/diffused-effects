@@ -46,7 +46,6 @@ library
     Algebra.NonDet.Church
     Effect.Catch
     Effect.Choose
-    Effect.Class
     Effect.Cull
     Effect.Cut
     Effect.Empty
