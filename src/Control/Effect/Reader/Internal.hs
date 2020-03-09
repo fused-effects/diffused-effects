@@ -6,7 +6,7 @@ module Control.Effect.Reader.Internal
 ( Reader(..)
 ) where
 
-import Control.Algebra
+import Control.Effect.Class
 
 data Reader r m k
   = Ask (r -> m k)
