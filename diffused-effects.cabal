@@ -45,9 +45,6 @@ library
     Algebra.Fresh.Strict
     Algebra.Lift
     Algebra.NonDet.Church
-    Algebra.Trace.Ignoring
-    Algebra.Trace.Printing
-    Algebra.Trace.Returning
     Effect.Catch
     Effect.Choose
     Effect.Class
@@ -63,7 +60,6 @@ library
     Effect.State
     Effect.Sum
     Effect.Throw
-    Effect.Trace
     Effect.Writer
   other-modules:
     Effect.Catch.Internal
