@@ -14,6 +14,7 @@ import Control.Effect.NonDet.Internal
 import Control.Effect.Reader.Internal
 import Control.Effect.Sum
 import Control.Effect.Throw.Internal
+import Control.Effect.Writer.Internal
 import Control.Monad (join)
 import Data.List.NonEmpty (NonEmpty)
 
@@ -52,3 +53,11 @@ instance Algebra [] where
   alg = \case
     L Empty      -> []
     R (Choose m) -> m True <> m False
+
+instance Monoid w => Algebra ((,) w) where
+  type Signature ((,) w) = Writer w
+
+  alg = \case
+    Tell w     k -> let              (w', k') = k     in (mappend w w', k')
+    Listen m   k -> let (w, a) = m ; (w', a') = k w a in (mappend w w', a')
+    Censor f m k -> let (w, a) = m ; (w', a') = k   a in (mappend (f w) w', a')
