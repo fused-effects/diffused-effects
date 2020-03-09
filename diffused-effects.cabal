@@ -43,7 +43,6 @@ library
     Control.Algebra.Cull
     Control.Algebra.Cut.Church
     Control.Algebra.Empty.Maybe
-    Control.Algebra.Error.Either
     Control.Algebra.Fail
     Control.Algebra.Fresh.Strict
     Control.Algebra.Lift

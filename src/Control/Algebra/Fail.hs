@@ -1,4 +1,8 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Control.Algebra.Fail
 ( -- * Fail effect
   module Control.Effect.Fail
@@ -11,23 +15,24 @@ module Control.Algebra.Fail
 , run
 ) where
 
-import Control.Algebra
-import Control.Algebra.Error.Either
-import Control.Applicative (Alternative(..))
-import Control.Effect.Fail
-import Control.Monad (MonadPlus(..))
+import           Control.Algebra
+import           Control.Applicative (Alternative(..))
+import           Control.Effect.Throw
+import           Control.Effect.Fail
+import           Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+import           Control.Monad.Fix
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Except
 
 -- | Run a 'Fail' effect, returning failure messages in 'Left' and successful computations’ results in 'Right'.
 --
 --   prop> run (runFail (pure a)) === Right a
 runFail :: FailC m a -> m (Either String a)
-runFail = runError . runFailC
+runFail = runExceptT . runFailC
 
-newtype FailC m a = FailC { runFailC :: ErrorC String m a }
+newtype FailC m a = FailC { runFailC :: ExceptT String m a }
   deriving (Alternative, Applicative, Functor, Monad, MonadFix, MonadIO, MonadPlus, MonadTrans)
 
 instance (Algebra m, Effect (Signature m)) => Fail.MonadFail (FailC m) where
