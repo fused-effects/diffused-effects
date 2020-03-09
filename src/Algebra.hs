@@ -60,6 +60,7 @@ instance Algebra Maybe where
   type Sig Maybe = Empty
 
   alg Empty = Nothing
+  {-# INLINE alg #-}
 
 instance Algebra (Either e) where
   type Sig (Either e) = Error e
@@ -67,6 +68,7 @@ instance Algebra (Either e) where
   alg = \case
     L (Throw e)     -> Left e
     R (Catch m h k) -> either h pure m >>= k
+  {-# INLINE alg #-}
 
 instance Algebra ((->) r) where
   type Sig ((->) r) = Reader r
@@ -74,11 +76,13 @@ instance Algebra ((->) r) where
   alg = \case
     Ask       k -> join k
     Local f m k -> m . f >>= k
+  {-# INLINE alg #-}
 
 instance Algebra NonEmpty where
   type Sig NonEmpty = Choose
 
   alg (Choose m) = m True <> m False
+  {-# INLINE alg #-}
 
 instance Algebra [] where
   type Sig [] = NonDet
@@ -86,6 +90,7 @@ instance Algebra [] where
   alg = \case
     L Empty      -> []
     R (Choose m) -> m True <> m False
+  {-# INLINE alg #-}
 
 instance Monoid w => Algebra ((,) w) where
   type Sig ((,) w) = Writer w
@@ -94,16 +99,19 @@ instance Monoid w => Algebra ((,) w) where
     Tell w     k -> join (w, k)
     Listen m   k -> let (w, a) = m ; (w', a') = k w a in (mappend w w', a')
     Censor f m k -> let (w, a) = m ; (w', a') = k   a in (mappend (f w) w', a')
+  {-# INLINE alg #-}
 
 instance Algebra IO where
   type Sig IO = Lift IO
 
   alg (LiftWith with k) = with (Identity ()) coerce >>= k . runIdentity
+  {-# INLINE alg #-}
 
 instance Algebra Identity where
   type Sig Identity = Lift Identity
 
   alg (LiftWith with k) = with (Identity ()) coerce >>= k . runIdentity
+  {-# INLINE alg #-}
 
 
 instance (Algebra m, Effect (Sig m)) => Algebra (Maybe.MaybeT m) where
@@ -121,6 +129,7 @@ instance (Algebra m, Effect (Sig m)) => Algebra (Except.ExceptT e m) where
     L (L (Throw e))     -> Except.throwE e
     L (R (Catch m h k)) -> Except.catchE m h >>= k
     R other             -> Except.ExceptT $ alg (handle (Right ()) (either (pure . Left) Except.runExceptT) other)
+  {-# INLINE alg #-}
 
 instance Algebra m => Algebra (Reader.ReaderT r m) where
   type Sig (Reader.ReaderT r m) = Reader r :+: Sig m
@@ -129,6 +138,7 @@ instance Algebra m => Algebra (Reader.ReaderT r m) where
     L (Ask       k) -> Reader.ask >>= k
     L (Local f m k) -> Reader.local f m >>= k
     R other         -> Reader.ReaderT $ \ r -> alg (hmap (`Reader.runReaderT` r) other)
+  {-# INLINE alg #-}
 
 instance (Algebra m, Effect (Sig m)) => Algebra (State.Lazy.StateT s m) where
   type Sig (State.Lazy.StateT s m) = State s :+: Sig m
@@ -137,6 +147,7 @@ instance (Algebra m, Effect (Sig m)) => Algebra (State.Lazy.StateT s m) where
     L (Get   k) -> State.Lazy.get >>= k
     L (Put s k) -> State.Lazy.put s *> k
     R other     -> State.Lazy.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Lazy.runStateT x s) other)
+  {-# INLINE alg #-}
 
 instance (Algebra m, Effect (Sig m)) => Algebra (State.Strict.StateT s m) where
   type Sig (State.Strict.StateT s m) = State s :+: Sig m
@@ -145,6 +156,7 @@ instance (Algebra m, Effect (Sig m)) => Algebra (State.Strict.StateT s m) where
     L (Get   k) -> State.Strict.get >>= k
     L (Put s k) -> State.Strict.put s *> k
     R other     -> State.Strict.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Strict.runStateT x s) other)
+  {-# INLINE alg #-}
 
 instance (Algebra m, Effect (Sig m), Monoid w) => Algebra (Writer.Lazy.WriterT w m) where
   type Sig (Writer.Lazy.WriterT w m) = Writer w :+: Sig m
@@ -154,6 +166,7 @@ instance (Algebra m, Effect (Sig m), Monoid w) => Algebra (Writer.Lazy.WriterT w
     L (Listen m k)   -> Writer.Lazy.listen m >>= uncurry (flip k)
     L (Censor f m k) -> Writer.Lazy.censor f m >>= k
     R other          -> Writer.Lazy.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Lazy.runWriterT x) other)
+  {-# INLINE alg #-}
 
 instance (Algebra m, Effect (Sig m), Monoid w) => Algebra (Writer.Strict.WriterT w m) where
   type Sig (Writer.Strict.WriterT w m) = Writer w :+: Sig m
@@ -163,3 +176,4 @@ instance (Algebra m, Effect (Sig m), Monoid w) => Algebra (Writer.Strict.WriterT
     L (Listen m k)   -> Writer.Strict.listen m >>= uncurry (flip k)
     L (Censor f m k) -> Writer.Strict.censor f m >>= k
     R other          -> Writer.Strict.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Strict.runWriterT x) other)
+  {-# INLINE alg #-}
