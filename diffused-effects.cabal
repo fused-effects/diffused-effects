@@ -44,7 +44,6 @@ library
     Algebra.Fail
     Algebra.Fresh.Strict
     Algebra.Lift
-    Algebra.Named
     Algebra.NonDet.Church
     Algebra.Trace.Ignoring
     Algebra.Trace.Printing
@@ -61,11 +60,8 @@ library
     Effect.Lift
     Effect.NonDet
     Effect.Reader
-    Effect.Reader.Named
     Effect.State
-    Effect.State.Named
     Effect.Sum
-    Effect.Sum.Named
     Effect.Throw
     Effect.Trace
     Effect.Writer
