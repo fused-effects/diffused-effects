@@ -51,7 +51,6 @@ library
     Control.Algebra.NonDet.Church
     Control.Algebra.Pure
     Control.Algebra.Reader
-    Control.Algebra.Resource
     Control.Algebra.State.Lazy
     Control.Algebra.State.Strict
     Control.Algebra.Trace.Ignoring
@@ -71,7 +70,6 @@ library
     Control.Effect.Pure
     Control.Effect.Reader
     Control.Effect.Reader.Named
-    Control.Effect.Resource
     Control.Effect.State
     Control.Effect.State.Named
     Control.Effect.Sum
