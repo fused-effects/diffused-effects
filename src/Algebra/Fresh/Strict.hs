@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, LambdaCase, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Algebra.Fresh.Strict
 ( -- * Fresh effect
   module Effect.Fresh
@@ -32,14 +32,16 @@ newtype FreshC m a = FreshC { runFreshC :: StateT Int m a }
 
 instance (Algebra m, Effect (Sig m)) => Algebra (FreshC m) where
   type Sig (FreshC m) = Fresh :+: Sig m
-  alg (L (Fresh   k)) = FreshC $ do
-    i <- get
-    put (succ i)
-    runFreshC (k i)
-  alg (L (Reset m k)) = FreshC $ do
-    i <- get
-    a <- runFreshC m
-    put (i :: Int)
-    runFreshC (k a)
-  alg (R other)       = FreshC (alg (R (handleCoercible other)))
+
+  alg = \case
+    L (Fresh   k) -> FreshC $ do
+      i <- get
+      put (succ i)
+      runFreshC (k i)
+    L (Reset m k) -> FreshC $ do
+      i <- get
+      a <- runFreshC m
+      put (i :: Int)
+      runFreshC (k a)
+    R other       -> FreshC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}

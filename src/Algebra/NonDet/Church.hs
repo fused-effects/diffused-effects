@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveTraversable, FlexibleInstances, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveTraversable, FlexibleInstances, LambdaCase, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Algebra.NonDet.Church
 ( -- * NonDet effects
   module Effect.NonDet
@@ -82,9 +82,11 @@ instance MonadTrans NonDetC where
 
 instance (Algebra m, Effect (Sig m)) => Algebra (NonDetC m) where
   type Sig (NonDetC m) = NonDet :+: Sig m
-  alg (L (L Empty))      = empty
-  alg (L (R (Choose k))) = k True <|> k False
-  alg (R other)          = NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
+
+  alg = \case
+    L (L Empty)      -> empty
+    L (R (Choose k)) -> k True <|> k False
+    R other          -> NonDetC $ \ fork leaf nil -> alg (handle (Leaf ()) (fmap join . traverse runNonDet) other) >>= fold fork leaf nil
   {-# INLINE alg #-}
 
 

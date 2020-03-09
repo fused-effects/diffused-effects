@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, GeneralizedNewtypeDeriving, LambdaCase, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Algebra.Trace.Ignoring
 ( -- * Trace effect
   module Effect.Trace
@@ -34,6 +34,8 @@ instance MonadTrans TraceC where
 
 instance Algebra m => Algebra (TraceC m) where
   type Sig (TraceC m) = Trace :+: Sig m
-  alg (L trace) = traceCont trace
-  alg (R other) = TraceC (alg (handleCoercible other))
+
+  alg = \case
+    L trace -> traceCont trace
+    R other -> TraceC (alg (handleCoercible other))
   {-# INLINE alg #-}

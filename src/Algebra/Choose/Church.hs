@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveTraversable, FlexibleInstances, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveTraversable, FlexibleInstances, LambdaCase, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Algebra.Choose.Church
 ( -- * Choose effect
   module Effect.Choose
@@ -61,8 +61,10 @@ instance MonadTrans ChooseC where
 
 instance (Algebra m, Effect (Sig m)) => Algebra (ChooseC m) where
   type Sig (ChooseC m) = Choose :+: Sig m
-  alg (L (Choose k)) = ChooseC $ \ fork leaf -> fork (runChooseC (k True) fork leaf) (runChooseC (k False) fork leaf)
-  alg (R other)      = ChooseC $ \ fork leaf -> alg (handle (Leaf ()) (fmap join . traverse (runChoose (liftA2 Fork) (pure . Leaf))) other) >>= fold fork leaf
+
+  alg = \case
+    L (Choose k) -> ChooseC $ \ fork leaf -> fork (runChooseC (k True) fork leaf) (runChooseC (k False) fork leaf)
+    R other      -> ChooseC $ \ fork leaf -> alg (handle (Leaf ()) (fmap join . traverse (runChoose (liftA2 Fork) (pure . Leaf))) other) >>= fold fork leaf
   {-# INLINE alg #-}
 
 

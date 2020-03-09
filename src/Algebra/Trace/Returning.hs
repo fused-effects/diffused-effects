@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -36,5 +37,6 @@ newtype TraceC m a = TraceC { runTraceC :: StateT [String] m a }
 instance (Algebra m, Effect (Sig m)) => Algebra (TraceC m) where
   type Sig (TraceC m) = Trace :+: Sig m
 
-  alg (L (Trace m k)) = TraceC (modify (m :)) *> k
-  alg (R other)       = TraceC (alg (R (handleCoercible other)))
+  alg = \case
+    L (Trace m k) -> TraceC (modify (m :)) *> k
+    R other       -> TraceC (alg (R (handleCoercible other)))

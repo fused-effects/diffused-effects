@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, FlexibleInstances, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor, FlexibleInstances, LambdaCase, RankNTypes, TypeFamilies, TypeOperators, UndecidableInstances #-}
 module Algebra.Cut.Church
 ( -- * Cut effect
   module Effect.Cut
@@ -73,9 +73,11 @@ instance MonadTrans CutC where
 
 instance (Algebra m, Effect (Sig m)) => Algebra (CutC m) where
   type Sig (CutC m) = Cut :+: NonDet :+: Sig m
-  alg (L Cutfail)    = CutC $ \ _    _   fail -> fail
-  alg (L (Call m k)) = CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
-  alg (R (L (L Empty)))      = empty
-  alg (R (L (R (Choose k)))) = k True <|> k False
-  alg (R (R other))          = CutC $ \ cons nil _ -> alg (handle [()] (fmap concat . traverse runCutAll) other) >>= foldr cons nil
+
+  alg = \case
+    L Cutfail    -> CutC $ \ _    _   fail -> fail
+    L (Call m k) -> CutC $ \ cons nil fail -> runCutC m (\ a as -> runCutC (k a) cons as fail) nil nil
+    R (L (L Empty))      -> empty
+    R (L (R (Choose k))) -> k True <|> k False
+    R (R other)          -> CutC $ \ cons nil _ -> alg (handle [()] (fmap concat . traverse runCutAll) other) >>= foldr cons nil
   {-# INLINE alg #-}

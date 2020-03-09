@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -41,6 +42,8 @@ instance (Algebra m, Effect (Sig m)) => Fail.MonadFail (FailC m) where
 
 instance (Algebra m, Effect (Sig m)) => Algebra (FailC m) where
   type Sig (FailC m) = Fail :+: Sig m
-  alg (L (Fail s)) = Fail.fail s
-  alg (R other)    = FailC (alg (R (handleCoercible other)))
+
+  alg = \case
+    L (Fail s) -> Fail.fail s
+    R other    -> FailC (alg (R (handleCoercible other)))
   {-# INLINE alg #-}
