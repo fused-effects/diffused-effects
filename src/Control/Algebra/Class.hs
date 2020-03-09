@@ -7,9 +7,15 @@ module Control.Algebra.Class
 
 import Control.Effect.Catch.Internal
 import Control.Effect.Class
+import Control.Effect.Empty.Internal
 import Control.Effect.Error.Internal
 import Control.Effect.Sum
 import Control.Effect.Throw.Internal
+
+instance Algebra Maybe where
+  type Signature Maybe = Empty
+
+  alg Empty = Nothing
 
 -- | The class of algebras (effect handlers) for carriers (monad transformers) over signatures (effects), whose actions are given by the 'alg' method.
 class (HFunctor (Signature m), Monad m) => Algebra m where
