@@ -30,16 +30,13 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Functor.Identity
 import Data.Kind (Type)
-import Effect.Sum (reassociateSumL)
+import Effect.Sum (L, reassociateSumL)
 
 newtype Labelled (label :: k) (sub :: (Type -> Type) -> (Type -> Type)) m a = Labelled (sub m a)
   deriving (Alternative, Applicative, Functor, Monad, Fail.MonadFail, MonadIO, MonadPlus, MonadTrans)
 
 runLabelled :: forall label sub m a . Labelled label sub m a -> sub m a
 runLabelled (Labelled l) = l
-
-type family L f where
-  L (l :+: _) = l
 
 instance (Algebra (sub m), Sig (sub m) ~ (eff :+: Sig m)) => Algebra (Labelled label sub m) where
   type Sig (Labelled label sub m) = Labelled label (L (Sig (sub m))) :+: Sig m
