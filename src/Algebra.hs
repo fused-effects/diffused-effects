@@ -14,6 +14,18 @@ module Algebra
 , module Effect.Class
 ) where
 
+import           Control.Monad (join)
+import qualified Control.Monad.Trans.Except as Except
+import qualified Control.Monad.Trans.Maybe as Maybe
+import qualified Control.Monad.Trans.Reader as Reader
+import qualified Control.Monad.Trans.State.Lazy as State.Lazy
+import qualified Control.Monad.Trans.State.Strict as State.Strict
+import qualified Control.Monad.Trans.Writer.Lazy as Writer.Lazy
+import qualified Control.Monad.Trans.Writer.Strict as Writer.Strict
+import           Data.Coerce (coerce)
+import           Data.Functor.Identity
+import           Data.List.NonEmpty (NonEmpty)
+import           Data.Tuple (swap)
 import           Effect.Catch.Internal
 import           Effect.Choose.Internal
 import           Effect.Class
@@ -26,17 +38,6 @@ import           Effect.State.Internal
 import           Effect.Sum
 import           Effect.Throw.Internal
 import           Effect.Writer.Internal
-import           Control.Monad (join)
-import qualified Control.Monad.Trans.Except as Except
-import qualified Control.Monad.Trans.Reader as Reader
-import qualified Control.Monad.Trans.State.Lazy as State.Lazy
-import qualified Control.Monad.Trans.State.Strict as State.Strict
-import qualified Control.Monad.Trans.Writer.Lazy as Writer.Lazy
-import qualified Control.Monad.Trans.Writer.Strict as Writer.Strict
-import           Data.Coerce (coerce)
-import           Data.Functor.Identity
-import           Data.List.NonEmpty (NonEmpty)
-import           Data.Tuple (swap)
 
 class (HFunctor (Sig m), Monad m) => Algebra m where
   type Sig m :: (* -> *) -> (* -> *)
@@ -104,6 +105,14 @@ instance Algebra Identity where
 
   alg (LiftWith with k) = with (Identity ()) coerce >>= k . runIdentity
 
+
+instance (Algebra m, Effect (Sig m)) => Algebra (Maybe.MaybeT m) where
+  type Sig (Maybe.MaybeT m) = Empty :+: Sig m
+
+  alg = \case
+    L Empty -> Maybe.MaybeT (pure Nothing)
+    R other -> Maybe.MaybeT (alg (handle (Just ()) (maybe (pure Nothing) Maybe.runMaybeT) other))
+  {-# INLINE alg #-}
 
 instance (Algebra m, Effect (Sig m)) => Algebra (Except.ExceptT e m) where
   type Sig (Except.ExceptT e m) = Error e :+: Sig m
