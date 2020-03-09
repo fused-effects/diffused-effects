@@ -89,43 +89,49 @@ instance Algebra Identity where
 instance (Algebra m, Effect (Signature m)) => Algebra (Except.ExceptT e m) where
   type Signature (Except.ExceptT e m) = Error e :+: Signature m
 
-  alg (L (L (Throw e)))     = Except.throwE e
-  alg (L (R (Catch m h k))) = Except.catchE m h >>= k
-  alg (R other)             = Except.ExceptT $ alg (handle (Right ()) (either (pure . Left) Except.runExceptT) other)
+  alg = \case
+    L (L (Throw e))     -> Except.throwE e
+    L (R (Catch m h k)) -> Except.catchE m h >>= k
+    R other             -> Except.ExceptT $ alg (handle (Right ()) (either (pure . Left) Except.runExceptT) other)
 
 instance Algebra m => Algebra (Reader.ReaderT r m) where
   type Signature (Reader.ReaderT r m) = Reader r :+: Signature m
 
-  alg (L (Ask       k)) = Reader.ask >>= k
-  alg (L (Local f m k)) = Reader.local f m >>= k
-  alg (R other)         = Reader.ReaderT $ \ r -> alg (hmap (`Reader.runReaderT` r) other)
+  alg = \case
+    L (Ask       k) -> Reader.ask >>= k
+    L (Local f m k) -> Reader.local f m >>= k
+    R other         -> Reader.ReaderT $ \ r -> alg (hmap (`Reader.runReaderT` r) other)
 
 instance (Algebra m, Effect (Signature m)) => Algebra (State.Lazy.StateT s m) where
   type Signature (State.Lazy.StateT s m) = State s :+: Signature m
 
-  alg (L (Get   k)) = State.Lazy.get >>= k
-  alg (L (Put s k)) = State.Lazy.put s *> k
-  alg (R other)     = State.Lazy.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Lazy.runStateT x s) other)
+  alg = \case
+    L (Get   k) -> State.Lazy.get >>= k
+    L (Put s k) -> State.Lazy.put s *> k
+    R other     -> State.Lazy.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Lazy.runStateT x s) other)
 
 instance (Algebra m, Effect (Signature m)) => Algebra (State.Strict.StateT s m) where
   type Signature (State.Strict.StateT s m) = State s :+: Signature m
 
-  alg (L (Get   k)) = State.Strict.get >>= k
-  alg (L (Put s k)) = State.Strict.put s *> k
-  alg (R other)     = State.Strict.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Strict.runStateT x s) other)
+  alg = \case
+    L (Get   k) -> State.Strict.get >>= k
+    L (Put s k) -> State.Strict.put s *> k
+    R other     -> State.Strict.StateT $ \ s -> swap <$> alg (handle (s, ()) (\ (s, x) -> swap <$> State.Strict.runStateT x s) other)
 
 instance (Algebra m, Effect (Signature m), Monoid w) => Algebra (Writer.Lazy.WriterT w m) where
   type Signature (Writer.Lazy.WriterT w m) = Writer w :+: Signature m
 
-  alg (L (Tell w k))     = Writer.Lazy.tell w *> k
-  alg (L (Listen m k))   = Writer.Lazy.listen m >>= uncurry (flip k)
-  alg (L (Censor f m k)) = Writer.Lazy.censor f m >>= k
-  alg (R other)          = Writer.Lazy.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Lazy.runWriterT x) other)
+  alg = \case
+    L (Tell w k)     -> Writer.Lazy.tell w *> k
+    L (Listen m k)   -> Writer.Lazy.listen m >>= uncurry (flip k)
+    L (Censor f m k) -> Writer.Lazy.censor f m >>= k
+    R other          -> Writer.Lazy.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Lazy.runWriterT x) other)
 
 instance (Algebra m, Effect (Signature m), Monoid w) => Algebra (Writer.Strict.WriterT w m) where
   type Signature (Writer.Strict.WriterT w m) = Writer w :+: Signature m
 
-  alg (L (Tell w k))     = Writer.Strict.tell w *> k
-  alg (L (Listen m k))   = Writer.Strict.listen m >>= uncurry (flip k)
-  alg (L (Censor f m k)) = Writer.Strict.censor f m >>= k
-  alg (R other)          = Writer.Strict.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Strict.runWriterT x) other)
+  alg = \case
+    L (Tell w k)     -> Writer.Strict.tell w *> k
+    L (Listen m k)   -> Writer.Strict.listen m >>= uncurry (flip k)
+    L (Censor f m k) -> Writer.Strict.censor f m >>= k
+    R other          -> Writer.Strict.WriterT $ swap <$> alg (handle (mempty, ()) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Strict.runWriterT x) other)
