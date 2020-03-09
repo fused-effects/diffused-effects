@@ -1,4 +1,9 @@
-{-# LANGUAGE DeriveFunctor, ExplicitForAll, FlexibleContexts, FlexibleInstances, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE ExplicitForAll #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Control.Algebra.State.Lazy
 ( -- * State effect
   module State
@@ -12,19 +17,19 @@ module Control.Algebra.State.Lazy
 , run
 ) where
 
-import Control.Algebra
-import Control.Applicative (Alternative(..))
-import Control.Effect.State as State
-import Control.Monad (MonadPlus(..))
+import           Control.Algebra
+import           Control.Applicative (Alternative(..))
+import           Control.Effect.State as State
+import           Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+import           Control.Monad.Fix
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
 
 newtype StateC s m a = StateC { runStateC :: s -> m (s, a) }
 
 instance Functor m => Functor (StateC s m) where
-  fmap f m = StateC $ \ s -> fmap (\ ~(s', a) -> (s', f a)) $ runStateC m s
+  fmap f m = StateC $ fmap (\ ~(s', a) -> (s', f a)) . runStateC m
   {-# INLINE fmap #-}
 
 instance (Functor m, Monad m) => Applicative (StateC s m) where
@@ -35,7 +40,7 @@ instance (Functor m, Monad m) => Applicative (StateC s m) where
     ~(s'', x) <- mx s'
     return (s'', f x)
   {-# INLINE (<*>) #-}
-  m *> k = m >>= \_ -> k
+  m *> k = m >>= const k
   {-# INLINE (*>) #-}
 
 instance Monad m => Monad (StateC s m) where

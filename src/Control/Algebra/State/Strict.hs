@@ -1,4 +1,10 @@
-{-# LANGUAGE DeriveFunctor, ExplicitForAll, FlexibleContexts, FlexibleInstances, TypeFamilies, TypeOperators, UndecidableInstances #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE ExplicitForAll #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Control.Algebra.State.Strict
 ( -- * State effect
   module Control.Effect.State
@@ -12,14 +18,14 @@ module Control.Algebra.State.Strict
 , run
 ) where
 
-import Control.Algebra
-import Control.Applicative (Alternative(..))
-import Control.Effect.State
-import Control.Monad (MonadPlus(..))
+import           Control.Algebra
+import           Control.Applicative (Alternative(..))
+import           Control.Effect.State
+import           Control.Monad (MonadPlus(..))
 import qualified Control.Monad.Fail as Fail
-import Control.Monad.Fix
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+import           Control.Monad.Fix
+import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Class
 
 -- | Run a 'State' effect starting from the passed value.
 --
@@ -55,7 +61,7 @@ instance Monad m => Applicative (StateC s m) where
     let fa = f' a'
     fa `seq` pure (s'', fa)
   {-# INLINE (<*>) #-}
-  m *> k = m >>= \_ -> k
+  m *> k = m >>= const k
   {-# INLINE (*>) #-}
 
 instance (Alternative m, Monad m) => Alternative (StateC s m) where
