@@ -107,8 +107,8 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
   algT ctx hdl = \case
-    Ask       k -> R.ask                      >>= hdl . (<$ ctx) . k
-    Local f m k -> R.local f (hdl (m <$ ctx)) >>= hdl . fmap k
+    Ask       k -> runLower ctx hdl (lift R.ask >>= initial . k)
+    Local f m k -> runLower ctx hdl (mapAlgM (R.local f) (initial m) >>= cont k)
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
