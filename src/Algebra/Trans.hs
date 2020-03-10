@@ -78,11 +78,11 @@ runDist cm (Dist run) = run cm
 newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 
 
-runLowerT :: LowerT ctx m n a -> ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> n a
-runLowerT (LowerT m) ctx hdl = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
+runLowerT :: ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> LowerT ctx m n a -> n a
+runLowerT ctx hdl (LowerT m) = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
 
 runLowerT' :: Functor m => LowerT Identity m m a -> m a
-runLowerT' m = runLowerT m (Identity ()) (fmap Identity . runIdentity)
+runLowerT' = runLowerT (Identity ()) (fmap Identity . runIdentity)
 
 newtype LowerT ctx m n a = LowerT (R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a)
   deriving (Applicative, Functor, Monad)
@@ -106,9 +106,9 @@ instance MonadLift (R.ReaderT r) where
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
-  algT ctx hdl = \case
-    Ask       k -> runLowerT (lift R.ask >>= initial . k) ctx hdl
-    Local f m k -> runLowerT (mapLowerT (R.local f) (initial m) >>= cont k) ctx hdl
+  algT ctx hdl = runLowerT ctx hdl . \case
+    Ask       k -> lift R.ask >>= initial . k
+    Local f m k -> mapLowerT (R.local f) (initial m) >>= cont k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
