@@ -37,8 +37,8 @@ import           Data.Tuple (swap)
 import           Effect.Catch.Internal
 import           Effect.Error.Internal
 import           Effect.Reader.Internal
-import           Effect.Sum
 import           Effect.State.Internal
+import           Effect.Sum
 import           Effect.Throw.Internal
 
 class Monad m => Algebra m where
