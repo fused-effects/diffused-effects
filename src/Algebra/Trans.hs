@@ -56,6 +56,9 @@ class Monad m => Algebra m where
   alg :: Functor ctx => ctx () -> Dist ctx n m -> Sig m n a -> m (ctx a)
 
 class MonadTrans t => MonadLift t where
+  type Ctx t :: * -> *
+  type Ctx t = Identity
+
   liftWith :: Monad m => (forall ctx . Functor ctx => LowerT ctx (t m) m (ctx a)) -> t m a
 
 liftDefault :: (MonadLift t, Monad m) => m a -> t m a
@@ -150,6 +153,8 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
 instance MonadLift (E.ExceptT e) where
+  type Ctx (E.ExceptT e) = Either e
+
   liftWith = E.ExceptT . runLowerT (Right ()) (Dist (either (pure . Left) E.runExceptT))
 
 instance Algebra m => AlgebraTrans (E.ExceptT e) m where
@@ -162,6 +167,8 @@ instance Algebra m => AlgebraTrans (E.ExceptT e) m where
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
 instance MonadLift (S.L.StateT s) where
+  type Ctx (S.L.StateT s) = (,) s
+
   liftWith m = S.L.StateT $ \ s -> swap <$> runLowerT (s, ()) (Dist (fmap swap . uncurry (flip S.L.runStateT))) m
 
 instance Algebra m => AlgebraTrans (S.L.StateT s) m where
@@ -174,6 +181,8 @@ instance Algebra m => AlgebraTrans (S.L.StateT s) m where
 deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m)
 
 instance MonadLift (S.S.StateT s) where
+  type Ctx (S.S.StateT s) = (,) s
+
   liftWith m = S.S.StateT $ \ s -> swap <$> runLowerT (s, ()) (Dist (fmap swap . uncurry (flip S.S.runStateT))) m
 
 instance Algebra m => AlgebraTrans (S.S.StateT s) m where
