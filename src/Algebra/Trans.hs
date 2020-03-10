@@ -21,6 +21,7 @@ module Algebra.Trans
 , runAlg'
 , AlgM(..)
 , initial
+, cont
 , mapAlgM
 ) where
 
@@ -91,6 +92,9 @@ instance MonadTrans (AlgM ctx m) where
 
 initial :: Functor ctx => m a -> AlgM ctx m n (ctx a)
 initial m = AlgM . R.ReaderT $ \ ctx -> R.ReaderT $ runDist (m <$ ctx)
+
+cont :: Functor ctx => (a -> m b) -> ctx a -> AlgM ctx m n (ctx b)
+cont k ctx = AlgM . R.ReaderT . const . R.ReaderT $ runDist (k <$> ctx)
 
 mapAlgM :: (n a -> n b) -> AlgM ctx m n a -> AlgM ctx m n b
 mapAlgM f = AlgM . R.mapReaderT (R.mapReaderT f) . runAlgM
