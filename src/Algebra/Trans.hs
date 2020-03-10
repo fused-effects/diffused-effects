@@ -34,7 +34,7 @@ class Monad m => Algebra m where
   alg :: Functor ctx => ctx () -> (forall x . ctx (n x) -> m (ctx x)) -> Sig m n a -> m (ctx a)
 
 
-class (MonadTrans t, Algebra m) => AlgebraTrans t m where
+class (MonadTrans t, Algebra m, Monad (t m)) => AlgebraTrans t m where
   type SigT t :: (Type -> Type) -> (Type -> Type)
 
   algT :: Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> SigT t n a -> t m (ctx a)
