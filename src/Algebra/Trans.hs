@@ -17,9 +17,9 @@ module Algebra.Trans
 , algDefault
 , runDist
 , Dist(..)
-, runAlg
-, runAlg'
-, AlgM(..)
+, runLower
+, runLower'
+, LowerT(..)
 , initial
 , cont
 , mapAlgM
@@ -78,26 +78,26 @@ runDist cm (Dist run) = run cm
 newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 
 
-runAlg :: ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> AlgM ctx m n a -> n a
-runAlg ctx hdl (AlgM m) = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
+runLower :: ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> LowerT ctx m n a -> n a
+runLower ctx hdl (LowerT m) = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
 
-runAlg' :: Functor m => AlgM Identity m m a -> m a
-runAlg' = runAlg (Identity ()) (fmap Identity . runIdentity)
+runLower' :: Functor m => LowerT Identity m m a -> m a
+runLower' = runLower (Identity ()) (fmap Identity . runIdentity)
 
-newtype AlgM ctx m n a = AlgM { runAlgM :: R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a }
+newtype LowerT ctx m n a = LowerT { runLowerT :: R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a }
   deriving (Applicative, Functor, Monad)
 
-instance MonadTrans (AlgM ctx m) where
-  lift = AlgM . lift . lift
+instance MonadTrans (LowerT ctx m) where
+  lift = LowerT . lift . lift
 
-initial :: Functor ctx => m a -> AlgM ctx m n (ctx a)
-initial m = AlgM . R.ReaderT $ \ ctx -> R.ReaderT $ runDist (m <$ ctx)
+initial :: Functor ctx => m a -> LowerT ctx m n (ctx a)
+initial m = LowerT . R.ReaderT $ \ ctx -> R.ReaderT $ runDist (m <$ ctx)
 
-cont :: Functor ctx => (a -> m b) -> ctx a -> AlgM ctx m n (ctx b)
-cont k ctx = AlgM . R.ReaderT . const . R.ReaderT $ runDist (k <$> ctx)
+cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
+cont k ctx = LowerT . R.ReaderT . const . R.ReaderT $ runDist (k <$> ctx)
 
-mapAlgM :: (n a -> n b) -> AlgM ctx m n a -> AlgM ctx m n b
-mapAlgM f = AlgM . R.mapReaderT (R.mapReaderT f) . runAlgM
+mapAlgM :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
+mapAlgM f = LowerT . R.mapReaderT (R.mapReaderT f) . runLowerT
 
 
 instance MonadLift (R.ReaderT r) where
