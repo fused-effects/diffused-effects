@@ -59,7 +59,7 @@ liftDefault m = liftWith (LowerT (\ ctx _ -> (<$ ctx) <$> m))
 class (MonadLift t, Algebra m, Monad (t m)) => AlgebraTrans t m where
   type SigT t :: (Type -> Type) -> (Type -> Type)
 
-  algT :: Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> SigT t n a -> t m (ctx a)
+  algT :: Functor ctx => ctx () -> Dist ctx n (t m) -> SigT t n a -> t m (ctx a)
 
 
 newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
@@ -72,7 +72,7 @@ instance AlgebraTrans t m => Algebra (AlgT t m) where
 
 algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> (SigT t :+: Sig m) n a -> t m (ctx a)
 algDefault ctx1 hdl1 = \case
-  L l -> algT ctx1 hdl1 l
+  L l -> algT ctx1 (Dist hdl1) l
   R r -> liftWith $ LowerT $ \ ctx2 (Dist hdl2) -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (fmap Compose . hdl2 . fmap hdl1 . getCompose) r
 
 
@@ -122,7 +122,7 @@ instance MonadLift (R.ReaderT r) where
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
-  algT ctx hdl = runLowerT ctx (Dist hdl) . \case
+  algT ctx hdl = runLowerT ctx hdl . \case
     Ask       k -> lift R.ask >>= initial . k
     Local f m k -> mapLowerT (R.local f) (initial m) >>= cont k
 
@@ -134,7 +134,7 @@ instance MonadLift (E.ExceptT e) where
 instance Algebra m => AlgebraTrans (E.ExceptT e) m where
   type SigT (E.ExceptT e) = Error e
 
-  algT ctx hdl = runLowerT ctx (Dist hdl) . \case
+  algT ctx hdl = runLowerT ctx hdl . \case
     L (Throw e)     -> lift (E.throwE e)
     R (Catch m h k) -> liftInitial (\ initial -> E.catchE (initial m) (initial . h)) >>= cont k
 
@@ -146,7 +146,7 @@ instance MonadLift (S.L.StateT s) where
 instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
 
-  algT ctx hdl = runLowerT ctx (Dist hdl) . \case
+  algT ctx hdl = runLowerT ctx hdl . \case
     Get   k -> lift S.L.get     >>= initial . k
     Put s k -> lift (S.L.put s) >>  initial k
 
@@ -158,7 +158,7 @@ instance MonadLift (S.S.StateT s) where
 instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
-  algT ctx hdl = runLowerT ctx (Dist hdl) . \case
+  algT ctx hdl = runLowerT ctx hdl . \case
     Get   k -> lift S.S.get     >>= initial . k
     Put s k -> lift (S.S.put s) >>  initial k
 
