@@ -22,7 +22,7 @@ module Algebra.Trans
 , LowerT(..)
 , initial
 , cont
-, mapAlgM
+, mapLowerT
 ) where
 
 import           Control.Monad.Trans.Class
@@ -96,8 +96,8 @@ initial m = LowerT . R.ReaderT $ \ ctx -> R.ReaderT $ runDist (m <$ ctx)
 cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
 cont k ctx = LowerT . R.ReaderT . const . R.ReaderT $ runDist (k <$> ctx)
 
-mapAlgM :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
-mapAlgM f (LowerT m) = LowerT $ R.mapReaderT (R.mapReaderT f) m
+mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
+mapLowerT f (LowerT m) = LowerT $ R.mapReaderT (R.mapReaderT f) m
 
 
 instance MonadLift (R.ReaderT r) where
@@ -108,7 +108,7 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
 
   algT ctx hdl = \case
     Ask       k -> runLowerT (lift R.ask >>= initial . k) ctx hdl
-    Local f m k -> runLowerT (mapAlgM (R.local f) (initial m) >>= cont k) ctx hdl
+    Local f m k -> runLowerT (mapLowerT (R.local f) (initial m) >>= cont k) ctx hdl
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
