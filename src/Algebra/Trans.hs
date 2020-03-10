@@ -72,6 +72,9 @@ runDist cm (Dist run) = run cm
 newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 
 
+runAlg :: ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> AlgM ctx m n a -> n a
+runAlg ctx hdl (AlgM m) = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
+
 newtype AlgM ctx m n a = AlgM { runAlgM :: R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a }
   deriving (Applicative, Functor, Monad)
 
