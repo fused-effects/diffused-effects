@@ -84,7 +84,7 @@ runLower ctx hdl (LowerT m) = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
 runLower' :: Functor m => LowerT Identity m m a -> m a
 runLower' = runLower (Identity ()) (fmap Identity . runIdentity)
 
-newtype LowerT ctx m n a = LowerT { runLowerT :: R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a }
+newtype LowerT ctx m n a = LowerT (R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a)
   deriving (Applicative, Functor, Monad)
 
 instance MonadTrans (LowerT ctx m) where
@@ -97,7 +97,7 @@ cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
 cont k ctx = LowerT . R.ReaderT . const . R.ReaderT $ runDist (k <$> ctx)
 
 mapAlgM :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
-mapAlgM f = LowerT . R.mapReaderT (R.mapReaderT f) . runLowerT
+mapAlgM f (LowerT m) = LowerT $ R.mapReaderT (R.mapReaderT f) m
 
 
 instance MonadLift (R.ReaderT r) where
