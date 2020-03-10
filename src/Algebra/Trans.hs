@@ -66,7 +66,7 @@ class (Functor (Ctx t), MonadTrans t, forall m . Monad m => Monad (t m)) => Mona
   liftWith :: Monad m => LowerT (Ctx t) (t m) m (Ctx t a) -> t m a
 
 liftDefault :: (MonadLift t, Monad m) => m a -> t m a
-liftDefault m = liftWith (LowerT (\ ctx _ -> (<$ ctx) <$> m))
+liftDefault m = liftWith (LowerT (\ _ ctx -> (<$ ctx) <$> m))
 
 
 class (MonadLift t, Algebra m, Monad (t m)) => AlgebraTrans t m where
@@ -135,11 +135,11 @@ infixr 1 ~<
 newtype Dist ctx m n = Dist { appDist :: forall x . ctx (m x) -> n (ctx x) }
 
 
-runLowerT :: ctx () -> Dist ctx m n -> LowerT ctx m n a -> n a
-runLowerT ctx hdl (LowerT m) = m ctx hdl
+runLowerT :: Dist ctx m n -> ctx () -> LowerT ctx m n a -> n a
+runLowerT hdl ctx (LowerT m) = m hdl ctx
 
-newtype LowerT ctx m n a = LowerT (ctx () -> Dist ctx m n -> n a)
-  deriving (Applicative, Functor, Monad) via R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n)
+newtype LowerT ctx m n a = LowerT (Dist ctx m n -> ctx () -> n a)
+  deriving (Applicative, Functor, Monad) via R.ReaderT (Dist ctx m n) (R.ReaderT (ctx ()) n)
 
 instance MonadTrans (LowerT ctx m) where
   lift = LowerT . const . const
@@ -148,7 +148,7 @@ initial :: Functor ctx => m a -> LowerT ctx m n (ctx a)
 initial m = liftInitial ($ m)
 
 cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
-cont k ctx = LowerT . const $ runDist (k <$> ctx)
+cont k ctx = LowerT $ const . runDist (k <$> ctx)
 
 mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
 mapLowerT f = mapLowerTDist f id
@@ -157,17 +157,17 @@ mapLowerTDist :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx m n') -> LowerT ctx 
 mapLowerTDist f g = mapLowerTDistCtx f g id
 
 mapLowerTDistCtx :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
-mapLowerTDistCtx f g h (LowerT m) = LowerT $ \ ctx hdl -> f (m (h ctx) (g hdl))
+mapLowerTDistCtx f g h (LowerT m) = LowerT $ \ hdl ctx -> f (m (g hdl) (h ctx))
 
 liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-liftInitial with = LowerT $ \ ctx hdl -> with (appDist hdl . (<$ ctx))
+liftInitial with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
 
 liftWithin :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
-liftWithin m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
+liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLowerT (hdl2 <~< hdl1) (Compose (ctx1 <$ ctx2)) m
 
 
 instance MonadLift (R.ReaderT r) where
-  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (Identity ()) (homDist (Hom (`R.runReaderT` r))) m
+  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (homDist (Hom (`R.runReaderT` r))) (Identity ()) m
 
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
@@ -181,7 +181,7 @@ deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 instance MonadLift (E.ExceptT e) where
   type Ctx (E.ExceptT e) = Either e
 
-  liftWith = E.ExceptT . runLowerT (Right ()) (Dist (either (pure . Left) E.runExceptT))
+  liftWith = E.ExceptT . runLowerT (Dist (either (pure . Left) E.runExceptT)) (Right ())
 
 instance Algebra m => AlgebraTrans (E.ExceptT e) m where
   type SigT (E.ExceptT e) = Error e
@@ -195,7 +195,7 @@ deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 instance MonadLift (S.L.StateT s) where
   type Ctx (S.L.StateT s) = (,) s
 
-  liftWith m = S.L.StateT $ \ s -> swap <$> runLowerT (s, ()) (Dist (fmap swap . uncurry (flip S.L.runStateT))) m
+  liftWith m = S.L.StateT $ \ s -> swap <$> runLowerT (Dist (fmap swap . uncurry (flip S.L.runStateT))) (s, ()) m
 
 instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
@@ -209,7 +209,7 @@ deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m
 instance MonadLift (S.S.StateT s) where
   type Ctx (S.S.StateT s) = (,) s
 
-  liftWith m = S.S.StateT $ \ s -> swap <$> runLowerT (s, ()) (Dist (fmap swap . uncurry (flip S.S.runStateT))) m
+  liftWith m = S.S.StateT $ \ s -> swap <$> runLowerT (Dist (fmap swap . uncurry (flip S.S.runStateT))) (s, ()) m
 
 instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
