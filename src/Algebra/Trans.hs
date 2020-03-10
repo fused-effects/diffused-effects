@@ -57,6 +57,7 @@ class Monad m => Algebra m where
 
   alg :: Functor ctx => Sig m n a -> LowerT ctx n m (ctx a)
 
+
 class (Functor (Ctx t), MonadTrans t, forall m . Monad m => Monad (t m)) => MonadLift t where
   type Ctx t :: * -> *
   type Ctx t = Identity
@@ -75,6 +76,7 @@ class (Functor (Ctx t), MonadTrans t, forall m . Monad m => Monad (t m)) => Mona
 
 liftDefault :: (MonadLift t, Monad m) => m a -> t m a
 liftDefault m = liftWith (LowerT (\ ctx _ -> (<$ ctx) <$> m))
+
 
 class (MonadLift t, Algebra m, Monad (t m)) => AlgebraTrans t m where
   type SigT t :: (Type -> Type) -> (Type -> Type)
