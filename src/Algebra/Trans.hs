@@ -15,6 +15,8 @@ import           Effect.Reader.Internal
 import           Effect.Sum
 import           Effect.Throw.Internal
 
+-- FIXME: can’t express non-orthogonal algebras
+
 class MonadTrans t => AlgebraTrans t where
   type SigT t :: (Type -> Type) -> (Type -> Type)
 
