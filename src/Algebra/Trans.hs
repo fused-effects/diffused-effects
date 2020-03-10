@@ -10,6 +10,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 module Algebra.Trans
 ( Algebra(..)
+, MonadLift(..)
 , AlgebraTrans(..)
 , AlgT(..)
 , algDefault
