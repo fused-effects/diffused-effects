@@ -11,6 +11,7 @@
 module Algebra.Trans
 ( Algebra(..)
 , MonadLift(..)
+, liftDefault
 , AlgebraTrans(..)
 , AlgT(..)
 , algDefault
@@ -39,6 +40,9 @@ class Monad m => Algebra m where
 
 class MonadTrans t => MonadLift t where
   liftWith :: Monad m => (forall ctx . Functor ctx => ctx () -> (forall a . ctx (t m a) -> m (ctx a)) -> m (ctx a)) -> t m a
+
+liftDefault :: (MonadLift t, Monad m) => m a -> t m a
+liftDefault m = liftWith (\ ctx _ -> (<$ ctx) <$> m)
 
 class (MonadLift t, Algebra m, Monad (t m)) => AlgebraTrans t m where
   type SigT t :: (Type -> Type) -> (Type -> Type)
