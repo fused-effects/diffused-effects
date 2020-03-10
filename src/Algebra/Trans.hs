@@ -27,6 +27,7 @@ module Algebra.Trans
 , (>~)
 , (~<)
 , Dist(..)
+, Point(..)
 , runLowerT
 , LowerT(..)
 , initial
@@ -133,6 +134,9 @@ Hom hdl1 ~< Dist hdl2 = Dist (hdl1 . hdl2)
 infixr 1 ~<
 
 newtype Dist ctx m n = Dist { appDist :: forall x . ctx (m x) -> n (ctx x) }
+
+
+newtype Point ctx = Point { point :: forall x . x -> ctx x }
 
 
 runLowerT :: Dist ctx m n -> ctx () -> LowerT ctx m n a -> n a
