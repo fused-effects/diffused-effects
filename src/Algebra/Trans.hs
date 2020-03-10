@@ -1,7 +1,9 @@
+{-# LANGUAGE TypeFamilies #-}
 module Algebra.Trans
-( AlgebraTrans
+( AlgebraTrans(..)
 ) where
 
 import Control.Monad.Trans.Class
 
-class MonadTrans t => AlgebraTrans t
+class MonadTrans t => AlgebraTrans t where
+  type SigT t :: (* -> *) -> (* -> *)
