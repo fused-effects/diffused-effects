@@ -15,6 +15,8 @@ module Algebra.Trans
 , AlgebraTrans(..)
 , AlgT(..)
 , algDefault
+, runDist
+, Dist(..)
 ) where
 
 import           Control.Monad.Trans.Class
@@ -62,6 +64,12 @@ algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> (forall a . ctx (n a)
 algDefault ctx1 hdl1 = \case
   L l -> algT ctx1 hdl1 l
   R r -> liftWith $ \ ctx2 hdl2 -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (fmap Compose . hdl2 . fmap hdl1 . getCompose) r
+
+
+runDist :: ctx (m a) -> Dist ctx m n -> n (ctx a)
+runDist cm (Dist run) = run cm
+
+newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 
 
 instance MonadLift (R.ReaderT r) where
