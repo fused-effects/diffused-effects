@@ -54,7 +54,7 @@ import           Effect.Throw.Internal
 class Monad m => Algebra m where
   type Sig m :: (* -> *) -> (* -> *)
 
-  alg :: Functor ctx => ctx () -> Dist ctx n m -> Sig m n a -> m (ctx a)
+  alg :: Functor ctx => Sig m n a -> LowerT ctx n m (ctx a)
 
 class (Functor (Ctx t), MonadTrans t) => MonadLift t where
   type Ctx t :: * -> *
@@ -77,12 +77,12 @@ newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
 instance AlgebraTrans t m => Algebra (AlgT t m) where
   type Sig (AlgT t m) = SigT t :+: Sig m
 
-  alg ctx hdl = AlgT . runLowerT ctx (Hom runAlgT ~< hdl) . algDefault
+  alg = mapLowerTDist AlgT (Hom runAlgT ~<) . algDefault
 
 algDefault :: AlgebraTrans t m => Functor ctx => (SigT t :+: Sig m) n a -> LowerT ctx n (t m) (ctx a)
 algDefault = \case
   L l -> algT l
-  R r -> LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) r
+  R r -> LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> getCompose <$> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) (alg r)
 
 
 newtype Hom m n = Hom { appHom :: forall x . m x -> n x }
@@ -148,6 +148,9 @@ cont k ctx = LowerT . const $ runDist (k <$> ctx)
 
 mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
 mapLowerT f (LowerT m) = LowerT $ fmap f <$> m
+
+mapLowerTDist :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx m n') -> LowerT ctx m n' a -> LowerT ctx m n b
+mapLowerTDist f g (LowerT m) = LowerT $ \ ctx hdl -> f (m ctx (g hdl))
 
 liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
 liftInitial with = LowerT $ \ ctx hdl -> with (appDist hdl . (<$ ctx))
