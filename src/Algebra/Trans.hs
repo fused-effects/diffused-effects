@@ -1,2 +1,7 @@
 module Algebra.Trans
-() where
+( AlgebraTrans
+) where
+
+import Control.Monad.Trans.Class
+
+class MonadTrans t => AlgebraTrans t
