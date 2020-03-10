@@ -79,7 +79,7 @@ instance AlgebraTrans t m => Algebra (AlgT t m) where
 
   alg = mapLowerTDist AlgT (Hom runAlgT ~<) . algDefault
 
-algDefault :: AlgebraTrans t m => Functor ctx => (SigT t :+: Sig m) n a -> LowerT ctx n (t m) (ctx a)
+algDefault :: (AlgebraTrans t m, Functor ctx) => (SigT t :+: Sig m) n a -> LowerT ctx n (t m) (ctx a)
 algDefault = \case
   L l -> algT l
   R r -> LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> getCompose <$> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) (alg r)
