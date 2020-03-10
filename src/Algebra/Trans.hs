@@ -142,7 +142,7 @@ instance MonadTrans (LowerT ctx m) where
   lift = LowerT . const . const
 
 initial :: Functor ctx => m a -> LowerT ctx m n (ctx a)
-initial m = LowerT $ runDist . (m <$)
+initial m = liftInitial ($ m)
 
 cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
 cont k ctx = LowerT . const $ runDist (k <$> ctx)
