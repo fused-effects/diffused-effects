@@ -88,8 +88,8 @@ instance C.Category Hom where
 runDist :: ctx (m a) -> Dist ctx m n -> n (ctx a)
 runDist cm (Dist run) = run cm
 
-homDist :: Functor n => (forall x . m x -> n x) -> Dist Identity m n
-homDist hom = Dist (fmap Identity . hom . runIdentity)
+homDist :: Functor n => Hom m n -> Dist Identity m n
+homDist hom = Dist (fmap Identity . runHom hom . runIdentity)
 
 (<~<) :: (Functor n, Functor ctx2) => Dist ctx1 l m -> Dist ctx2 m n -> Dist (Compose ctx2 ctx1) l n
 Dist hdl1 <~< Dist hdl2 = Dist (fmap Compose . hdl2 . fmap hdl1 . getCompose)
