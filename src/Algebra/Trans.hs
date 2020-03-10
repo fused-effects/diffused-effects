@@ -8,11 +8,13 @@ module Algebra.Trans
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
+import qualified Control.Monad.Trans.State.Strict as S.S
 import           Data.Kind (Type)
 import           Effect.Catch.Internal
 import           Effect.Error.Internal
 import           Effect.Reader.Internal
 import           Effect.Sum
+import           Effect.State.Internal
 import           Effect.Throw.Internal
 
 -- FIXME: can’t express non-orthogonal algebras
@@ -35,3 +37,10 @@ instance AlgebraTrans (E.ExceptT e) where
   algT = \case
     L (Throw e)     -> E.throwE e
     R (Catch m h k) -> E.catchE m h >>= k
+
+instance AlgebraTrans (S.S.StateT s) where
+  type SigT (S.S.StateT s) = State s
+
+  algT = \case
+    Get   k -> S.S.get   >>= k
+    Put s k -> S.S.put s >>  k
