@@ -10,4 +10,4 @@ import           Control.Monad.Trans.Class
 class MonadTrans t => AlgebraTrans t where
   type SigT t :: (* -> *) -> (* -> *)
 
-  algT :: A.Algebra m => SigT t (t m) a -> t m (ctx a)
+  algT :: A.Algebra m => SigT t (t m) a -> t m a
