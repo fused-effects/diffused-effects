@@ -1,9 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 module Algebra.Trans
 ( Algebra(..)
 , AlgebraTrans(..)
+, algDefault
 ) where
 
 import           Control.Monad.Trans.Class
@@ -11,6 +13,7 @@ import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
 import qualified Control.Monad.Trans.State.Lazy as S.L
 import qualified Control.Monad.Trans.State.Strict as S.S
+import           Data.Functor.Compose
 import           Data.Functor.Identity
 import           Data.Kind (Type)
 import           Data.Tuple (swap)
@@ -35,6 +38,12 @@ class MonadTrans t => AlgebraTrans t where
   algT :: (Monad m, Functor ctx) => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> SigT t n a -> t m (ctx a)
 
   liftWith :: Monad m => (forall ctx . Functor ctx => ctx () -> (forall a . ctx (t m a) -> m (ctx a)) -> m (ctx a)) -> t m a
+
+
+algDefault :: (AlgebraTrans t, Algebra m) => Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> (SigT t :+: Sig m) n a -> t m (ctx a)
+algDefault ctx1 hdl1 = \case
+  L l -> algT ctx1 hdl1 l
+  R r -> liftWith $ \ ctx2 hdl2 -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (fmap Compose . hdl2 . fmap hdl1 . getCompose) r
 
 
 instance AlgebraTrans (R.ReaderT r) where
