@@ -18,6 +18,7 @@ module Algebra.Trans
 , runDist
 , Dist(..)
 , runAlg
+, runAlg'
 , AlgM(..)
 , initial
 , mapAlgM
@@ -78,6 +79,9 @@ newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 
 runAlg :: ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> AlgM ctx m n a -> n a
 runAlg ctx hdl (AlgM m) = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
+
+runAlg' :: Functor m => AlgM Identity m m a -> m a
+runAlg' = runAlg (Identity ()) (fmap Identity . runIdentity)
 
 newtype AlgM ctx m n a = AlgM { runAlgM :: R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a }
   deriving (Applicative, Functor, Monad)
