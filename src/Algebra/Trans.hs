@@ -71,6 +71,8 @@ class (Functor (Ctx t), MonadTrans t, forall m . Monad m => Monad (t m)) => Mona
   liftWithin :: Monad m => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
   liftWithin m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
 
+  {-# MINIMAL liftWith | liftWithin #-}
+
 liftDefault :: (MonadLift t, Monad m) => m a -> t m a
 liftDefault m = liftWith (LowerT (\ ctx _ -> (<$ ctx) <$> m))
 
