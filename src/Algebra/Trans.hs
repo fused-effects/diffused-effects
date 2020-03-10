@@ -23,6 +23,7 @@ module Algebra.Trans
 , initial
 , cont
 , mapLowerT
+, withInitial
 ) where
 
 import           Control.Monad.Trans.Class
@@ -98,6 +99,9 @@ cont k ctx = LowerT . const $ runDist (k <$> ctx)
 
 mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
 mapLowerT f (LowerT m) = LowerT $ fmap f <$> m
+
+withInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
+withInitial with = LowerT $ \ ctx (Dist hdl) -> with (hdl . (<$ ctx))
 
 
 instance MonadLift (R.ReaderT r) where
