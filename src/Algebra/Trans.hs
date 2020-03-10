@@ -118,9 +118,9 @@ instance MonadLift (E.ExceptT e) where
 instance Algebra m => AlgebraTrans (E.ExceptT e) m where
   type SigT (E.ExceptT e) = Error e
 
-  algT ctx hdl = \case
-    L (Throw e)     -> E.throwE e
-    R (Catch m h k) -> E.catchE (hdl (m <$ ctx)) (hdl . (<$ ctx) . h) >>= hdl . fmap k
+  algT ctx hdl = runLowerT ctx hdl . \case
+    L (Throw e)     -> lift (E.throwE e)
+    R (Catch m h k) -> LowerT (\ ctx (Dist hdl) -> E.catchE (runLowerT ctx hdl (initial m)) (runLowerT ctx hdl . initial . h)) >>= cont k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
