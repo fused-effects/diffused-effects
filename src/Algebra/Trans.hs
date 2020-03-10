@@ -84,6 +84,9 @@ instance MonadTrans (AlgM ctx m) where
 initial :: Functor ctx => m a -> AlgM ctx m n (ctx a)
 initial m = AlgM . R.ReaderT $ \ ctx -> R.ReaderT $ runDist (m <$ ctx)
 
+mapAlgM :: (n a -> n b) -> AlgM ctx m n a -> AlgM ctx m n b
+mapAlgM f = AlgM . R.mapReaderT (R.mapReaderT f) . runAlgM
+
 
 instance MonadLift (R.ReaderT r) where
   liftWith f = R.ReaderT $ \ r -> runIdentity <$> f (Identity ()) (fmap Identity . (`R.runReaderT` r) . runIdentity)
