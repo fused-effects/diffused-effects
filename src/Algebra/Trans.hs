@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
@@ -7,6 +8,7 @@
 module Algebra.Trans
 ( Algebra(..)
 , AlgebraTrans(..)
+, AlgT(..)
 , algDefault
 ) where
 
@@ -39,6 +41,9 @@ class (MonadTrans t, Algebra m) => AlgebraTrans t m where
 
   liftWith :: (forall ctx . Functor ctx => ctx () -> (forall a . ctx (t m a) -> m (ctx a)) -> m (ctx a)) -> t m a
 
+
+newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
+  deriving (Applicative, Functor, Monad, MonadTrans)
 
 algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> (SigT t :+: Sig m) n a -> t m (ctx a)
 algDefault ctx1 hdl1 = \case
