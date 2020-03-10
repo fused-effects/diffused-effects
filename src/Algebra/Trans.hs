@@ -151,7 +151,10 @@ mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
 mapLowerT f (LowerT m) = LowerT $ fmap f <$> m
 
 mapLowerTDist :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx m n') -> LowerT ctx m n' a -> LowerT ctx m n b
-mapLowerTDist f g (LowerT m) = LowerT $ \ ctx hdl -> f (m ctx (g hdl))
+mapLowerTDist f g = mapLowerTDistCtx f g id
+
+mapLowerTDistCtx :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
+mapLowerTDistCtx f g h (LowerT m) = LowerT $ \ ctx hdl -> f (m (h ctx) (g hdl))
 
 liftWithLowerT :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Compose (Ctx t) ctx a) -> LowerT ctx n (t m) (ctx a)
 liftWithLowerT m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> getCompose <$> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
