@@ -26,7 +26,6 @@ module Algebra.Trans
 , (~<)
 , Dist(..)
 , runLowerT
-, runLowerTHom
 , LowerT(..)
 , initial
 , cont
@@ -119,9 +118,6 @@ newtype Dist ctx m n = Dist { appDist :: forall x . ctx (m x) -> n (ctx x) }
 runLowerT :: ctx () -> Dist ctx m n -> LowerT ctx m n a -> n a
 runLowerT ctx hdl (LowerT m) = m ctx hdl
 
-runLowerTHom :: Functor n => (forall x . m x -> n x) -> LowerT Identity m n (Identity a) -> n a
-runLowerTHom hom = fmap runIdentity . runLowerT (Identity ()) (homDist (Hom hom))
-
 newtype LowerT ctx m n a = LowerT (ctx () -> Dist ctx m n -> n a)
   deriving (Applicative, Functor, Monad) via R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n)
 
@@ -142,7 +138,7 @@ liftInitial with = LowerT $ \ ctx hdl -> with (appDist hdl . (<$ ctx))
 
 
 instance MonadLift (R.ReaderT r) where
-  liftWith m = R.ReaderT $ \ r -> runLowerTHom (`R.runReaderT` r) m
+  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (Identity ()) (homDist (Hom (`R.runReaderT` r))) m
 
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
