@@ -83,7 +83,7 @@ algDefault ctx1 hdl1 = \case
   R r -> liftWith $ LowerT $ \ ctx2 hdl2 -> let Dist hdl = hdl2 <~< hdl1 in getCompose <$> alg (Compose (ctx1 <$ ctx2)) hdl r
 
 
-newtype Hom m n = Hom { runHom :: forall x . m x -> n x }
+newtype Hom m n = Hom { appHom :: forall x . m x -> n x }
 
 instance C.Category Hom where
   id = Hom id
@@ -94,7 +94,7 @@ runDist :: ctx (m a) -> Dist ctx m n -> n (ctx a)
 runDist cm (Dist run) = run cm
 
 homDist :: Functor n => Hom m n -> Dist Identity m n
-homDist hom = Dist (fmap Identity . runHom hom . runIdentity)
+homDist hom = Dist (fmap Identity . appHom hom . runIdentity)
 
 (>~>) :: (Functor n, Functor ctx2) => Dist ctx1 l m -> Dist ctx2 m n -> Dist (Compose ctx2 ctx1) l n
 Dist hdl1 >~> Dist hdl2 = Dist (fmap Compose . hdl2 . fmap hdl1 . getCompose)
