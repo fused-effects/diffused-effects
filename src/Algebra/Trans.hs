@@ -148,7 +148,7 @@ cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
 cont k ctx = LowerT . const $ runDist (k <$> ctx)
 
 mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
-mapLowerT f (LowerT m) = LowerT $ fmap f <$> m
+mapLowerT f = mapLowerTDist f id
 
 mapLowerTDist :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx m n') -> LowerT ctx m n' a -> LowerT ctx m n b
 mapLowerTDist f g = mapLowerTDistCtx f g id
