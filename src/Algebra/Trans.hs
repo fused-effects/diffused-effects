@@ -4,6 +4,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -56,7 +57,7 @@ class Monad m => Algebra m where
 
   alg :: Functor ctx => Sig m n a -> LowerT ctx n m (ctx a)
 
-class (Functor (Ctx t), MonadTrans t) => MonadLift t where
+class (Functor (Ctx t), MonadTrans t, forall m . Monad m => Monad (t m)) => MonadLift t where
   type Ctx t :: * -> *
   type Ctx t = Identity
 
