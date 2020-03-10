@@ -121,7 +121,7 @@ runLowerT :: ctx () -> Dist ctx m n -> LowerT ctx m n a -> n a
 runLowerT ctx hdl (LowerT m) = m ctx hdl
 
 runLowerTHom :: Functor n => (forall x . m x -> n x) -> LowerT Identity m n (Identity a) -> n a
-runLowerTHom hom = fmap runIdentity . runLowerT (Identity ()) (Dist (fmap Identity . hom . runIdentity))
+runLowerTHom hom = fmap runIdentity . runLowerT (Identity ()) (homDist (Hom hom))
 
 mkLowerT :: (ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> n a) -> LowerT ctx m n a
 mkLowerT f = LowerT $ \ ctx hdl -> f ctx (appDist hdl)
