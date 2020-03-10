@@ -1,10 +1,13 @@
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Algebra.Trans
 ( Algebra(..)
 , AlgebraTrans(..)
@@ -65,6 +68,8 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
 
   liftWith f = R.ReaderT $ \ r -> runIdentity <$> f (Identity ()) (fmap Identity . (`R.runReaderT` r) . runIdentity)
 
+deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
+
 instance Algebra m => AlgebraTrans (E.ExceptT e) m where
   type SigT (E.ExceptT e) = Error e
 
@@ -73,6 +78,8 @@ instance Algebra m => AlgebraTrans (E.ExceptT e) m where
     R (Catch m h k) -> E.catchE (hdl (m <$ ctx)) (hdl . (<$ ctx) . h) >>= hdl . fmap k
 
   liftWith f = E.ExceptT $ f (Right ()) (either (pure . Left) E.runExceptT)
+
+deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
 instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
@@ -83,6 +90,8 @@ instance Algebra m => AlgebraTrans (S.L.StateT s) m where
 
   liftWith f = S.L.StateT $ \ s -> swap <$> f (s, ()) (fmap swap . uncurry (flip S.L.runStateT))
 
+deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m)
+
 instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
@@ -91,3 +100,5 @@ instance Algebra m => AlgebraTrans (S.S.StateT s) m where
     Put s k -> S.S.put s >>  hdl (k <$ ctx)
 
   liftWith f = S.S.StateT $ \ s -> swap <$> f (s, ()) (fmap swap . uncurry (flip S.S.runStateT))
+
+deriving via AlgT (S.S.StateT s) m instance Algebra m => Algebra (S.S.StateT s m)
