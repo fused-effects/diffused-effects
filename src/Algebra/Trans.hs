@@ -20,6 +20,7 @@ module Algebra.Trans
 , homDist
 , (<~<)
 , (~<)
+, (<~)
 , Dist(..)
 , runLowerT
 , runLowerTHom
@@ -97,6 +98,9 @@ Dist hdl1 <~< Dist hdl2 = Dist (fmap Compose . hdl2 . fmap hdl1 . getCompose)
 
 (~<) :: Functor ctx => Hom l m -> Dist ctx m n -> Dist ctx l n
 Hom hdl1 ~< Dist hdl2 = Dist (hdl2 . fmap hdl1)
+
+(<~) :: Dist ctx l m -> Hom m n -> Dist ctx l n
+Dist hdl1 <~ Hom hdl2 = Dist (hdl2 . hdl1)
 
 newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 
