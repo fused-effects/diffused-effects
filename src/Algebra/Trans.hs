@@ -60,7 +60,7 @@ class (Functor (Ctx t), MonadTrans t) => MonadLift t where
   type Ctx t :: * -> *
   type Ctx t = Identity
 
-  liftWith :: Monad m => (forall ctx . Functor ctx => LowerT ctx (t m) m (ctx a)) -> t m a
+  liftWith :: Monad m => LowerT (Ctx t) (t m) m (Ctx t a) -> t m a
 
 liftDefault :: (MonadLift t, Monad m) => m a -> t m a
 liftDefault m = liftWith (LowerT (\ ctx _ -> (<$ ctx) <$> m))
