@@ -32,6 +32,7 @@ module Algebra.Trans
 , cont
 , mapLowerT
 , liftInitial
+, liftWithLowerT
 ) where
 
 import qualified Control.Category as C
@@ -151,6 +152,9 @@ mapLowerT f (LowerT m) = LowerT $ fmap f <$> m
 
 mapLowerTDist :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx m n') -> LowerT ctx m n' a -> LowerT ctx m n b
 mapLowerTDist f g (LowerT m) = LowerT $ \ ctx hdl -> f (m ctx (g hdl))
+
+liftWithLowerT :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Compose (Ctx t) ctx a) -> LowerT ctx n (t m) (ctx a)
+liftWithLowerT m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> getCompose <$> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
 
 liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
 liftInitial with = LowerT $ \ ctx hdl -> with (appDist hdl . (<$ ctx))
