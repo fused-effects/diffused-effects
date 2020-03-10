@@ -1,4 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
@@ -30,23 +32,21 @@ class Monad m => Algebra m where
   alg :: Functor ctx => ctx () -> (forall x . ctx (n x) -> m (ctx x)) -> Sig m n a -> m (ctx a)
 
 
--- FIXME: can’t express non-orthogonal algebras
-
-class MonadTrans t => AlgebraTrans t where
+class (MonadTrans t, Algebra m) => AlgebraTrans t m where
   type SigT t :: (Type -> Type) -> (Type -> Type)
 
-  algT :: (Monad m, Functor ctx) => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> SigT t n a -> t m (ctx a)
+  algT :: Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> SigT t n a -> t m (ctx a)
 
-  liftWith :: Monad m => (forall ctx . Functor ctx => ctx () -> (forall a . ctx (t m a) -> m (ctx a)) -> m (ctx a)) -> t m a
+  liftWith :: (forall ctx . Functor ctx => ctx () -> (forall a . ctx (t m a) -> m (ctx a)) -> m (ctx a)) -> t m a
 
 
-algDefault :: (AlgebraTrans t, Algebra m) => Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> (SigT t :+: Sig m) n a -> t m (ctx a)
+algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> (SigT t :+: Sig m) n a -> t m (ctx a)
 algDefault ctx1 hdl1 = \case
   L l -> algT ctx1 hdl1 l
   R r -> liftWith $ \ ctx2 hdl2 -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (fmap Compose . hdl2 . fmap hdl1 . getCompose) r
 
 
-instance AlgebraTrans (R.ReaderT r) where
+instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
   algT ctx hdl = \case
@@ -55,7 +55,7 @@ instance AlgebraTrans (R.ReaderT r) where
 
   liftWith f = R.ReaderT $ \ r -> runIdentity <$> f (Identity ()) (fmap Identity . (`R.runReaderT` r) . runIdentity)
 
-instance AlgebraTrans (E.ExceptT e) where
+instance Algebra m => AlgebraTrans (E.ExceptT e) m where
   type SigT (E.ExceptT e) = Error e
 
   algT ctx hdl = \case
@@ -64,7 +64,7 @@ instance AlgebraTrans (E.ExceptT e) where
 
   liftWith f = E.ExceptT $ f (Right ()) (either (pure . Left) E.runExceptT)
 
-instance AlgebraTrans (S.L.StateT s) where
+instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
 
   algT ctx hdl = \case
@@ -73,7 +73,7 @@ instance AlgebraTrans (S.L.StateT s) where
 
   liftWith f = S.L.StateT $ \ s -> swap <$> f (s, ()) (fmap swap . uncurry (flip S.L.runStateT))
 
-instance AlgebraTrans (S.S.StateT s) where
+instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
   algT ctx hdl = \case
