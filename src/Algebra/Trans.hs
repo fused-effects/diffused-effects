@@ -1,4 +1,5 @@
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
@@ -55,7 +56,7 @@ class Monad m => Algebra m where
 
   alg :: Functor ctx => ctx () -> Dist ctx n m -> Sig m n a -> m (ctx a)
 
-class MonadTrans t => MonadLift t where
+class (Functor (Ctx t), MonadTrans t) => MonadLift t where
   type Ctx t :: * -> *
   type Ctx t = Identity
 
