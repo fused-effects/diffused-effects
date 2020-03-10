@@ -30,6 +30,7 @@ module Algebra.Trans
 , liftInitial
 ) where
 
+import qualified Control.Category as C
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
@@ -78,6 +79,10 @@ algDefault ctx1 (Dist hdl1) = \case
 
 
 newtype Hom m n = Hom (forall x . m x -> n x)
+
+instance C.Category Hom where
+  id = Hom id
+  Hom f . Hom g = Hom (f . g)
 
 
 runDist :: ctx (m a) -> Dist ctx m n -> n (ctx a)
