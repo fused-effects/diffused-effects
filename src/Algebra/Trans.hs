@@ -8,6 +8,7 @@ module Algebra.Trans
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
+import qualified Control.Monad.Trans.State.Lazy as S.L
 import qualified Control.Monad.Trans.State.Strict as S.S
 import           Data.Kind (Type)
 import           Effect.Catch.Internal
@@ -37,6 +38,13 @@ instance AlgebraTrans (E.ExceptT e) where
   algT = \case
     L (Throw e)     -> E.throwE e
     R (Catch m h k) -> E.catchE m h >>= k
+
+instance AlgebraTrans (S.L.StateT s) where
+  type SigT (S.L.StateT s) = State s
+
+  algT = \case
+    Get   k -> S.L.get   >>= k
+    Put s k -> S.L.put s >>  k
 
 instance AlgebraTrans (S.S.StateT s) where
   type SigT (S.S.StateT s) = State s
