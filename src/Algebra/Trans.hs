@@ -68,10 +68,10 @@ newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
 instance AlgebraTrans t m => Algebra (AlgT t m) where
   type Sig (AlgT t m) = SigT t :+: Sig m
 
-  alg ctx hdl = AlgT . algDefault ctx (runAlgT . hdl)
+  alg ctx hdl = AlgT . algDefault ctx (Dist (runAlgT . hdl))
 
-algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> (SigT t :+: Sig m) n a -> t m (ctx a)
-algDefault ctx1 hdl1 = \case
+algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> Dist ctx n (t m) -> (SigT t :+: Sig m) n a -> t m (ctx a)
+algDefault ctx1 (Dist hdl1) = \case
   L l -> algT ctx1 (Dist hdl1) l
   R r -> liftWith $ LowerT $ \ ctx2 (Dist hdl2) -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (fmap Compose . hdl2 . fmap hdl1 . getCompose) r
 
