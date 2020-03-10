@@ -113,7 +113,7 @@ liftInitial with = LowerT $ \ ctx (Dist hdl) -> with (hdl . (<$ ctx))
 
 
 instance MonadLift (R.ReaderT r) where
-  liftWith f = R.ReaderT $ \ r -> runIdentity <$> f (Identity ()) (fmap Identity . (`R.runReaderT` r) . runIdentity)
+  liftWith f = R.ReaderT $ \ r -> runLowerTHom (`R.runReaderT` r) (mkLowerT f)
 
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
