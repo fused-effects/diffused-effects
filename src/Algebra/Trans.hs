@@ -78,7 +78,7 @@ instance AlgebraTrans t m => Algebra (AlgT t m) where
 algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> Dist ctx n (t m) -> (SigT t :+: Sig m) n a -> t m (ctx a)
 algDefault ctx1 hdl1 = \case
   L l -> algT ctx1 hdl1 l
-  R r -> liftWith $ LowerT $ \ ctx2 hdl2 -> let hdl = hdl2 <~< hdl1 in getCompose <$> alg (Compose (ctx1 <$ ctx2)) hdl r
+  R r -> liftWith $ LowerT $ \ ctx2 hdl2 -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) r
 
 
 newtype Hom m n = Hom { appHom :: forall x . m x -> n x }
