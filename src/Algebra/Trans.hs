@@ -33,6 +33,7 @@ module Algebra.Trans
 , cont
 , mapLowerT
 , liftInitial
+, liftWithin
 ) where
 
 import qualified Control.Category as C
@@ -63,16 +64,6 @@ class (Functor (Ctx t), MonadTrans t, forall m . Monad m => Monad (t m)) => Mona
   type Ctx t = Identity
 
   liftWith :: Monad m => LowerT (Ctx t) (t m) m (Ctx t a) -> t m a
-  liftWith m = runLowerT (Identity ()) (Dist (fmap Identity . runIdentity)) . liftWithin $
-    LowerT $ \ (Compose ctx) (Dist hdl) -> runLowerT
-      (runIdentity <$> ctx)
-      (Dist (fmap (fmap runIdentity . getCompose) . hdl . Compose . fmap Identity))
-      m
-
-  liftWithin :: Monad m => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
-  liftWithin m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
-
-  {-# MINIMAL liftWith | liftWithin #-}
 
 liftDefault :: (MonadLift t, Monad m) => m a -> t m a
 liftDefault m = liftWith (LowerT (\ ctx _ -> (<$ ctx) <$> m))
@@ -170,6 +161,9 @@ mapLowerTDistCtx f g h (LowerT m) = LowerT $ \ ctx hdl -> f (m (h ctx) (g hdl))
 
 liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
 liftInitial with = LowerT $ \ ctx hdl -> with (appDist hdl . (<$ ctx))
+
+liftWithin :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
+liftWithin m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
 
 
 instance MonadLift (R.ReaderT r) where
