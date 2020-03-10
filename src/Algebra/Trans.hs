@@ -23,7 +23,7 @@ module Algebra.Trans
 , initial
 , cont
 , mapLowerT
-, withInitial
+, liftInitial
 ) where
 
 import           Control.Monad.Trans.Class
@@ -100,8 +100,8 @@ cont k ctx = LowerT . const $ runDist (k <$> ctx)
 mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
 mapLowerT f (LowerT m) = LowerT $ fmap f <$> m
 
-withInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-withInitial with = LowerT $ \ ctx (Dist hdl) -> with (hdl . (<$ ctx))
+liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
+liftInitial with = LowerT $ \ ctx (Dist hdl) -> with (hdl . (<$ ctx))
 
 
 instance MonadLift (R.ReaderT r) where
@@ -124,7 +124,7 @@ instance Algebra m => AlgebraTrans (E.ExceptT e) m where
 
   algT ctx hdl = runLowerT ctx hdl . \case
     L (Throw e)     -> lift (E.throwE e)
-    R (Catch m h k) -> LowerT (\ ctx (Dist hdl) -> E.catchE (runLowerT ctx hdl (initial m)) (runLowerT ctx hdl . initial . h)) >>= cont k
+    R (Catch m h k) -> liftInitial (\ initial -> E.catchE (initial m) (initial . h)) >>= cont k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
