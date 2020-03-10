@@ -124,7 +124,7 @@ runLowerTHom :: Functor n => (forall x . m x -> n x) -> LowerT Identity m n (Ide
 runLowerTHom hom = fmap runIdentity . runLowerT (Identity ()) (Dist (fmap Identity . hom . runIdentity))
 
 mkLowerT :: (ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> n a) -> LowerT ctx m n a
-mkLowerT f = LowerT $ \ ctx (Dist hdl) -> f ctx hdl
+mkLowerT f = LowerT $ \ ctx hdl -> f ctx (appDist hdl)
 
 newtype LowerT ctx m n a = LowerT (ctx () -> Dist ctx m n -> n a)
   deriving (Applicative, Functor, Monad) via R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n)
@@ -142,7 +142,7 @@ mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
 mapLowerT f (LowerT m) = LowerT $ fmap f <$> m
 
 liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-liftInitial with = LowerT $ \ ctx (Dist hdl) -> with (hdl . (<$ ctx))
+liftInitial with = LowerT $ \ ctx hdl -> with (appDist hdl . (<$ ctx))
 
 
 instance MonadLift (R.ReaderT r) where
