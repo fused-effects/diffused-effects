@@ -45,6 +45,11 @@ class (MonadTrans t, Algebra m, Monad (t m)) => AlgebraTrans t m where
 newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
   deriving (Applicative, Functor, Monad, MonadTrans)
 
+instance AlgebraTrans t m => Algebra (AlgT t m) where
+  type Sig (AlgT t m) = SigT t :+: Sig m
+
+  alg ctx hdl = AlgT . algDefault ctx (runAlgT . hdl)
+
 algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> (forall a . ctx (n a) -> t m (ctx a)) -> (SigT t :+: Sig m) n a -> t m (ctx a)
 algDefault ctx1 hdl1 = \case
   L l -> algT ctx1 hdl1 l
