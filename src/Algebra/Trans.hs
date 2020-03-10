@@ -75,6 +75,9 @@ newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 newtype AlgM ctx m n a = AlgM { runAlgM :: R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a }
   deriving (Applicative, Functor, Monad)
 
+instance MonadTrans (AlgM ctx m) where
+  lift = AlgM . lift . lift
+
 
 instance MonadLift (R.ReaderT r) where
   liftWith f = R.ReaderT $ \ r -> runIdentity <$> f (Identity ()) (fmap Identity . (`R.runReaderT` r) . runIdentity)
