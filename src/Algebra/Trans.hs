@@ -25,6 +25,7 @@ class MonadTrans t => AlgebraTrans t where
 
   algT :: Monad m => SigT t (t m) a -> t m a
 
+
 instance AlgebraTrans (R.ReaderT r) where
   type SigT (R.ReaderT r) = Reader r
 
