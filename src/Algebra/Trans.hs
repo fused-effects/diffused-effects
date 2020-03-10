@@ -78,9 +78,9 @@ instance AlgebraTrans t m => Algebra (AlgT t m) where
   alg ctx hdl = AlgT . algDefault ctx (Hom runAlgT ~< Dist hdl)
 
 algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> Dist ctx n (t m) -> (SigT t :+: Sig m) n a -> t m (ctx a)
-algDefault ctx1 (Dist hdl1) = \case
-  L l -> algT ctx1 (Dist hdl1) l
-  R r -> liftWith $ LowerT $ \ ctx2 (Dist hdl2) -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (fmap Compose . hdl2 . fmap hdl1 . getCompose) r
+algDefault ctx1 hdl1 = \case
+  L l -> algT ctx1 hdl1 l
+  R r -> liftWith $ LowerT $ \ ctx2 hdl2 -> let Dist hdl = hdl2 <~< hdl1 in getCompose <$> alg (Compose (ctx1 <$ ctx2)) hdl r
 
 
 newtype Hom m n = Hom { runHom :: forall x . m x -> n x }
