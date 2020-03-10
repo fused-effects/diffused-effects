@@ -19,6 +19,8 @@ module Algebra.Trans
 , Dist(..)
 , runAlg
 , AlgM(..)
+, initial
+, mapAlgM
 ) where
 
 import           Control.Monad.Trans.Class
