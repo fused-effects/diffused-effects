@@ -4,9 +4,10 @@ module Algebra.Trans
 ( AlgebraTrans(..)
 ) where
 
-import Control.Monad.Trans.Class
+import qualified Algebra as A
+import           Control.Monad.Trans.Class
 
 class MonadTrans t => AlgebraTrans t where
   type SigT t :: (* -> *) -> (* -> *)
 
-  algT :: (Functor ctx, Monad m) => ctx () -> (forall x . ctx (n x) -> t m (ctx x)) -> SigT t n a -> t m (ctx a)
+  algT :: A.Algebra m => SigT t (t m) a -> t m (ctx a)
