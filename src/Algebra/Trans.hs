@@ -81,6 +81,9 @@ newtype AlgM ctx m n a = AlgM { runAlgM :: R.ReaderT (ctx ()) (R.ReaderT (Dist c
 instance MonadTrans (AlgM ctx m) where
   lift = AlgM . lift . lift
 
+initial :: Functor ctx => m a -> AlgM ctx m n (ctx a)
+initial m = AlgM . R.ReaderT $ \ ctx -> R.ReaderT $ runDist (m <$ ctx)
+
 
 instance MonadLift (R.ReaderT r) where
   liftWith f = R.ReaderT $ \ r -> runIdentity <$> f (Identity ()) (fmap Identity . (`R.runReaderT` r) . runIdentity)
