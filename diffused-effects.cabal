@@ -38,6 +38,7 @@ library
   import: common
   exposed-modules:
     Algebra
+    Algebra.Trans
     Algebra.Choose.Church
     Algebra.Cull.Church
     Algebra.Cut.Church
