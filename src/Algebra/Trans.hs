@@ -17,7 +17,7 @@ module Algebra.Trans
 , algDefault
 , runDist
 , homDist
-, composeDist
+, (<~<)
 , Dist(..)
 , runLowerT
 , runLowerTHom
@@ -82,8 +82,8 @@ runDist cm (Dist run) = run cm
 homDist :: Functor n => (forall x . m x -> n x) -> Dist Identity m n
 homDist hom = Dist (fmap Identity . hom . runIdentity)
 
-composeDist :: (Functor n, Functor ctx2) => Dist ctx1 l m -> Dist ctx2 m n -> Dist (Compose ctx2 ctx1) l n
-composeDist (Dist hdl1) (Dist hdl2) = Dist (fmap Compose . hdl2 . fmap hdl1 . getCompose)
+(<~<) :: (Functor n, Functor ctx2) => Dist ctx1 l m -> Dist ctx2 m n -> Dist (Compose ctx2 ctx1) l n
+Dist hdl1 <~< Dist hdl2 = Dist (fmap Compose . hdl2 . fmap hdl1 . getCompose)
 
 newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 
