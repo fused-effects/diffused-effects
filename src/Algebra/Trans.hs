@@ -62,6 +62,11 @@ class (Functor (Ctx t), MonadTrans t, forall m . Monad m => Monad (t m)) => Mona
   type Ctx t = Identity
 
   liftWith :: Monad m => LowerT (Ctx t) (t m) m (Ctx t a) -> t m a
+  liftWith m = runLowerT (Identity ()) (Dist (fmap Identity . runIdentity)) . liftWithin $
+    LowerT $ \ (Compose ctx) (Dist hdl) -> runLowerT
+      (runIdentity <$> ctx)
+      (Dist (fmap (fmap runIdentity . getCompose) . hdl . Compose . fmap Identity))
+      m
 
   liftWithin :: Monad m => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
   liftWithin m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
