@@ -15,6 +15,7 @@ module Algebra.Trans
 , AlgebraTrans(..)
 , AlgT(..)
 , algDefault
+, Hom(..)
 , runDist
 , homDist
 , (<~<)
@@ -74,6 +75,9 @@ algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> Dist ctx n (t m) -> (
 algDefault ctx1 (Dist hdl1) = \case
   L l -> algT ctx1 (Dist hdl1) l
   R r -> liftWith $ LowerT $ \ ctx2 (Dist hdl2) -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (fmap Compose . hdl2 . fmap hdl1 . getCompose) r
+
+
+newtype Hom m n = Hom (forall x . m x -> n x)
 
 
 runDist :: ctx (m a) -> Dist ctx m n -> n (ctx a)
