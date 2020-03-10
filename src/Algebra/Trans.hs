@@ -37,7 +37,7 @@ instance AlgebraTrans (R.ReaderT r) where
     Ask       k -> R.ask       >>= k
     Local f m k -> R.local f m >>= k
 
-  liftWith f = R.ReaderT (\ r -> runIdentity <$> f (Identity ()) (fmap Identity . (`R.runReaderT` r) . runIdentity))
+  liftWith f = R.ReaderT $ \ r -> runIdentity <$> f (Identity ()) (fmap Identity . (`R.runReaderT` r) . runIdentity)
 
 instance AlgebraTrans (E.ExceptT e) where
   type SigT (E.ExceptT e) = Error e
