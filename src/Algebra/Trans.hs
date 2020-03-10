@@ -32,7 +32,6 @@ module Algebra.Trans
 , cont
 , mapLowerT
 , liftInitial
-, liftWithLowerT
 ) where
 
 import qualified Control.Category as C
@@ -63,6 +62,9 @@ class (Functor (Ctx t), MonadTrans t) => MonadLift t where
 
   liftWith :: Monad m => LowerT (Ctx t) (t m) m (Ctx t a) -> t m a
 
+  liftWithin :: Monad m => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
+  liftWithin m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
+
 liftDefault :: (MonadLift t, Monad m) => m a -> t m a
 liftDefault m = liftWith (LowerT (\ ctx _ -> (<$ ctx) <$> m))
 
@@ -83,7 +85,7 @@ instance AlgebraTrans t m => Algebra (AlgT t m) where
 algDefault :: (AlgebraTrans t m, Functor ctx) => (SigT t :+: Sig m) n a -> LowerT ctx n (t m) (ctx a)
 algDefault = \case
   L l -> algT l
-  R r -> liftWithLowerT (getCompose <$> alg r)
+  R r -> liftWithin (getCompose <$> alg r)
 
 
 newtype Hom m n = Hom { appHom :: forall x . m x -> n x }
@@ -155,9 +157,6 @@ mapLowerTDist f g = mapLowerTDistCtx f g id
 
 mapLowerTDistCtx :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
 mapLowerTDistCtx f g h (LowerT m) = LowerT $ \ ctx hdl -> f (m (h ctx) (g hdl))
-
-liftWithLowerT :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
-liftWithLowerT m = LowerT $ \ ctx1 hdl1 -> liftWith $ LowerT $ \ ctx2 hdl2 -> runLowerT (Compose (ctx1 <$ ctx2)) (hdl2 <~< hdl1) m
 
 liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
 liftInitial with = LowerT $ \ ctx hdl -> with (appDist hdl . (<$ ctx))
