@@ -18,8 +18,7 @@ module Algebra.Trans
 , runDist
 , Dist(..)
 , runLowerT
-, runLower
-, runLower'
+, runLowerT'
 , LowerT(..)
 , initial
 , cont
@@ -82,11 +81,8 @@ newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 runLowerT :: LowerT ctx m n a -> ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> n a
 runLowerT (LowerT m) ctx hdl = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
 
-runLower :: ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> LowerT ctx m n a -> n a
-runLower ctx hdl m = runLowerT m ctx hdl
-
-runLower' :: Functor m => LowerT Identity m m a -> m a
-runLower' = runLower (Identity ()) (fmap Identity . runIdentity)
+runLowerT' :: Functor m => LowerT Identity m m a -> m a
+runLowerT' m = runLowerT m (Identity ()) (fmap Identity . runIdentity)
 
 newtype LowerT ctx m n a = LowerT (R.ReaderT (ctx ()) (R.ReaderT (Dist ctx m n) n) a)
   deriving (Applicative, Functor, Monad)
@@ -111,8 +107,8 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
   algT ctx hdl = \case
-    Ask       k -> runLower ctx hdl (lift R.ask >>= initial . k)
-    Local f m k -> runLower ctx hdl (mapAlgM (R.local f) (initial m) >>= cont k)
+    Ask       k -> runLowerT (lift R.ask >>= initial . k) ctx hdl
+    Local f m k -> runLowerT (mapAlgM (R.local f) (initial m) >>= cont k) ctx hdl
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
