@@ -53,7 +53,7 @@ import           Effect.Throw.Internal
 class Monad m => Algebra m where
   type Sig m :: (* -> *) -> (* -> *)
 
-  alg :: Functor ctx => ctx () -> (forall x . ctx (n x) -> m (ctx x)) -> Sig m n a -> m (ctx a)
+  alg :: Functor ctx => ctx () -> Dist ctx n m -> Sig m n a -> m (ctx a)
 
 class MonadTrans t => MonadLift t where
   liftWith :: Monad m => (forall ctx . Functor ctx => LowerT ctx (t m) m (ctx a)) -> t m a
@@ -73,12 +73,12 @@ newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
 instance AlgebraTrans t m => Algebra (AlgT t m) where
   type Sig (AlgT t m) = SigT t :+: Sig m
 
-  alg ctx hdl = AlgT . algDefault ctx (Hom runAlgT ~< Dist hdl)
+  alg ctx hdl = AlgT . algDefault ctx (Hom runAlgT ~< hdl)
 
 algDefault :: AlgebraTrans t m => Functor ctx => ctx () -> Dist ctx n (t m) -> (SigT t :+: Sig m) n a -> t m (ctx a)
 algDefault ctx1 hdl1 = \case
   L l -> algT ctx1 hdl1 l
-  R r -> liftWith $ LowerT $ \ ctx2 hdl2 -> let Dist hdl = hdl2 <~< hdl1 in getCompose <$> alg (Compose (ctx1 <$ ctx2)) hdl r
+  R r -> liftWith $ LowerT $ \ ctx2 hdl2 -> let hdl = hdl2 <~< hdl1 in getCompose <$> alg (Compose (ctx1 <$ ctx2)) hdl r
 
 
 newtype Hom m n = Hom { appHom :: forall x . m x -> n x }
