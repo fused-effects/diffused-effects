@@ -2,7 +2,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 module Algebra.Trans
-( AlgebraTrans(..)
+( Algebra(..)
+, AlgebraTrans(..)
 ) where
 
 import           Control.Monad.Trans.Class
@@ -19,6 +20,12 @@ import           Effect.Reader.Internal
 import           Effect.Sum
 import           Effect.State.Internal
 import           Effect.Throw.Internal
+
+class Monad m => Algebra m where
+  type Sig m :: (* -> *) -> (* -> *)
+
+  alg :: Functor ctx => ctx () -> (forall x . ctx (n x) -> m (ctx x)) -> Sig m n a -> m (ctx a)
+
 
 -- FIXME: can’t express non-orthogonal algebras
 
