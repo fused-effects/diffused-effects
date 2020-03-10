@@ -78,7 +78,7 @@ algDefault ctx1 (Dist hdl1) = \case
   R r -> liftWith $ LowerT $ \ ctx2 (Dist hdl2) -> getCompose <$> alg (Compose (ctx1 <$ ctx2)) (fmap Compose . hdl2 . fmap hdl1 . getCompose) r
 
 
-newtype Hom m n = Hom (forall x . m x -> n x)
+newtype Hom m n = Hom { runHom :: forall x . m x -> n x }
 
 instance C.Category Hom where
   id = Hom id
