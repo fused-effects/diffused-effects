@@ -17,6 +17,7 @@ module Algebra.Trans
 , algDefault
 , runDist
 , Dist(..)
+, runLowerT
 , runLower
 , runLower'
 , LowerT(..)
@@ -78,8 +79,11 @@ runDist cm (Dist run) = run cm
 newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
 
 
+runLowerT :: LowerT ctx m n a -> ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> n a
+runLowerT (LowerT m) ctx hdl = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
+
 runLower :: ctx () -> (forall x . ctx (m x) -> n (ctx x)) -> LowerT ctx m n a -> n a
-runLower ctx hdl (LowerT m) = R.runReaderT (R.runReaderT m ctx) (Dist hdl)
+runLower ctx hdl m = runLowerT m ctx hdl
 
 runLower' :: Functor m => LowerT Identity m m a -> m a
 runLower' = runLower (Identity ()) (fmap Identity . runIdentity)
