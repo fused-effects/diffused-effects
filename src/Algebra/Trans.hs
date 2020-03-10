@@ -114,7 +114,7 @@ Dist hdl1 >~ Hom hdl2 = Dist (hdl2 . hdl1)
 (~<) :: Hom m n -> Dist ctx l m -> Dist ctx l n
 Hom hdl1 ~< Dist hdl2 = Dist (hdl1 . hdl2)
 
-newtype Dist ctx m n = Dist (forall x . ctx (m x) -> n (ctx x))
+newtype Dist ctx m n = Dist { appDist :: forall x . ctx (m x) -> n (ctx x) }
 
 
 runLowerT :: ctx () -> Dist ctx m n -> LowerT ctx m n a -> n a
