@@ -9,9 +9,9 @@ module Control.Monad.Trans.Lower
 , lower
 , lowerCont
 , mapLowerT
-  -- * Distributive laws
-, Hom
-, hom
+  -- * Handlers
+, PureHandler
+, pureHandler
 , (>~>)
 , (<~<)
 , (~>)
@@ -54,11 +54,11 @@ mapLowerT :: (n' a -> n b) -> (Handler ctx m n -> Handler ctx' m n') -> (ctx () 
 mapLowerT f g h m = lowerT $ \ hdl ctx -> f (runLowerT (g hdl) (h ctx) m)
 
 
-type Hom m n = forall x . m x -> n x
+type PureHandler m n = forall x . m x -> n x
 
 
-hom :: Functor n => Hom m n -> Handler Identity m n
-hom hom = fmap Identity . hom . runIdentity
+pureHandler :: Functor n => PureHandler m n -> Handler Identity m n
+pureHandler hom = fmap Identity . hom . runIdentity
 
 (>~>) :: (Functor n, Functor ctx2) => Handler ctx1 l m -> Handler ctx2 m n -> Handler (Compose ctx2 ctx1) l n
 hdl1 >~> hdl2 = fmap Compose . hdl2 . fmap hdl1 . getCompose
@@ -70,22 +70,22 @@ hdl1 <~< hdl2 = fmap Compose . hdl1 . fmap hdl2 . getCompose
 
 infixr 1 <~<
 
-(~>) :: Functor ctx => Hom l m -> Handler ctx m n -> Handler ctx l n
+(~>) :: Functor ctx => PureHandler l m -> Handler ctx m n -> Handler ctx l n
 hdl1 ~> hdl2 = hdl2 . fmap hdl1
 
 infixr 1 ~>
 
-(<~) :: Functor ctx => Handler ctx m n -> Hom l m -> Handler ctx l n
+(<~) :: Functor ctx => Handler ctx m n -> PureHandler l m -> Handler ctx l n
 hdl1 <~ hdl2 = hdl1 . fmap hdl2
 
 infixr 1 <~
 
-(>~) :: Handler ctx l m -> Hom m n -> Handler ctx l n
+(>~) :: Handler ctx l m -> PureHandler m n -> Handler ctx l n
 hdl1 >~ hdl2 = hdl2 . hdl1
 
 infixr 1 >~
 
-(~<) :: Hom m n -> Handler ctx l m -> Handler ctx l n
+(~<) :: PureHandler m n -> Handler ctx l m -> Handler ctx l n
 hdl1 ~< hdl2 = hdl1 . hdl2
 
 infixr 1 ~<

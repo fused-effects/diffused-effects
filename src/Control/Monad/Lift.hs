@@ -42,7 +42,7 @@ instance MonadLift M.MaybeT where
   liftWith = M.MaybeT . runLowerT (maybe (pure Nothing) M.runMaybeT) (Just ())
 
 instance MonadLift (R.ReaderT r) where
-  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (hom (`R.runReaderT` r)) (Identity ()) m
+  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (pureHandler (`R.runReaderT` r)) (Identity ()) m
 
 instance MonadLift (S.L.StateT s) where
   type Ctx (S.L.StateT s) = (,) s
