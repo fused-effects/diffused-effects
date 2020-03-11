@@ -46,7 +46,7 @@ module Algebra.Trans
 , CtxC(..)
 ) where
 
-import           Control.Category ((>>>))
+import           Control.Category ((<<<), (>>>))
 import qualified Control.Category as C
 import           Control.Monad ((<=<))
 import           Control.Monad.Trans.Class
@@ -178,12 +178,17 @@ liftWithin :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Ctx t 
 liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLowerT (hdl2 <~< hdl1) (Compose (ctx1 <$ ctx2)) m
 
 
+newtype ReaderC r arr a b = ReaderC (r -> arr a b)
+
+instance C.Category arr => C.Category (ReaderC r arr) where
+  id = ReaderC $ const C.id
+
+  ReaderC f . ReaderC g = ReaderC $ \ hdl -> f hdl <<< g hdl
+
+
 newtype LowerC ctx m n a b = LowerC (Dist ctx m n -> ctx a -> n (ctx b))
 
-instance Monad n => C.Category (LowerC ctx m n) where
-  id = LowerC $ const pure
-
-  LowerC f . LowerC g = LowerC $ \ hdl -> f hdl <=< g hdl
+deriving via ReaderC (Dist ctx m n) (CtxC ctx n) instance Monad n => C.Category (LowerC ctx m n)
 
 fromLowerT :: LowerT ctx m n (ctx a) -> LowerC ctx m n () a
 fromLowerT (LowerT r) = LowerC r
