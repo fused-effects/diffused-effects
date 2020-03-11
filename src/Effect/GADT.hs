@@ -1,0 +1,2 @@
+module Effect.GADT
+() where
