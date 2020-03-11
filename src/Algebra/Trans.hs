@@ -35,6 +35,7 @@ module Algebra.Trans
 , mapLowerT
 , liftInitial
 , liftWithin
+, LowerC(..)
 ) where
 
 import           Control.Monad.Trans.Class
@@ -163,6 +164,9 @@ liftInitial with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
 
 liftWithin :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
 liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLowerT (hdl2 <~< hdl1) (Compose (ctx1 <$ ctx2)) m
+
+
+newtype LowerC ctx m n a b = LowerC (Dist ctx m n -> ctx a -> n (ctx b))
 
 
 instance MonadLift (R.ReaderT r) where
