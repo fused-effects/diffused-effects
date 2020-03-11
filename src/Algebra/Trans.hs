@@ -44,6 +44,7 @@ module Algebra.Trans
 , mapLowerC
 ) where
 
+import           Control.Category ((>>>))
 import qualified Control.Category as C
 import           Control.Monad ((<=<))
 import           Control.Monad.Trans.Class
@@ -210,7 +211,7 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
 
   algT = \case
     Ask       k -> lift R.ask >>= initialT . k
-    Local f m k -> mapLowerT (R.local f) (initialT m) >>= contT k
+    Local f m k -> fromLowerC $ mapLowerC (R.local f) (initialC m) >>> contC k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
