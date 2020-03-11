@@ -4,10 +4,10 @@ module Control.Monad.Trans.Lower
 ( -- * Lowering monad transformer
   runLowerT
 , LowerT(..)
+, lowerWith
 , lower
 , lowerCont
 , mapLowerT
-, lowerWith
   -- * Distributive laws
 , Hom
 , runDist
@@ -35,6 +35,9 @@ newtype LowerT ctx m n a = LowerT (Dist ctx m n -> ctx () -> n a)
 instance MonadTrans (LowerT ctx m) where
   lift = LowerT . const . const
 
+lowerWith :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
+lowerWith with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
+
 lower :: Functor ctx => m a -> LowerT ctx m n (ctx a)
 lower m = lowerWith ($ m)
 
@@ -43,9 +46,6 @@ lowerCont k ctx = LowerT $ const . runDist (k <$> ctx)
 
 mapLowerT :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
 mapLowerT f g h (LowerT m) = LowerT $ \ hdl ctx -> f (m (g hdl) (h ctx))
-
-lowerWith :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-lowerWith with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
 
 
 type Hom m n = forall x . m x -> n x
