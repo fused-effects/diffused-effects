@@ -30,29 +30,29 @@ import qualified Control.Monad.Trans.Reader as R
 import           Data.Functor.Compose
 import           Data.Functor.Identity
 
-runLowerT :: Handler ctx m n -> ctx () -> LowerT ctx m n a -> n a
-runLowerT hdl ctx (LowerT m) = m (WrappedHandler hdl) ctx
+runLowerT :: Handler ctx m n -> LowerT ctx m n a -> n a
+runLowerT hdl (LowerT m) = m (WrappedHandler hdl)
 
-lowerT :: (Handler ctx m n -> ctx () -> n a) -> LowerT ctx m n a
+lowerT :: (Handler ctx m n -> n a) -> LowerT ctx m n a
 lowerT f = LowerT $ \ hdl -> f (unwrapHandler hdl)
 
-newtype LowerT ctx m n a = LowerT (WrappedHandler ctx m n -> ctx () -> n a)
-  deriving (Applicative, Functor, Monad) via R.ReaderT (WrappedHandler ctx m n) (R.ReaderT (ctx ()) n)
+newtype LowerT ctx m n a = LowerT (WrappedHandler ctx m n -> n a)
+  deriving (Applicative, Functor, Monad) via R.ReaderT (WrappedHandler ctx m n) n
 
 instance MonadTrans (LowerT ctx m) where
-  lift = LowerT . const . const
+  lift = LowerT . const
 
-lowerWith :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-lowerWith with = LowerT $ \ hdl ctx -> with (unwrapHandler hdl . (<$ ctx))
+lowerWith :: Functor ctx => ctx () -> ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
+lowerWith ctx with = lowerT $ \ hdl -> with (hdl . (<$ ctx))
 
-lower :: Functor ctx => m a -> LowerT ctx m n (ctx a)
-lower m = lowerWith ($ m)
+lower :: Functor ctx => ctx () -> m a -> LowerT ctx m n (ctx a)
+lower ctx m = lowerWith ctx ($ m)
 
 lowerCont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
-lowerCont k ctx = LowerT $ const . runHandler (k <$> ctx)
+lowerCont k ctx = LowerT $ runHandler (k <$> ctx)
 
-mapLowerT :: (n' a -> n b) -> (Handler ctx m n -> Handler ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
-mapLowerT f g h m = lowerT $ \ hdl ctx -> f (runLowerT (g hdl) (h ctx) m)
+mapLowerT :: (n' a -> n b) -> (Handler ctx m n -> Handler ctx m n') -> LowerT ctx m n' a -> LowerT ctx m n b
+mapLowerT f g m = lowerT $ \ hdl -> f (runLowerT (g hdl) m)
 
 
 type PureHandler m n = forall x . m x -> n x
