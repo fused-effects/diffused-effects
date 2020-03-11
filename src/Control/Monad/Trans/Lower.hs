@@ -4,7 +4,7 @@ module Control.Monad.Trans.Lower
 ( -- * Lowering monad transformer
   runLowerT
 , LowerT(..)
-, initial
+, lower
 , lowerCont
 , mapLowerT
 , lowerWith
@@ -35,8 +35,8 @@ newtype LowerT ctx m n a = LowerT (Dist ctx m n -> ctx () -> n a)
 instance MonadTrans (LowerT ctx m) where
   lift = LowerT . const . const
 
-initial :: Functor ctx => m a -> LowerT ctx m n (ctx a)
-initial m = lowerWith ($ m)
+lower :: Functor ctx => m a -> LowerT ctx m n (ctx a)
+lower m = lowerWith ($ m)
 
 lowerCont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
 lowerCont k ctx = LowerT $ const . runDist (k <$> ctx)

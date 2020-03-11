@@ -65,8 +65,8 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
   algT = \case
-    Ask       k -> lift R.ask >>= initial . k
-    Local f m k -> mapLowerT (R.local f) id id (initial m) >>= lowerCont k
+    Ask       k -> lift R.ask >>= lower . k
+    Local f m k -> mapLowerT (R.local f) id id (lower m) >>= lowerCont k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
@@ -76,7 +76,7 @@ instance Algebra m => AlgebraTrans (E.ExceptT e) m where
 
   algT = \case
     L (Throw e)     -> lift (E.throwE e)
-    R (Catch m h k) -> lowerWith (\ initial -> E.catchE (initial m) (initial . h)) >>= lowerCont k
+    R (Catch m h k) -> lowerWith (\ lower -> E.catchE (lower m) (lower . h)) >>= lowerCont k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
@@ -85,8 +85,8 @@ instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
 
   algT = \case
-    Get   k -> lift S.L.get     >>= initial . k
-    Put s k -> lift (S.L.put s) >>  initial k
+    Get   k -> lift S.L.get     >>= lower . k
+    Put s k -> lift (S.L.put s) >>  lower k
 
 deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m)
 
@@ -95,7 +95,7 @@ instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
   algT = \case
-    Get   k -> lift S.S.get     >>= initial . k
-    Put s k -> lift (S.S.put s) >>  initial k
+    Get   k -> lift S.S.get     >>= lower . k
+    Put s k -> lift (S.S.put s) >>  lower k
 
 deriving via AlgT (S.S.StateT s) m instance Algebra m => Algebra (S.S.StateT s m)
