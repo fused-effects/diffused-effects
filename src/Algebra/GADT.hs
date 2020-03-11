@@ -3,7 +3,8 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 module Algebra.GADT
-( Algebra(..)
+( Handler
+, Algebra(..)
 , send
 , thread
 , lower
@@ -19,6 +20,8 @@ import           Data.Kind (Type)
 import           Data.List.NonEmpty (NonEmpty)
 import           Effect.GADT
 import           Effect.Sum
+
+type Handler ctx m n = forall x. ctx (m x) -> n (ctx x)
 
 class Monad m => Algebra m where
   type Sig m :: (Type -> Type) -> (Type -> Type)
