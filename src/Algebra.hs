@@ -143,6 +143,7 @@ instance Monad m => Algebra (I.IdentityT m) where
   type Sig (I.IdentityT m) = Lift m
 
   alg ctx hdl (LiftWith with k) = I.IdentityT (with ctx (I.runIdentityT . hdl)) >>= hdl . fmap k
+  {-# INLINE alg #-}
 
 instance Algebra m => Algebra (M.MaybeT m) where
   type Sig (M.MaybeT m) = Empty :+: Sig m
