@@ -7,6 +7,7 @@ module Control.Monad.Trans.Lower
 , LowerT
 , lowerWith
 , lower
+, liftInit
 , lowerCont
 , mapLowerT
   -- * Pure handlers
@@ -47,6 +48,9 @@ lowerWith with ctx = lowerT $ \ hdl -> with (hdl . (<$ ctx))
 
 lower :: Functor ctx => m a -> ctx () -> LowerT ctx m n (ctx a)
 lower m = lowerWith ($ m)
+
+liftInit :: (Functor ctx, Monad n) => n a -> ctx () -> LowerT ctx m n (ctx a)
+liftInit n ctx = lift ((<$ ctx) <$> n)
 
 lowerCont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
 lowerCont k ctx = LowerT $ runHandler (k <$> ctx)
