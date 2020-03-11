@@ -1,11 +1,15 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 module Effect.GADT
-( Empty(..)
+( Choose(..)
+, Empty(..)
 , Error(..)
 ) where
 
 import Data.Kind (Type)
+
+data Choose (m :: Type -> Type) k where
+  Choose :: Choose m Bool
 
 data Empty (m :: Type -> Type) k where
   Empty :: Empty m a
