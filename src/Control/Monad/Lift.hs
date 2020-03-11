@@ -34,12 +34,12 @@ liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLow
 instance MonadLift (E.ExceptT e) where
   type Ctx (E.ExceptT e) = Either e
 
-  liftWith = E.ExceptT . runLowerT (Dist (either (pure . Left) E.runExceptT)) (Right ())
+  liftWith = E.ExceptT . runLowerT (Handler (either (pure . Left) E.runExceptT)) (Right ())
 
 instance MonadLift M.MaybeT where
   type Ctx M.MaybeT = Maybe
 
-  liftWith = M.MaybeT . runLowerT (Dist (maybe (pure Nothing) M.runMaybeT)) (Just ())
+  liftWith = M.MaybeT . runLowerT (Handler (maybe (pure Nothing) M.runMaybeT)) (Just ())
 
 instance MonadLift (R.ReaderT r) where
   liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (hom (`R.runReaderT` r)) (Identity ()) m
@@ -47,9 +47,9 @@ instance MonadLift (R.ReaderT r) where
 instance MonadLift (S.L.StateT s) where
   type Ctx (S.L.StateT s) = (,) s
 
-  liftWith m = S.L.StateT $ \ s -> swap <$> runLowerT (Dist (fmap swap . uncurry (flip S.L.runStateT))) (s, ()) m
+  liftWith m = S.L.StateT $ \ s -> swap <$> runLowerT (Handler (fmap swap . uncurry (flip S.L.runStateT))) (s, ()) m
 
 instance MonadLift (S.S.StateT s) where
   type Ctx (S.S.StateT s) = (,) s
 
-  liftWith m = S.S.StateT $ \ s -> swap <$> runLowerT (Dist (fmap swap . uncurry (flip S.S.runStateT))) (s, ()) m
+  liftWith m = S.S.StateT $ \ s -> swap <$> runLowerT (Handler (fmap swap . uncurry (flip S.S.runStateT))) (s, ()) m
