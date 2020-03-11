@@ -90,6 +90,7 @@ instance Algebra m => AlgebraTrans (S.L.StateT s) m where
 
 deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m)
 
+
 instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
