@@ -38,6 +38,8 @@ module Algebra.Trans
 , LowerC(..)
 ) where
 
+import qualified Control.Category as C
+import           Control.Monad ((<=<))
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
@@ -167,6 +169,11 @@ liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLow
 
 
 newtype LowerC ctx m n a b = LowerC (Dist ctx m n -> ctx a -> n (ctx b))
+
+instance Monad n => C.Category (LowerC ctx m n) where
+  id = LowerC $ const pure
+
+  LowerC f . LowerC g = LowerC $ \ hdl -> f hdl <=< g hdl
 
 
 instance MonadLift (R.ReaderT r) where
