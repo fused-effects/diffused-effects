@@ -36,7 +36,7 @@ import           Effect.Sum
 import           Effect.Throw.Internal
 
 class Monad m => Algebra m where
-  type Sig m :: (* -> *) -> (* -> *)
+  type Sig m :: (Type -> Type) -> (Type -> Type)
 
   alg :: Functor ctx => ctx () -> Sig m n a -> LowerT ctx n m (ctx a)
 
