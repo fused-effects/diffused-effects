@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 module Algebra.GADT
@@ -125,4 +126,14 @@ instance Algebra m => Algebra (S.S.StateT s m) where
     L Get     -> liftInit ctx S.S.get
     L (Put s) -> liftInit ctx (S.S.put s)
     R other   -> S.S.StateT $ \ s -> swap <$> thread (fmap swap . uncurry (flip S.S.runStateT)) hdl (s, ctx) other
+  {-# INLINE alg #-}
+
+instance (Monoid w, Algebra m) => Algebra (W.S.WriterT w m) where
+  type Sig (W.S.WriterT w m) = Writer w :+: Sig m
+
+  alg hdl ctx = \case
+    L (Tell w)     -> liftInit ctx (W.S.tell w)
+    L (Listen m)   -> W.S.listen (lowerInit hdl ctx m) >>= \ (a, w') -> pure ((w',) <$> a)
+    L (Censor f m) -> W.S.censor f (lowerInit hdl ctx m)
+    R other        -> W.S.WriterT $ swap <$> thread (\ (w, x) -> swap . fmap (mappend w) <$> W.S.runWriterT x) hdl (mempty, ctx) other
   {-# INLINE alg #-}
