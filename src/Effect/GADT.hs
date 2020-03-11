@@ -10,6 +10,7 @@ module Effect.GADT
 , Reader(..)
 , State(..)
 , Throw(..)
+, Writer(..)
 ) where
 
 import Data.Kind (Type)
@@ -38,3 +39,8 @@ data State s (m :: Type -> Type) k where
 
 data Throw e (m :: Type -> Type) k where
   Throw :: e -> Throw e m a
+
+data Writer w m k where
+  Tell :: w -> Writer w m ()
+  Listen :: m a -> Writer w m (w, a)
+  Pass :: m (w -> w, a) -> Writer w m a
