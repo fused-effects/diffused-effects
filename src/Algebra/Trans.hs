@@ -41,6 +41,7 @@ module Algebra.Trans
 , initialC
 , liftInitialC
 , contC
+, liftC
 , mapLowerC
 ) where
 
@@ -52,6 +53,7 @@ import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
 import qualified Control.Monad.Trans.State.Lazy as S.L
 import qualified Control.Monad.Trans.State.Strict as S.S
+import           Data.Functor (($>))
 import           Data.Functor.Compose
 import           Data.Functor.Identity
 import           Data.Kind (Type)
@@ -197,6 +199,9 @@ liftInitialC with = LowerC $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
 
 contC :: Functor ctx => (a -> m b) -> LowerC ctx m n a b
 contC k = LowerC $ \ (Dist hdl) ctx -> hdl (k <$> ctx)
+
+liftC :: (Functor ctx, Functor n) => n a -> LowerC ctx m n () a
+liftC n = LowerC . const $ (<$> n) . ($>)
 
 
 mapLowerC :: (n (ctx b) -> n (ctx c)) -> LowerC ctx m n a b -> LowerC ctx m n a c
