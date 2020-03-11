@@ -17,7 +17,6 @@ module Algebra.Trans
 , AlgebraTrans(..)
 , AlgT(..)
 , algDefault
-, Point(..)
 , LowerC(..)
 , fromLowerT
 , fromLowerC
@@ -75,9 +74,6 @@ algDefault :: (AlgebraTrans t m, Functor ctx) => (SigT t :+: Sig m) n a -> Lower
 algDefault = \case
   L l -> algT l
   R r -> liftWithin (getCompose <$> alg r)
-
-
-newtype Point ctx = Point { point :: forall x . x -> ctx x }
 
 
 newtype ReaderC r arr a b = ReaderC (r -> arr a b)
