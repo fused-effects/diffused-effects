@@ -13,6 +13,7 @@ module Algebra
 , run
 , runLift
 , send
+, lowering
 -- $base
 -- $transformers
 ) where
@@ -68,6 +69,11 @@ runLift = I.runIdentityT
 send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
 send = fmap runIdentity . alg (fmap Identity . runIdentity) (Identity ()) . inj
 {-# INLINE send #-}
+
+
+lowering :: Functor ctx => (forall x . ctx (m x) -> n (ctx x)) -> ctx () -> ((forall a . m a -> n (ctx a)) -> (forall a b . (a -> m b) -> ctx a -> n (ctx b)) -> n c) -> n c
+lowering hdl ctx with = with (hdl . (<$ ctx)) (\ k -> hdl . fmap k)
+{-# INLINE lowering #-}
 
 
 -- $base
