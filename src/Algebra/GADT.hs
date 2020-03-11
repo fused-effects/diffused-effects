@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
@@ -6,6 +7,7 @@
 module Algebra.GADT
 ( Handler
 , Algebra(..)
+, Has
 , send
 , thread
 , liftInit
@@ -33,6 +35,8 @@ class Monad m => Algebra m where
 
   alg :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> ctx () -> Sig m n a -> m (ctx a)
 
+
+type Has eff m = (Members eff (Sig m), Algebra m)
 
 send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
 send = fmap runIdentity . alg (fmap Identity . runIdentity) (Identity ()) . inj
