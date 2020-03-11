@@ -16,6 +16,8 @@ module Algebra
 , run
 , runLift
 , send
+-- $base
+-- $transformers
 ) where
 
 import           Control.Monad (join)
@@ -81,6 +83,9 @@ send = fmap runIdentity . alg (Identity ()) (fmap Identity . runIdentity) . inj
 {-# INLINE send #-}
 
 
+-- $base
+-- We define 'Algebra' instances for a bunch of monads defined in @base@.
+
 instance Algebra NonEmpty where
   type Sig NonEmpty = Choose
 
@@ -138,6 +143,9 @@ instance Monoid w => Algebra ((,) w) where
     Censor f m k -> let (w, a) = hdl (m <$ ctx) ; (w', a') = hdl (fmap k a) in (mappend (f w) w', a')
   {-# INLINE alg #-}
 
+
+-- $transformers
+-- We define 'Algebra' instances for a bunch of monad transformers defined in @transformers@.
 
 instance Algebra m => Algebra (M.MaybeT m) where
   type Sig (M.MaybeT m) = Empty :+: Sig m
