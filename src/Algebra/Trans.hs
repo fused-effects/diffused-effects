@@ -76,7 +76,7 @@ instance Algebra m => AlgebraTrans (E.ExceptT e) m where
 
   algT = \case
     L (Throw e)     -> lift (E.throwE e)
-    R (Catch m h k) -> liftInitial (\ initial -> E.catchE (initial m) (initial . h)) >>= lowerCont k
+    R (Catch m h k) -> lowerWith (\ initial -> E.catchE (initial m) (initial . h)) >>= lowerCont k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
