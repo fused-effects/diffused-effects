@@ -25,8 +25,8 @@ instance Algebra (Either e) where
   type Sig (Either e) = Error e
 
   alg hdl ctx = \case
-    Throw e   -> Left e
-    Catch m h -> either (init . h) pure (init m)
+    L (Throw e)   -> Left e
+    R (Catch m h) -> either (init . h) pure (init m)
     where
     init = hdl . (<$ ctx)
   {-# INLINE alg #-}
