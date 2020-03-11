@@ -7,6 +7,7 @@ module Effect.GADT
 , Empty(..)
 , Error
 , NonDet
+, Reader(..)
 , Throw(..)
 ) where
 
@@ -25,6 +26,10 @@ data Empty (m :: Type -> Type) k where
 type Error e = Throw e :+: Catch e
 
 type NonDet = Empty :+: Choose
+
+data Reader r m k where
+  Ask :: Reader r m r
+  Local :: (r -> r) -> m a -> Reader r m a
 
 data Throw e (m :: Type -> Type) k where
   Throw :: e -> Throw e m a
