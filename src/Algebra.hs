@@ -77,7 +77,7 @@ runLift = Identity.runIdentityT
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
 send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
-send = fmap runIdentity <$> alg (Identity ()) (fmap Identity . runIdentity) . inj
+send = fmap runIdentity . alg (Identity ()) (fmap Identity . runIdentity) . inj
 {-# INLINE send #-}
 
 
