@@ -48,3 +48,12 @@ instance Algebra [] where
   alg _ ctx = \case
     L Empty  -> []
     R Choose -> [True <$ ctx, False <$ ctx]
+
+instance Algebra ((->) r) where
+  type Sig ((->) r) = Reader r
+
+  alg hdl ctx = \case
+    Ask       -> (<$ ctx)
+    Local f m -> lower m . f
+    where
+    lower = hdl . (<$ ctx)
