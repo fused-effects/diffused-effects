@@ -30,10 +30,10 @@ module Algebra.Trans
 , Point(..)
 , runLowerT
 , LowerT(..)
-, initial
-, cont
+, initialT
+, contT
 , mapLowerT
-, liftInitial
+, liftInitialT
 , liftWithin
 , LowerC(..)
 , fromLowerT
@@ -148,11 +148,11 @@ newtype LowerT ctx m n a = LowerT (Dist ctx m n -> ctx () -> n a)
 instance MonadTrans (LowerT ctx m) where
   lift = LowerT . const . const
 
-initial :: Functor ctx => m a -> LowerT ctx m n (ctx a)
-initial m = liftInitial ($ m)
+initialT :: Functor ctx => m a -> LowerT ctx m n (ctx a)
+initialT m = liftInitialT ($ m)
 
-cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
-cont k ctx = LowerT $ const . runDist (k <$> ctx)
+contT :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
+contT k ctx = LowerT $ const . runDist (k <$> ctx)
 
 mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
 mapLowerT f = mapLowerTDist f id
@@ -163,8 +163,8 @@ mapLowerTDist f g = mapLowerTDistCtx f g id
 mapLowerTDistCtx :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
 mapLowerTDistCtx f g h (LowerT m) = LowerT $ \ hdl ctx -> f (m (g hdl) (h ctx))
 
-liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-liftInitial with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
+liftInitialT :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
+liftInitialT with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
 
 liftWithin :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
 liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLowerT (hdl2 <~< hdl1) (Compose (ctx1 <$ ctx2)) m
@@ -191,8 +191,8 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
   algT = \case
-    Ask       k -> lift R.ask >>= initial . k
-    Local f m k -> mapLowerT (R.local f) (initial m) >>= cont k
+    Ask       k -> lift R.ask >>= initialT . k
+    Local f m k -> mapLowerT (R.local f) (initialT m) >>= contT k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
@@ -206,7 +206,7 @@ instance Algebra m => AlgebraTrans (E.ExceptT e) m where
 
   algT = \case
     L (Throw e)     -> lift (E.throwE e)
-    R (Catch m h k) -> liftInitial (\ initial -> E.catchE (initial m) (initial . h)) >>= cont k
+    R (Catch m h k) -> liftInitialT (\ initialT -> E.catchE (initialT m) (initialT . h)) >>= contT k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
@@ -219,8 +219,8 @@ instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
 
   algT = \case
-    Get   k -> lift S.L.get     >>= initial . k
-    Put s k -> lift (S.L.put s) >>  initial k
+    Get   k -> lift S.L.get     >>= initialT . k
+    Put s k -> lift (S.L.put s) >>  initialT k
 
 deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m)
 
@@ -233,7 +233,7 @@ instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
   algT = \case
-    Get   k -> lift S.S.get     >>= initial . k
-    Put s k -> lift (S.S.put s) >>  initial k
+    Get   k -> lift S.S.get     >>= initialT . k
+    Put s k -> lift (S.S.put s) >>  initialT k
 
 deriving via AlgT (S.S.StateT s) m instance Algebra m => Algebra (S.S.StateT s m)
