@@ -21,7 +21,7 @@ module Control.Monad.Trans.Lower
 , (>~)
 , (~<)
   -- * Wrapped handlers
-, runDist
+, runHandler
 , WrappedHandler(..)
 ) where
 
@@ -49,7 +49,7 @@ lower :: Functor ctx => m a -> LowerT ctx m n (ctx a)
 lower m = lowerWith ($ m)
 
 lowerCont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
-lowerCont k ctx = LowerT $ const . runDist (k <$> ctx)
+lowerCont k ctx = LowerT $ const . runHandler (k <$> ctx)
 
 mapLowerT :: (n' a -> n b) -> (Handler ctx m n -> Handler ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
 mapLowerT f g h m = lowerT $ \ hdl ctx -> f (runLowerT (g hdl) (h ctx) m)
@@ -94,7 +94,7 @@ hdl1 ~< hdl2 = hdl1 . hdl2
 infixr 1 ~<
 
 
-runDist :: ctx (m a) -> WrappedHandler ctx m n -> n (ctx a)
-runDist cm (WrappedHandler run) = run cm
+runHandler :: ctx (m a) -> WrappedHandler ctx m n -> n (ctx a)
+runHandler cm (WrappedHandler run) = run cm
 
 newtype WrappedHandler ctx m n = WrappedHandler { unwrapHandler :: Handler ctx m n }
