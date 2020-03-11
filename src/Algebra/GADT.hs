@@ -1,0 +1,2 @@
+module Algebra.GADT
+() where
