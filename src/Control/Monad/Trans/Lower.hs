@@ -42,11 +42,11 @@ newtype LowerT ctx m n a = LowerT (WrappedHandler ctx m n -> n a)
 instance MonadTrans (LowerT ctx m) where
   lift = LowerT . const
 
-lowerWith :: Functor ctx => ctx () -> ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-lowerWith ctx with = lowerT $ \ hdl -> with (hdl . (<$ ctx))
+lowerWith :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> ctx () -> LowerT ctx m n b
+lowerWith with ctx = lowerT $ \ hdl -> with (hdl . (<$ ctx))
 
-lower :: Functor ctx => ctx () -> m a -> LowerT ctx m n (ctx a)
-lower ctx m = lowerWith ctx ($ m)
+lower :: Functor ctx => m a -> ctx () -> LowerT ctx m n (ctx a)
+lower m = lowerWith ($ m)
 
 lowerCont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
 lowerCont k ctx = LowerT $ runHandler (k <$> ctx)
