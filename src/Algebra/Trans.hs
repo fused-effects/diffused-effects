@@ -242,9 +242,9 @@ instance MonadLift (S.L.StateT s) where
 instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
 
-  algT = \case
-    Get   k -> lift S.L.get     >>= initialT . k
-    Put s k -> lift (S.L.put s) >>  initialT k
+  algT = fromLowerC . \case
+    Get   k -> liftC S.L.get     >>> contC k
+    Put s k -> liftC (S.L.put s) >>> contC (const k)
 
 deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m)
 
@@ -256,8 +256,8 @@ instance MonadLift (S.S.StateT s) where
 instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
-  algT = \case
-    Get   k -> lift S.S.get     >>= initialT . k
-    Put s k -> lift (S.S.put s) >>  initialT k
+  algT = fromLowerC . \case
+    Get   k -> liftC S.S.get     >>> contC k
+    Put s k -> liftC (S.S.put s) >>> contC (const k)
 
 deriving via AlgT (S.S.StateT s) m instance Algebra m => Algebra (S.S.StateT s m)
