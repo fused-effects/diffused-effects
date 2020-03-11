@@ -40,6 +40,7 @@ module Algebra.Trans
 , fromLowerC
 , initialC
 , liftInitialC
+, contC
 ) where
 
 import qualified Control.Category as C
@@ -191,6 +192,9 @@ initialC m = liftInitialC ($ m)
 
 liftInitialC :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n (ctx b)) -> LowerC ctx m n () b
 liftInitialC with = LowerC $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
+
+contC :: Functor ctx => (a -> m b) -> LowerC ctx m n a b
+contC k = LowerC $ \ (Dist hdl) ctx -> hdl (k <$> ctx)
 
 
 instance MonadLift (R.ReaderT r) where
