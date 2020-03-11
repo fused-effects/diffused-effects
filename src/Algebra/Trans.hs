@@ -17,7 +17,7 @@ module Algebra.Trans
 , AlgebraTrans(..)
 , AlgT(..)
 , algDefault
-, Hom(..)
+, Hom
 , runDist
 , homDist
 , (>~>)
@@ -37,7 +37,6 @@ module Algebra.Trans
 , liftWithin
 ) where
 
-import qualified Control.Category as C
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
@@ -82,7 +81,7 @@ newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
 instance AlgebraTrans t m => Algebra (AlgT t m) where
   type Sig (AlgT t m) = SigT t :+: Sig m
 
-  alg = mapLowerTDist AlgT (Hom runAlgT ~<) . algDefault
+  alg = mapLowerTDist AlgT (runAlgT ~<) . algDefault
 
 algDefault :: (AlgebraTrans t m, Functor ctx) => (SigT t :+: Sig m) n a -> LowerT ctx n (t m) (ctx a)
 algDefault = \case
@@ -90,18 +89,14 @@ algDefault = \case
   R r -> liftWithin (getCompose <$> alg r)
 
 
-newtype Hom m n = Hom { appHom :: forall x . m x -> n x }
-
-instance C.Category Hom where
-  id = Hom id
-  Hom f . Hom g = Hom (f . g)
+type Hom m n = forall x . m x -> n x
 
 
 runDist :: ctx (m a) -> Dist ctx m n -> n (ctx a)
 runDist cm (Dist run) = run cm
 
 homDist :: Functor n => Hom m n -> Dist Identity m n
-homDist hom = Dist (fmap Identity . appHom hom . runIdentity)
+homDist hom = Dist (fmap Identity . hom . runIdentity)
 
 (>~>) :: (Functor n, Functor ctx2) => Dist ctx1 l m -> Dist ctx2 m n -> Dist (Compose ctx2 ctx1) l n
 Dist hdl1 >~> Dist hdl2 = Dist (fmap Compose . hdl2 . fmap hdl1 . getCompose)
@@ -114,22 +109,22 @@ Dist hdl1 <~< Dist hdl2 = Dist (fmap Compose . hdl1 . fmap hdl2 . getCompose)
 infixr 1 <~<
 
 (~>) :: Functor ctx => Hom l m -> Dist ctx m n -> Dist ctx l n
-Hom hdl1 ~> Dist hdl2 = Dist (hdl2 . fmap hdl1)
+hdl1 ~> Dist hdl2 = Dist (hdl2 . fmap hdl1)
 
 infixr 1 ~>
 
 (<~) :: Functor ctx => Dist ctx m n -> Hom l m -> Dist ctx l n
-Dist hdl1 <~ Hom hdl2 = Dist (hdl1 . fmap hdl2)
+Dist hdl1 <~ hdl2 = Dist (hdl1 . fmap hdl2)
 
 infixr 1 <~
 
 (>~) :: Dist ctx l m -> Hom m n -> Dist ctx l n
-Dist hdl1 >~ Hom hdl2 = Dist (hdl2 . hdl1)
+Dist hdl1 >~ hdl2 = Dist (hdl2 . hdl1)
 
 infixr 1 >~
 
 (~<) :: Hom m n -> Dist ctx l m -> Dist ctx l n
-Hom hdl1 ~< Dist hdl2 = Dist (hdl1 . hdl2)
+hdl1 ~< Dist hdl2 = Dist (hdl1 . hdl2)
 
 infixr 1 ~<
 
@@ -171,7 +166,7 @@ liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLow
 
 
 instance MonadLift (R.ReaderT r) where
-  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (homDist (Hom (`R.runReaderT` r))) (Identity ()) m
+  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (homDist (`R.runReaderT` r)) (Identity ()) m
 
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
