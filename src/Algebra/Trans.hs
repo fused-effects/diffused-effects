@@ -43,6 +43,7 @@ module Algebra.Trans
 , contC
 , liftC
 , mapLowerC
+, CtxC(..)
 ) where
 
 import           Control.Category ((>>>))
@@ -206,6 +207,9 @@ liftC n = LowerC . const $ (<$> n) . ($>)
 
 mapLowerC :: (n (ctx b) -> n (ctx c)) -> LowerC ctx m n a b -> LowerC ctx m n a c
 mapLowerC f (LowerC r) = LowerC $ \ hdl -> f . r hdl
+
+
+newtype CtxC ctx n a b = CtxC (ctx a -> n (ctx b))
 
 
 instance MonadLift (R.ReaderT r) where
