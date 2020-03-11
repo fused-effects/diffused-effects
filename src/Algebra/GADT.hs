@@ -7,6 +7,7 @@ module Algebra.GADT
 ) where
 
 import Data.Functor.Identity
+import Data.List.NonEmpty (NonEmpty)
 import Data.Kind (Type)
 import Effect.GADT
 import Effect.Sum
@@ -25,6 +26,11 @@ instance Algebra Maybe where
   type Sig Maybe = Empty
 
   alg _ _ Empty = Nothing
+
+instance Algebra NonEmpty where
+  type Sig NonEmpty = Choose
+
+  alg _ ctx Choose = pure (True <$ ctx) <> pure (False <$ ctx)
 
 instance Algebra (Either e) where
   type Sig (Either e) = Error e
