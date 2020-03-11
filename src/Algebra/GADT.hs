@@ -113,7 +113,7 @@ instance Algebra m => Algebra (R.ReaderT r m) where
   type Sig (R.ReaderT r m) = Reader r :+: Sig m
 
   alg hdl ctx = \case
-    L Ask         -> (<$ ctx) <$> R.ask
+    L Ask         -> liftInit ctx R.ask
     L (Local f m) -> R.local f (lowerInit hdl ctx m)
     R other       -> R.ReaderT $ \ r -> alg ((`R.runReaderT` r) . hdl) ctx other
   {-# INLINE alg #-}
@@ -122,7 +122,7 @@ instance Algebra m => Algebra (S.S.StateT s m) where
   type Sig (S.S.StateT s m) = State s :+: Sig m
 
   alg hdl ctx = \case
-    L Get     -> (<$ ctx) <$> S.S.get
-    L (Put s) -> (<$ ctx) <$> S.S.put s
+    L Get     -> liftInit ctx S.S.get
+    L (Put s) -> liftInit ctx (S.S.put s)
     R other   -> S.S.StateT $ \ s -> swap <$> thread (fmap swap . uncurry (flip S.S.runStateT)) hdl (s, ctx) other
   {-# INLINE alg #-}
