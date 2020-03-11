@@ -6,6 +6,7 @@ module Algebra.GADT
 ( Algebra(..)
 , send
 , thread
+, lower
 ) where
 
 import qualified Control.Monad.Trans.Except as E
@@ -33,6 +34,11 @@ thread hdl ctx = fmap getCompose . alg (fmap Compose . hdl . getCompose) (Compos
 {-# INLINE thread #-}
 
 
+lower :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> ctx () -> n a -> m (ctx a)
+lower hdl ctx = hdl . (<$ ctx)
+{-# INLINE lower #-}
+
+
 instance Algebra Maybe where
   type Sig Maybe = Empty
 
@@ -48,9 +54,7 @@ instance Algebra (Either e) where
 
   alg hdl ctx = \case
     L (Throw e)   -> Left e
-    R (Catch m h) -> either (lower . h) pure (lower m)
-    where
-    lower = hdl . (<$ ctx)
+    R (Catch m h) -> either (lower hdl ctx . h) pure (lower hdl ctx m)
   {-# INLINE alg #-}
 
 instance Algebra [] where
@@ -65,9 +69,7 @@ instance Algebra ((->) r) where
 
   alg hdl ctx = \case
     Ask       -> (<$ ctx)
-    Local f m -> lower m . f
-    where
-    lower = hdl . (<$ ctx)
+    Local f m -> lower hdl ctx m . f
 
 
 instance Algebra m => Algebra (M.MaybeT m) where
@@ -83,10 +85,8 @@ instance Algebra m => Algebra (E.ExceptT e m) where
 
   alg hdl ctx = \case
     L (L (Throw e))   -> E.throwE e
-    L (R (Catch m h)) -> E.catchE (lower m) (lower . h)
+    L (R (Catch m h)) -> E.catchE (lower hdl ctx m) (lower hdl ctx . h)
     R other           -> E.ExceptT $ thread (either (pure . Left) (E.runExceptT . hdl)) (Right ctx) other
-    where
-    lower = hdl . (<$ ctx)
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (R.ReaderT r m) where
@@ -94,7 +94,5 @@ instance Algebra m => Algebra (R.ReaderT r m) where
 
   alg hdl ctx = \case
     L Ask         -> (<$ ctx) <$> R.ask
-    L (Local f m) -> R.local f (lower m)
+    L (Local f m) -> R.local f (lower hdl ctx m)
     R other       -> R.ReaderT $ \ r -> alg ((`R.runReaderT` r) . hdl) ctx other
-    where
-    lower = hdl . (<$ ctx)
