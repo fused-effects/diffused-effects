@@ -30,8 +30,8 @@ send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
 send = fmap runIdentity . alg (fmap Identity . runIdentity) (Identity ()) . inj
 {-# INLINE send #-}
 
-thread :: (Functor ctx1, Functor ctx2, Algebra m) => (forall x . ctx1 (ctx2 (n x)) -> m (ctx1 (ctx2 x))) -> ctx1 (ctx2 ()) -> Sig m n a -> m (ctx1 (ctx2 a))
-thread hdl ctx = fmap getCompose . alg (fmap Compose . hdl . getCompose) (Compose ctx)
+thread :: (Functor ctx1, Functor ctx2, Algebra m) => (forall x . ctx1 (n x) -> m (ctx1 x)) -> (forall x . ctx2 (o x) -> n (ctx2 x)) -> ctx1 (ctx2 ()) -> Sig m o a -> m (ctx1 (ctx2 a))
+thread hdl1 hdl2 ctx = fmap getCompose . alg (fmap Compose . hdl1 . fmap hdl2 . getCompose) (Compose ctx)
 {-# INLINE thread #-}
 
 
@@ -86,7 +86,7 @@ instance Algebra m => Algebra (M.MaybeT m) where
 
   alg hdl ctx = \case
     L Empty -> M.MaybeT (pure Nothing)
-    R other -> M.MaybeT (thread (maybe (pure Nothing) (M.runMaybeT . hdl)) (Just ctx) other)
+    R other -> M.MaybeT (thread (maybe (pure Nothing) M.runMaybeT) hdl (Just ctx) other)
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (E.ExceptT e m) where
@@ -95,7 +95,7 @@ instance Algebra m => Algebra (E.ExceptT e m) where
   alg hdl ctx = \case
     L (L (Throw e))   -> E.throwE e
     L (R (Catch m h)) -> E.catchE (lower hdl ctx m) (lower hdl ctx . h)
-    R other           -> E.ExceptT $ thread (either (pure . Left) (E.runExceptT . hdl)) (Right ctx) other
+    R other           -> E.ExceptT $ thread (either (pure . Left) E.runExceptT) hdl (Right ctx) other
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (R.ReaderT r m) where
