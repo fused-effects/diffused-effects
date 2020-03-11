@@ -31,7 +31,7 @@ newtype FailT m a = FailT { runFailT :: ExceptT String m a }
 instance Algebra m => Algebra (FailT m) where
   type Sig (FailT m) = Fail :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (Fail s) -> FailT (throwError s)
-    R other    -> FailT (alg ctx (runFailT . hdl) (R other))
+    R other    -> FailT (alg (runFailT . hdl) ctx (R other))
   {-# INLINE alg #-}

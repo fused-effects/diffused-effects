@@ -52,7 +52,7 @@ infixr 0 ~>
 class Monad m => Algebra m where
   type Sig m :: (* -> *) -> (* -> *)
 
-  alg :: Functor ctx => ctx () -> (forall x . ctx (n x) -> m (ctx x)) -> Sig m n a -> m (ctx a)
+  alg :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> ctx () -> Sig m n a -> m (ctx a)
 
 
 type Has eff m = (Members eff (Sig m), Algebra m)
@@ -64,8 +64,8 @@ newtype (f :.: g) a = C { runC :: f (g a) }
 infixr 7 :.:
 
 
-thread :: (Functor ctx1, Functor ctx2, Algebra m) => ctx1 (ctx2 ()) -> (forall x . ctx1 (ctx2 (n x)) -> m (ctx1 (ctx2 x))) -> Sig m n a -> m (ctx1 (ctx2 a))
-thread ctx hdl = fmap runC . alg (C ctx) (fmap C . hdl . runC)
+thread :: (Functor ctx1, Functor ctx2, Algebra m) => (forall x . ctx1 (ctx2 (n x)) -> m (ctx1 (ctx2 x))) -> ctx1 (ctx2 ()) -> Sig m n a -> m (ctx1 (ctx2 a))
+thread hdl ctx = fmap runC . alg (fmap C . hdl . runC) (C ctx)
 {-# INLINE thread #-}
 
 run :: Identity a -> a
@@ -79,7 +79,7 @@ runLift = I.runIdentityT
 
 -- | Construct a request for an effect to be interpreted by some handler later on.
 send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
-send = fmap runIdentity . alg (Identity ()) (fmap Identity . runIdentity) . inj
+send = fmap runIdentity . alg (fmap Identity . runIdentity) (Identity ()) . inj
 {-# INLINE send #-}
 
 
@@ -89,7 +89,7 @@ send = fmap runIdentity . alg (Identity ()) (fmap Identity . runIdentity) . inj
 instance Algebra NonEmpty where
   type Sig NonEmpty = Choose
 
-  alg ctx hdl (Choose k) = hdl (k True <$ ctx) <> hdl (k False <$ ctx)
+  alg hdl ctx (Choose k) = hdl (k True <$ ctx) <> hdl (k False <$ ctx)
   {-# INLINE alg #-}
 
 instance Algebra Maybe where
@@ -101,7 +101,7 @@ instance Algebra Maybe where
 instance Algebra (Either e) where
   type Sig (Either e) = Error e
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (Throw e)     -> Left e
     R (Catch m h k) -> either (hdl . (<$ ctx) . h) pure (hdl (m <$ ctx)) >>= hdl . fmap k
   {-# INLINE alg #-}
@@ -109,19 +109,19 @@ instance Algebra (Either e) where
 instance Algebra Identity where
   type Sig Identity = Lift Identity
 
-  alg ctx hdl (LiftWith with k) = with hdl ctx >>= hdl . fmap k
+  alg hdl ctx (LiftWith with k) = with hdl ctx >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Algebra IO where
   type Sig IO = Lift IO
 
-  alg ctx hdl (LiftWith with k) = with hdl ctx >>= hdl . fmap k
+  alg hdl ctx (LiftWith with k) = with hdl ctx >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Algebra [] where
   type Sig [] = NonDet
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L Empty      -> []
     R (Choose k) -> hdl (k True <$ ctx) <> hdl (k False <$ ctx)
   {-# INLINE alg #-}
@@ -129,7 +129,7 @@ instance Algebra [] where
 instance Algebra ((->) r) where
   type Sig ((->) r) = Reader r
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     Ask       k -> join (hdl . (<$ ctx) . k)
     Local f m k -> hdl (m <$ ctx) . f >>= hdl . fmap k
   {-# INLINE alg #-}
@@ -137,7 +137,7 @@ instance Algebra ((->) r) where
 instance Monoid w => Algebra ((,) w) where
   type Sig ((,) w) = Writer w
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     Tell w     k -> join (w, hdl (k <$ ctx))
     Listen m   k -> let (w, a) = hdl (m <$ ctx) ; (w', a') = hdl (fmap (k w) a) in (mappend w w', a')
     Censor f m k -> let (w, a) = hdl (m <$ ctx) ; (w', a') = hdl (fmap k a) in (mappend (f w) w', a')
@@ -150,69 +150,69 @@ instance Monoid w => Algebra ((,) w) where
 instance Algebra m => Algebra (M.MaybeT m) where
   type Sig (M.MaybeT m) = Empty :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L Empty -> M.MaybeT (pure Nothing)
-    R other -> M.MaybeT (thread (Just ctx) (maybe (pure Nothing) (M.runMaybeT . hdl)) other)
+    R other -> M.MaybeT (thread (maybe (pure Nothing) (M.runMaybeT . hdl)) (Just ctx) other)
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (E.ExceptT e m) where
   type Sig (E.ExceptT e m) = Error e :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (L (Throw e))     -> E.throwE e
     L (R (Catch m h k)) -> E.catchE (hdl (m <$ ctx)) (hdl . (<$ ctx) . h) >>= hdl . fmap k
-    R other             -> E.ExceptT $ thread (Right ctx) (either (pure . Left) (E.runExceptT . hdl)) other
+    R other             -> E.ExceptT $ thread (either (pure . Left) (E.runExceptT . hdl)) (Right ctx) other
   {-# INLINE alg #-}
 
 instance Monad m => Algebra (I.IdentityT m) where
   type Sig (I.IdentityT m) = Lift m
 
-  alg ctx hdl (LiftWith with k) = I.IdentityT (with (I.runIdentityT . hdl) ctx) >>= hdl . fmap k
+  alg hdl ctx (LiftWith with k) = I.IdentityT (with (I.runIdentityT . hdl) ctx) >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (R.ReaderT r m) where
   type Sig (R.ReaderT r m) = Reader r :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (Ask       k) -> R.ask >>= hdl . (<$ ctx) . k
     L (Local f m k) -> R.local f (hdl (m <$ ctx)) >>= hdl . fmap k
-    R other         -> R.ReaderT $ \ r -> alg ctx ((`R.runReaderT` r) . hdl) other
+    R other         -> R.ReaderT $ \ r -> alg ((`R.runReaderT` r) . hdl) ctx other
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (S.L.StateT s m) where
   type Sig (S.L.StateT s m) = State s :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (Get   k) -> S.L.get >>= hdl . (<$ ctx) . k
     L (Put s k) -> S.L.put s *> hdl (k <$ ctx)
-    R other     -> S.L.StateT $ \ s -> swap <$> thread (s, ctx) (\ (s, x) -> swap <$> S.L.runStateT (hdl x) s) other
+    R other     -> S.L.StateT $ \ s -> swap <$> thread (\ (s, x) -> swap <$> S.L.runStateT (hdl x) s) (s, ctx) other
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (S.S.StateT s m) where
   type Sig (S.S.StateT s m) = State s :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (Get   k) -> S.S.get >>= hdl . (<$ ctx) . k
     L (Put s k) -> S.S.put s *> hdl (k <$ ctx)
-    R other     -> S.S.StateT $ \ s -> swap <$> thread (s, ctx) (\ (s, x) -> swap <$> S.S.runStateT (hdl x) s) other
+    R other     -> S.S.StateT $ \ s -> swap <$> thread (\ (s, x) -> swap <$> S.S.runStateT (hdl x) s) (s, ctx) other
   {-# INLINE alg #-}
 
 instance (Algebra m, Monoid w) => Algebra (W.L.WriterT w m) where
   type Sig (W.L.WriterT w m) = Writer w :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (Tell w k)     -> W.L.tell w *> hdl (k <$ ctx)
     L (Listen m k)   -> W.L.listen (hdl (m <$ ctx)) >>= hdl . uncurry (fmap . k) . swap
     L (Censor f m k) -> W.L.censor f (hdl (m <$ ctx)) >>= hdl . fmap k
-    R other          -> W.L.WriterT $ swap <$> thread (mempty, ctx) (\ (s, x) -> swap . fmap (mappend s) <$> W.L.runWriterT (hdl x)) other
+    R other          -> W.L.WriterT $ swap <$> thread (\ (s, x) -> swap . fmap (mappend s) <$> W.L.runWriterT (hdl x)) (mempty, ctx) other
   {-# INLINE alg #-}
 
 instance (Algebra m, Monoid w) => Algebra (W.S.WriterT w m) where
   type Sig (W.S.WriterT w m) = Writer w :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (Tell w k)     -> W.S.tell w *> hdl (k <$ ctx)
     L (Listen m k)   -> W.S.listen (hdl (m <$ ctx)) >>= hdl . uncurry (fmap . k) . swap
     L (Censor f m k) -> W.S.censor f (hdl (m <$ ctx)) >>= hdl . fmap k
-    R other          -> W.S.WriterT $ swap <$> thread (mempty, ctx) (\ (s, x) -> swap . fmap (mappend s) <$> W.S.runWriterT (hdl x)) other
+    R other          -> W.S.WriterT $ swap <$> thread (\ (s, x) -> swap . fmap (mappend s) <$> W.S.runWriterT (hdl x)) (mempty, ctx) other
   {-# INLINE alg #-}
