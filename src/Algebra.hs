@@ -81,6 +81,12 @@ send = fmap runIdentity . alg (Identity ()) (fmap Identity . runIdentity) . inj
 {-# INLINE send #-}
 
 
+instance Algebra NonEmpty where
+  type Sig NonEmpty = Choose
+
+  alg ctx hdl (Choose k) = hdl (k True <$ ctx) <> hdl (k False <$ ctx)
+  {-# INLINE alg #-}
+
 instance Algebra Maybe where
   type Sig Maybe = Empty
 
@@ -95,18 +101,16 @@ instance Algebra (Either e) where
     R (Catch m h k) -> either (hdl . (<$ ctx) . h) pure (hdl (m <$ ctx)) >>= hdl . fmap k
   {-# INLINE alg #-}
 
-instance Algebra ((->) r) where
-  type Sig ((->) r) = Reader r
+instance Algebra Identity where
+  type Sig Identity = Lift Identity
 
-  alg ctx hdl = \case
-    Ask       k -> join (hdl . (<$ ctx) . k)
-    Local f m k -> hdl (m <$ ctx) . f >>= hdl . fmap k
+  alg ctx hdl (LiftWith with k) = with ctx hdl >>= hdl . fmap k
   {-# INLINE alg #-}
 
-instance Algebra NonEmpty where
-  type Sig NonEmpty = Choose
+instance Algebra IO where
+  type Sig IO = Lift IO
 
-  alg ctx hdl (Choose k) = hdl (k True <$ ctx) <> hdl (k False <$ ctx)
+  alg ctx hdl (LiftWith with k) = with ctx hdl >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Algebra [] where
@@ -115,6 +119,14 @@ instance Algebra [] where
   alg ctx hdl = \case
     L Empty      -> []
     R (Choose k) -> hdl (k True <$ ctx) <> hdl (k False <$ ctx)
+  {-# INLINE alg #-}
+
+instance Algebra ((->) r) where
+  type Sig ((->) r) = Reader r
+
+  alg ctx hdl = \case
+    Ask       k -> join (hdl . (<$ ctx) . k)
+    Local f m k -> hdl (m <$ ctx) . f >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Monoid w => Algebra ((,) w) where
@@ -126,24 +138,6 @@ instance Monoid w => Algebra ((,) w) where
     Censor f m k -> let (w, a) = hdl (m <$ ctx) ; (w', a') = hdl (fmap k a) in (mappend (f w) w', a')
   {-# INLINE alg #-}
 
-instance Algebra IO where
-  type Sig IO = Lift IO
-
-  alg ctx hdl (LiftWith with k) = with ctx hdl >>= hdl . fmap k
-  {-# INLINE alg #-}
-
-instance Algebra Identity where
-  type Sig Identity = Lift Identity
-
-  alg ctx hdl (LiftWith with k) = with ctx hdl >>= hdl . fmap k
-  {-# INLINE alg #-}
-
-
-instance Monad m => Algebra (I.IdentityT m) where
-  type Sig (I.IdentityT m) = Lift m
-
-  alg ctx hdl (LiftWith with k) = I.IdentityT (with ctx (I.runIdentityT . hdl)) >>= hdl . fmap k
-  {-# INLINE alg #-}
 
 instance Algebra m => Algebra (M.MaybeT m) where
   type Sig (M.MaybeT m) = Empty :+: Sig m
@@ -160,6 +154,12 @@ instance Algebra m => Algebra (E.ExceptT e m) where
     L (L (Throw e))     -> E.throwE e
     L (R (Catch m h k)) -> E.catchE (hdl (m <$ ctx)) (hdl . (<$ ctx) . h) >>= hdl . fmap k
     R other             -> E.ExceptT $ thread (Right ctx) (either (pure . Left) (E.runExceptT . hdl)) other
+  {-# INLINE alg #-}
+
+instance Monad m => Algebra (I.IdentityT m) where
+  type Sig (I.IdentityT m) = Lift m
+
+  alg ctx hdl (LiftWith with k) = I.IdentityT (with ctx (I.runIdentityT . hdl)) >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (R.ReaderT r m) where
