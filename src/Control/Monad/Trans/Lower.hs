@@ -9,16 +9,17 @@ module Control.Monad.Trans.Lower
 , lower
 , lowerCont
 , mapLowerT
-  -- * Handlers
+  -- * Pure handlers
 , PureHandler
 , pureHandler
+  -- * Handlers
+, Handler
 , (>~>)
 , (<~<)
 , (~>)
 , (<~)
 , (>~)
 , (~<)
-, Handler
   -- * Wrapped handlers
 , runDist
 , WrappedHandler(..)
@@ -56,9 +57,11 @@ mapLowerT f g h m = lowerT $ \ hdl ctx -> f (runLowerT (g hdl) (h ctx) m)
 
 type PureHandler m n = forall x . m x -> n x
 
-
 pureHandler :: Functor n => PureHandler m n -> Handler Identity m n
 pureHandler hom = fmap Identity . hom . runIdentity
+
+
+type Handler ctx m n = forall x . ctx (m x) -> n (ctx x)
 
 (>~>) :: (Functor n, Functor ctx2) => Handler ctx1 l m -> Handler ctx2 m n -> Handler (Compose ctx2 ctx1) l n
 hdl1 >~> hdl2 = fmap Compose . hdl2 . fmap hdl1 . getCompose
@@ -89,8 +92,6 @@ infixr 1 >~
 hdl1 ~< hdl2 = hdl1 . hdl2
 
 infixr 1 ~<
-
-type Handler ctx m n = forall x . ctx (m x) -> n (ctx x)
 
 
 runDist :: ctx (m a) -> WrappedHandler ctx m n -> n (ctx a)
