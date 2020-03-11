@@ -32,7 +32,7 @@ data Reader r m k where
   Ask :: Reader r m r
   Local :: (r -> r) -> m a -> Reader r m a
 
-data State s m k where
+data State s (m :: Type -> Type) k where
   Get ::      State s m s
   Put :: s -> State s m ()
 
