@@ -19,6 +19,7 @@ module Algebra.Trans
 , algDefault
 ) where
 
+import           Control.Monad ((>=>))
 import           Control.Monad.Lift
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Except as E
@@ -38,13 +39,13 @@ import           Effect.Throw.Internal
 class Monad m => Algebra m where
   type Sig m :: (Type -> Type) -> (Type -> Type)
 
-  alg :: Functor ctx => ctx () -> Sig m n a -> LowerT ctx n m (ctx a)
+  alg :: Functor ctx => Sig m n a -> ctx () -> LowerT ctx n m (ctx a)
 
 
 class (MonadLift t, Algebra m) => AlgebraTrans t m where
   type SigT t :: (Type -> Type) -> (Type -> Type)
 
-  algT :: Functor ctx => ctx () -> SigT t n a -> LowerT ctx n (t m) (ctx a)
+  algT :: Functor ctx => SigT t n a -> ctx () -> LowerT ctx n (t m) (ctx a)
 
 
 newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
@@ -53,20 +54,20 @@ newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
 instance AlgebraTrans t m => Algebra (AlgT t m) where
   type Sig (AlgT t m) = SigT t :+: Sig m
 
-  alg ctx = mapLowerT AlgT (runAlgT ~<) . algDefault ctx
+  alg m = mapLowerT AlgT (runAlgT ~<) . algDefault m
 
-algDefault :: (AlgebraTrans t m, Functor ctx) => ctx () -> (SigT t :+: Sig m) n a -> LowerT ctx n (t m) (ctx a)
-algDefault ctx = \case
-  L l -> algT ctx l
-  R r -> liftWithin (\ ctx -> getCompose <$> alg ctx r) ctx
+algDefault :: (AlgebraTrans t m, Functor ctx) => (SigT t :+: Sig m) n a -> ctx () -> LowerT ctx n (t m) (ctx a)
+algDefault = \case
+  L l -> algT l
+  R r -> liftWithin (fmap getCompose . alg r)
 
 
 instance Algebra m => AlgebraTrans (E.ExceptT e) m where
   type SigT (E.ExceptT e) = Error e
 
-  algT ctx = \case
-    L (Throw e)     -> lift (E.throwE e)
-    R (Catch m h k) -> lowerWith (\ lower -> E.catchE (lower m) (lower . h)) ctx >>= lowerCont k
+  algT = \case
+    L (Throw e)     -> const $ lift (E.throwE e)
+    R (Catch m h k) -> lowerWith (\ lower -> E.catchE (lower m) (lower . h)) >=> lowerCont k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
@@ -74,9 +75,9 @@ deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
-  algT ctx = \case
-    Ask       k -> lift R.ask >>= (`lower` ctx) . k
-    Local f m k -> mapLowerT (R.local f) id (lower m ctx) >>= lowerCont k
+  algT = \case
+    Ask       k -> liftInit R.ask >=> lowerCont k
+    Local f m k -> mapLowerT (R.local f) id . lower m >=> lowerCont k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
@@ -84,9 +85,9 @@ deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
 
-  algT ctx = \case
-    Get   k -> lift S.L.get     >>= (`lower` ctx) . k
-    Put s k -> lift (S.L.put s) >>  lower k ctx
+  algT = \case
+    Get   k -> liftInit S.L.get     >=> lowerCont k
+    Put s k -> liftInit (S.L.put s) >=> lowerCont (const k)
 
 deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m)
 
@@ -94,8 +95,8 @@ deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m
 instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
-  algT ctx = \case
-    Get   k -> lift S.S.get     >>= (`lower` ctx) . k
-    Put s k -> lift (S.S.put s) >>  lower k ctx
+  algT = \case
+    Get   k -> liftInit S.S.get     >=> lowerCont k
+    Put s k -> liftInit (S.S.put s) >=> lowerCont (const k)
 
 deriving via AlgT (S.S.StateT s) m instance Algebra m => Algebra (S.S.StateT s m)
