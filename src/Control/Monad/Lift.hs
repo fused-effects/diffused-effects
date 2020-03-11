@@ -30,13 +30,13 @@ liftWithin :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Ctx t 
 liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLowerT (hdl2 <~< hdl1) (Compose (ctx1 <$ ctx2)) m
 
 
-instance MonadLift (R.ReaderT r) where
-  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (hom (`R.runReaderT` r)) (Identity ()) m
-
 instance MonadLift (E.ExceptT e) where
   type Ctx (E.ExceptT e) = Either e
 
   liftWith = E.ExceptT . runLowerT (Dist (either (pure . Left) E.runExceptT)) (Right ())
+
+instance MonadLift (R.ReaderT r) where
+  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (hom (`R.runReaderT` r)) (Identity ()) m
 
 instance MonadLift (S.L.StateT s) where
   type Ctx (S.L.StateT s) = (,) s
