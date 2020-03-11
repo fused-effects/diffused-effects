@@ -109,13 +109,13 @@ instance Algebra (Either e) where
 instance Algebra Identity where
   type Sig Identity = Lift Identity
 
-  alg ctx hdl (LiftWith with k) = with ctx hdl >>= hdl . fmap k
+  alg ctx hdl (LiftWith with k) = with hdl ctx >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Algebra IO where
   type Sig IO = Lift IO
 
-  alg ctx hdl (LiftWith with k) = with ctx hdl >>= hdl . fmap k
+  alg ctx hdl (LiftWith with k) = with hdl ctx >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Algebra [] where
@@ -167,7 +167,7 @@ instance Algebra m => Algebra (E.ExceptT e m) where
 instance Monad m => Algebra (I.IdentityT m) where
   type Sig (I.IdentityT m) = Lift m
 
-  alg ctx hdl (LiftWith with k) = I.IdentityT (with ctx (I.runIdentityT . hdl)) >>= hdl . fmap k
+  alg ctx hdl (LiftWith with k) = I.IdentityT (with (I.runIdentityT . hdl) ctx) >>= hdl . fmap k
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (R.ReaderT r m) where

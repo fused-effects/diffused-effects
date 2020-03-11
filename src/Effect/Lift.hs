@@ -22,6 +22,6 @@ sendIO = sendM
 
 liftWith
   :: Has (Lift n) m
-  => (forall ctx . Functor ctx => ctx () -> (forall a . ctx (m a) -> n (ctx a)) -> n (ctx a))
+  => (forall ctx . Functor ctx => (forall a . ctx (m a) -> n (ctx a)) -> ctx () -> n (ctx a))
   -> m a
 liftWith with = send (LiftWith with pure)
