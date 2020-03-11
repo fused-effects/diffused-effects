@@ -14,10 +14,12 @@ module Algebra.GADT
 import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Maybe as M
 import qualified Control.Monad.Trans.Reader as R
+import qualified Control.Monad.Trans.State.Strict as S.S
 import           Data.Functor.Compose
 import           Data.Functor.Identity
 import           Data.Kind (Type)
 import           Data.List.NonEmpty (NonEmpty)
+import           Data.Tuple (swap)
 import           Effect.GADT
 import           Effect.Sum
 
@@ -108,4 +110,13 @@ instance Algebra m => Algebra (R.ReaderT r m) where
     L Ask         -> (<$ ctx) <$> R.ask
     L (Local f m) -> R.local f (lower hdl ctx m)
     R other       -> R.ReaderT $ \ r -> alg ((`R.runReaderT` r) . hdl) ctx other
+  {-# INLINE alg #-}
+
+instance Algebra m => Algebra (S.S.StateT s m) where
+  type Sig (S.S.StateT s m) = State s :+: Sig m
+
+  alg hdl ctx = \case
+    L Get     -> (<$ ctx) <$> S.S.get
+    L (Put s) -> (<$ ctx) <$> S.S.put s
+    R other   -> S.S.StateT $ \ s -> swap <$> thread (fmap swap . uncurry (flip S.S.runStateT)) hdl (s, ctx) other
   {-# INLINE alg #-}
