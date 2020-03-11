@@ -46,6 +46,7 @@ module Algebra.Trans
 , CtxC(..)
 ) where
 
+import qualified Control.Arrow as A
 import           Control.Category ((<<<), (>>>))
 import qualified Control.Category as C
 import           Control.Monad ((<=<))
@@ -184,6 +185,11 @@ instance C.Category arr => C.Category (ReaderC r arr) where
   id = ReaderC $ const C.id
 
   ReaderC f . ReaderC g = ReaderC $ \ hdl -> f hdl <<< g hdl
+
+instance A.Arrow arr => A.Arrow (ReaderC r arr) where
+  arr = ReaderC . const . A.arr
+
+  ReaderC l *** ReaderC r = ReaderC $ \ hdl -> l hdl A.*** r hdl
 
 
 newtype LowerC ctx m n a b = LowerC (Dist ctx m n -> ctx a -> n (ctx b))
