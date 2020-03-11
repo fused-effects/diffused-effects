@@ -65,10 +65,10 @@ instance MonadTrans NonDetT where
 instance Algebra m => Algebra (NonDetT m) where
   type Sig (NonDetT m) = NonDet :+: Sig m
 
-  alg (ctx :: ctx ()) (hdl :: forall x . ctx (n x) -> NonDetT m (ctx x)) = \case
+  alg (hdl :: forall x . ctx (n x) -> NonDetT m (ctx x)) (ctx :: ctx ()) = \case
     L (L Empty)      -> NonDetT $ \ _ _ nil -> nil
     L (R (Choose k)) -> NonDetT $ \ fork leaf nil -> fork (runNonDet fork leaf nil (hdl (k True <$ ctx))) (runNonDet fork leaf nil (hdl (k False <$ ctx)))
-    R other          -> NonDetT $ \ fork leaf nil -> thread (pure ctx) dst other >>= runIdentity . runNonDet (coerce fork) (coerce leaf) (coerce nil)
+    R other          -> NonDetT $ \ fork leaf nil -> thread dst (pure ctx) other >>= runIdentity . runNonDet (coerce fork) (coerce leaf) (coerce nil)
     where
     dst :: NonDetT Identity (ctx (n a)) -> m (NonDetT Identity (ctx a))
     dst = runIdentity . runNonDet (liftA2 (liftA2 (<|>))) (Identity . runNonDetND . hdl) (pure (pure empty))

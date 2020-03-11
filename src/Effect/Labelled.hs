@@ -41,9 +41,9 @@ runLabelled (Labelled l) = l
 instance (Algebra (sub m), Sig (sub m) ~ (eff :+: Sig m)) => Algebra (Labelled label sub m) where
   type Sig (Labelled label sub m) = Labelled label (L (Sig (sub m))) :+: Sig m
 
-  alg ctx hdl = \case
-    L eff -> Labelled (alg ctx (runLabelled . hdl) (L (runLabelled eff)))
-    R sig -> Labelled (alg ctx (runLabelled . hdl) (R sig))
+  alg hdl ctx = \case
+    L eff -> Labelled (alg (runLabelled . hdl) ctx (L (runLabelled eff)))
+    R sig -> Labelled (alg (runLabelled . hdl) ctx (R sig))
   {-# INLINE alg #-}
 
 
@@ -75,7 +75,7 @@ instance {-# OVERLAPPABLE #-}
 type HasLabelled label eff m = (LabelledMember label eff (Sig m), Algebra m)
 
 sendLabelled :: forall label eff m a . HasLabelled label eff m => eff m a -> m a
-sendLabelled = fmap runIdentity . alg (Identity ()) (fmap Identity . runIdentity) . injLabelled @label . Labelled
+sendLabelled = fmap runIdentity . alg (fmap Identity . runIdentity) (Identity ()) . injLabelled @label . Labelled
 {-# INLINABLE sendLabelled #-}
 
 
@@ -92,7 +92,7 @@ instance MonadTrans (UnderLabel sub label) where
 instance HasLabelled label sub m => Algebra (UnderLabel label sub m) where
   type Sig (UnderLabel label sub m) = sub :+: Sig m
 
-  alg ctx hdl = \case
-    L sub -> UnderLabel (alg ctx (runUnderLabel . hdl) (injLabelled @label (Labelled sub)))
-    R sig -> UnderLabel (alg ctx (runUnderLabel . hdl) sig)
+  alg hdl ctx = \case
+    L sub -> UnderLabel (alg (runUnderLabel . hdl) ctx (injLabelled @label (Labelled sub)))
+    R sig -> UnderLabel (alg (runUnderLabel . hdl) ctx sig)
   {-# INLINE alg #-}

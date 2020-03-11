@@ -47,7 +47,7 @@ instance MonadTrans CullT where
 instance Algebra m => Algebra (CullT m) where
   type Sig (CullT m) = Cull :+: NonDet :+: Sig m
 
-  alg ctx hdl = \case
+  alg hdl ctx = \case
     L (Cull m k)         -> CullT (local (const True) (runCullT (hdl (m <$ ctx)))) >>= hdl . fmap k
     R (L (L Empty))      -> CullT empty
     R (L (R (Choose k))) -> CullT $ ReaderT $ \ cull -> do
@@ -58,5 +58,5 @@ instance Algebra m => Algebra (CullT m) where
           runNonDet fork leaf (runNonDet fork leaf nil (runReaderT r cull)) (runReaderT l cull)
       else
         runReaderT l cull <|> runReaderT r cull
-    R (R other)          -> CullT (alg ctx (runCullT . hdl) (R (R other)))
+    R (R other)          -> CullT (alg (runCullT . hdl) ctx (R (R other)))
   {-# INLINE alg #-}

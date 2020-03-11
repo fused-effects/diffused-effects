@@ -69,12 +69,12 @@ instance MonadTrans CutT where
 instance Algebra m => Algebra (CutT m) where
   type Sig (CutT m) = Cut :+: NonDet :+: Sig m
 
-  alg (ctx :: ctx ()) (hdl :: forall x . ctx (n x) -> CutT m (ctx x)) = \case
+  alg (hdl :: forall x . ctx (n x) -> CutT m (ctx x)) (ctx :: ctx ()) = \case
     L Cutfail    -> CutT $ \ _    _   fail -> fail
     L (Call m k) -> CutT $ \ cons nil fail -> runCut (\ a as -> runCut cons as fail (hdl (fmap k a))) nil nil (hdl (m <$ ctx))
     R (L (L Empty))      -> CutT $ \ _ nil _ -> nil
     R (L (R (Choose k))) -> CutT $ \ cons nil fail -> runCut cons (runCut cons nil fail (hdl (k False <$ ctx))) fail (hdl (k True <$ ctx))
-    R (R other)          -> CutT $ \ cons nil fail -> thread (pure ctx) dst other >>= runIdentity . runCut (coerce cons) (coerce nil) (coerce fail)
+    R (R other)          -> CutT $ \ cons nil fail -> thread dst (pure ctx) other >>= runIdentity . runCut (coerce cons) (coerce nil) (coerce fail)
     where
     dst :: CutT Identity (ctx (n a)) -> m (CutT Identity (ctx a))
     dst = runIdentity . runCut (fmap . liftA2 (<|>) . runCut (fmap . (<|>) . pure) (pure empty) (pure cutfail) . hdl) (pure (pure empty)) (pure (pure cutfail))
