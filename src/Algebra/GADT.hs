@@ -34,7 +34,9 @@ lowering with hdl ctx = with (hdl . (<$ ctx)) (\ k -> hdl . fmap k)
 instance Algebra (Either e) where
   type Sig (Either e) = Error e
 
-  alg = lowering $ \ init _ -> \case
+  alg hdl ctx = \case
     Throw e   -> Left e
     Catch m h -> either (init . h) pure (init m)
+    where
+    init = hdl . (<$ ctx)
   {-# INLINE alg #-}
