@@ -73,10 +73,10 @@ send = fmap runIdentity . alg (fmap Identity . runIdentity) (Identity ()) . inj
 
 lowering
   :: Functor ctx
-  => ((forall a . m a -> n (ctx a)) -> (forall a b . (a -> m b) -> ctx a -> n (ctx b)) -> n c)
+  => ((forall x . m x -> n (ctx x)) -> (forall x y . (x -> m y) -> ctx x -> n (ctx y)) -> a)
   -> (forall x . ctx (m x) -> n (ctx x))
   -> ctx ()
-  -> n c
+  -> a
 lowering with hdl ctx = with (hdl . (<$ ctx)) (\ k -> hdl . fmap k)
 {-# INLINE lowering #-}
 
