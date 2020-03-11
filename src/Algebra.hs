@@ -19,14 +19,14 @@ module Algebra
 ) where
 
 import           Control.Monad (join)
-import qualified Control.Monad.Trans.Except as Except
-import qualified Control.Monad.Trans.Identity as Identity
-import qualified Control.Monad.Trans.Maybe as Maybe
-import qualified Control.Monad.Trans.Reader as Reader
-import qualified Control.Monad.Trans.State.Lazy as State.Lazy
-import qualified Control.Monad.Trans.State.Strict as State.Strict
-import qualified Control.Monad.Trans.Writer.Lazy as Writer.Lazy
-import qualified Control.Monad.Trans.Writer.Strict as Writer.Strict
+import qualified Control.Monad.Trans.Except as E
+import qualified Control.Monad.Trans.Identity as I
+import qualified Control.Monad.Trans.Maybe as M
+import qualified Control.Monad.Trans.Reader as R
+import qualified Control.Monad.Trans.State.Lazy as S.L
+import qualified Control.Monad.Trans.State.Strict as S.S
+import qualified Control.Monad.Trans.Writer.Lazy as W.L
+import qualified Control.Monad.Trans.Writer.Strict as W.S
 import           Data.Functor.Identity
 import           Data.List.NonEmpty (NonEmpty)
 import           Data.Tuple (swap)
@@ -70,8 +70,8 @@ run :: Identity a -> a
 run = runIdentity
 {-# INLINE run #-}
 
-runLift :: Identity.IdentityT m a -> m a
-runLift = Identity.runIdentityT
+runLift :: I.IdentityT m a -> m a
+runLift = I.runIdentityT
 {-# INLINE runLift #-}
 
 
@@ -139,71 +139,71 @@ instance Algebra Identity where
   {-# INLINE alg #-}
 
 
-instance Monad m => Algebra (Identity.IdentityT m) where
-  type Sig (Identity.IdentityT m) = Lift m
+instance Monad m => Algebra (I.IdentityT m) where
+  type Sig (I.IdentityT m) = Lift m
 
-  alg ctx hdl (LiftWith with k) = Identity.IdentityT (with ctx (Identity.runIdentityT . hdl)) >>= hdl . fmap k
+  alg ctx hdl (LiftWith with k) = I.IdentityT (with ctx (I.runIdentityT . hdl)) >>= hdl . fmap k
 
-instance Algebra m => Algebra (Maybe.MaybeT m) where
-  type Sig (Maybe.MaybeT m) = Empty :+: Sig m
+instance Algebra m => Algebra (M.MaybeT m) where
+  type Sig (M.MaybeT m) = Empty :+: Sig m
 
   alg ctx hdl = \case
-    L Empty -> Maybe.MaybeT (pure Nothing)
-    R other -> Maybe.MaybeT (thread (Just ctx) (maybe (pure Nothing) (Maybe.runMaybeT . hdl)) other)
+    L Empty -> M.MaybeT (pure Nothing)
+    R other -> M.MaybeT (thread (Just ctx) (maybe (pure Nothing) (M.runMaybeT . hdl)) other)
   {-# INLINE alg #-}
 
-instance Algebra m => Algebra (Except.ExceptT e m) where
-  type Sig (Except.ExceptT e m) = Error e :+: Sig m
+instance Algebra m => Algebra (E.ExceptT e m) where
+  type Sig (E.ExceptT e m) = Error e :+: Sig m
 
   alg ctx hdl = \case
-    L (L (Throw e))     -> Except.throwE e
-    L (R (Catch m h k)) -> Except.catchE (hdl (m <$ ctx)) (hdl . (<$ ctx) . h) >>= hdl . fmap k
-    R other             -> Except.ExceptT $ thread (Right ctx) (either (pure . Left) (Except.runExceptT . hdl)) other
+    L (L (Throw e))     -> E.throwE e
+    L (R (Catch m h k)) -> E.catchE (hdl (m <$ ctx)) (hdl . (<$ ctx) . h) >>= hdl . fmap k
+    R other             -> E.ExceptT $ thread (Right ctx) (either (pure . Left) (E.runExceptT . hdl)) other
   {-# INLINE alg #-}
 
-instance Algebra m => Algebra (Reader.ReaderT r m) where
-  type Sig (Reader.ReaderT r m) = Reader r :+: Sig m
+instance Algebra m => Algebra (R.ReaderT r m) where
+  type Sig (R.ReaderT r m) = Reader r :+: Sig m
 
   alg ctx hdl = \case
-    L (Ask       k) -> Reader.ask >>= hdl . (<$ ctx) . k
-    L (Local f m k) -> Reader.local f (hdl (m <$ ctx)) >>= hdl . fmap k
-    R other         -> Reader.ReaderT $ \ r -> alg ctx ((`Reader.runReaderT` r) . hdl) other
+    L (Ask       k) -> R.ask >>= hdl . (<$ ctx) . k
+    L (Local f m k) -> R.local f (hdl (m <$ ctx)) >>= hdl . fmap k
+    R other         -> R.ReaderT $ \ r -> alg ctx ((`R.runReaderT` r) . hdl) other
   {-# INLINE alg #-}
 
-instance Algebra m => Algebra (State.Lazy.StateT s m) where
-  type Sig (State.Lazy.StateT s m) = State s :+: Sig m
+instance Algebra m => Algebra (S.L.StateT s m) where
+  type Sig (S.L.StateT s m) = State s :+: Sig m
 
   alg ctx hdl = \case
-    L (Get   k) -> State.Lazy.get >>= hdl . (<$ ctx) . k
-    L (Put s k) -> State.Lazy.put s *> hdl (k <$ ctx)
-    R other     -> State.Lazy.StateT $ \ s -> swap <$> thread (s, ctx) (\ (s, x) -> swap <$> State.Lazy.runStateT (hdl x) s) other
+    L (Get   k) -> S.L.get >>= hdl . (<$ ctx) . k
+    L (Put s k) -> S.L.put s *> hdl (k <$ ctx)
+    R other     -> S.L.StateT $ \ s -> swap <$> thread (s, ctx) (\ (s, x) -> swap <$> S.L.runStateT (hdl x) s) other
   {-# INLINE alg #-}
 
-instance Algebra m => Algebra (State.Strict.StateT s m) where
-  type Sig (State.Strict.StateT s m) = State s :+: Sig m
+instance Algebra m => Algebra (S.S.StateT s m) where
+  type Sig (S.S.StateT s m) = State s :+: Sig m
 
   alg ctx hdl = \case
-    L (Get   k) -> State.Strict.get >>= hdl . (<$ ctx) . k
-    L (Put s k) -> State.Strict.put s *> hdl (k <$ ctx)
-    R other     -> State.Strict.StateT $ \ s -> swap <$> thread (s, ctx) (\ (s, x) -> swap <$> State.Strict.runStateT (hdl x) s) other
+    L (Get   k) -> S.S.get >>= hdl . (<$ ctx) . k
+    L (Put s k) -> S.S.put s *> hdl (k <$ ctx)
+    R other     -> S.S.StateT $ \ s -> swap <$> thread (s, ctx) (\ (s, x) -> swap <$> S.S.runStateT (hdl x) s) other
   {-# INLINE alg #-}
 
-instance (Algebra m, Monoid w) => Algebra (Writer.Lazy.WriterT w m) where
-  type Sig (Writer.Lazy.WriterT w m) = Writer w :+: Sig m
+instance (Algebra m, Monoid w) => Algebra (W.L.WriterT w m) where
+  type Sig (W.L.WriterT w m) = Writer w :+: Sig m
 
   alg ctx hdl = \case
-    L (Tell w k)     -> Writer.Lazy.tell w *> hdl (k <$ ctx)
-    L (Listen m k)   -> Writer.Lazy.listen (hdl (m <$ ctx)) >>= hdl . uncurry (fmap . k) . swap
-    L (Censor f m k) -> Writer.Lazy.censor f (hdl (m <$ ctx)) >>= hdl . fmap k
-    R other          -> Writer.Lazy.WriterT $ swap <$> thread (mempty, ctx) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Lazy.runWriterT (hdl x)) other
+    L (Tell w k)     -> W.L.tell w *> hdl (k <$ ctx)
+    L (Listen m k)   -> W.L.listen (hdl (m <$ ctx)) >>= hdl . uncurry (fmap . k) . swap
+    L (Censor f m k) -> W.L.censor f (hdl (m <$ ctx)) >>= hdl . fmap k
+    R other          -> W.L.WriterT $ swap <$> thread (mempty, ctx) (\ (s, x) -> swap . fmap (mappend s) <$> W.L.runWriterT (hdl x)) other
   {-# INLINE alg #-}
 
-instance (Algebra m, Monoid w) => Algebra (Writer.Strict.WriterT w m) where
-  type Sig (Writer.Strict.WriterT w m) = Writer w :+: Sig m
+instance (Algebra m, Monoid w) => Algebra (W.S.WriterT w m) where
+  type Sig (W.S.WriterT w m) = Writer w :+: Sig m
 
   alg ctx hdl = \case
-    L (Tell w k)     -> Writer.Strict.tell w *> hdl (k <$ ctx)
-    L (Listen m k)   -> Writer.Strict.listen (hdl (m <$ ctx)) >>= hdl . uncurry (fmap . k) . swap
-    L (Censor f m k) -> Writer.Strict.censor f (hdl (m <$ ctx)) >>= hdl . fmap k
-    R other          -> Writer.Strict.WriterT $ swap <$> thread (mempty, ctx) (\ (s, x) -> swap . fmap (mappend s) <$> Writer.Strict.runWriterT (hdl x)) other
+    L (Tell w k)     -> W.S.tell w *> hdl (k <$ ctx)
+    L (Listen m k)   -> W.S.listen (hdl (m <$ ctx)) >>= hdl . uncurry (fmap . k) . swap
+    L (Censor f m k) -> W.S.censor f (hdl (m <$ ctx)) >>= hdl . fmap k
+    R other          -> W.S.WriterT $ swap <$> thread (mempty, ctx) (\ (s, x) -> swap . fmap (mappend s) <$> W.S.runWriterT (hdl x)) other
   {-# INLINE alg #-}
