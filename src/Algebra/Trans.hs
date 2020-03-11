@@ -53,7 +53,7 @@ newtype AlgT t (m :: Type -> Type) a = AlgT { runAlgT :: t m a }
 instance AlgebraTrans t m => Algebra (AlgT t m) where
   type Sig (AlgT t m) = SigT t :+: Sig m
 
-  alg = mapLowerTDist AlgT (runAlgT ~<) . algDefault
+  alg = mapLowerT AlgT (runAlgT ~<) id . algDefault
 
 algDefault :: (AlgebraTrans t m, Functor ctx) => (SigT t :+: Sig m) n a -> LowerT ctx n (t m) (ctx a)
 algDefault = \case
@@ -66,7 +66,7 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
 
   algT = \case
     Ask       k -> lift R.ask >>= initialT . k
-    Local f m k -> mapLowerT (R.local f) (initialT m) >>= contT k
+    Local f m k -> mapLowerT (R.local f) id id (initialT m) >>= contT k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 

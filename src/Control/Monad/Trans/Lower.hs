@@ -7,8 +7,6 @@ module Control.Monad.Trans.Lower
 , initialT
 , contT
 , mapLowerT
-, mapLowerTDist
-, mapLowerTDistCtx
 , liftInitialT
   -- * Distributive laws
 , Hom
@@ -43,14 +41,8 @@ initialT m = liftInitialT ($ m)
 contT :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
 contT k ctx = LowerT $ const . runDist (k <$> ctx)
 
-mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
-mapLowerT f = mapLowerTDist f id
-
-mapLowerTDist :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx m n') -> LowerT ctx m n' a -> LowerT ctx m n b
-mapLowerTDist f g = mapLowerTDistCtx f g id
-
-mapLowerTDistCtx :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
-mapLowerTDistCtx f g h (LowerT m) = LowerT $ \ hdl ctx -> f (m (g hdl) (h ctx))
+mapLowerT :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
+mapLowerT f g h (LowerT m) = LowerT $ \ hdl ctx -> f (m (g hdl) (h ctx))
 
 liftInitialT :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
 liftInitialT with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
