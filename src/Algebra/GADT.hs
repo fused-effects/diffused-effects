@@ -26,7 +26,7 @@ instance Algebra (Either e) where
 
   alg hdl ctx = \case
     L (Throw e)   -> Left e
-    R (Catch m h) -> either (init . h) pure (init m)
+    R (Catch m h) -> either (lower . h) pure (lower m)
     where
-    init = hdl . (<$ ctx)
+    lower = hdl . (<$ ctx)
   {-# INLINE alg #-}
