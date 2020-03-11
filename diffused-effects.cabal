@@ -44,6 +44,7 @@ library
     Algebra.Cut.Church
     Algebra.Fail.Either
     Algebra.NonDet.Church
+    Control.Monad.Lift
     Effect.Catch
     Effect.Choose
     Effect.Cull
