@@ -4,7 +4,7 @@ module Control.Monad.Trans.Lower
 ( -- * Lowering monad transformer
   runLowerT
 , lowerT
-, LowerT(..)
+, LowerT
 , lowerWith
 , lower
 , lowerCont
