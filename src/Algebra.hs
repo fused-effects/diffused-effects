@@ -156,10 +156,10 @@ instance Algebra m => Algebra (M.MaybeT m) where
 instance Algebra m => Algebra (E.ExceptT e m) where
   type Sig (E.ExceptT e m) = Error e :+: Sig m
 
-  alg hdl ctx = \case
+  alg hdl ctx = lowering (\ init cont -> \case
     L (L (Throw e))     -> E.throwE e
-    L (R (Catch m h k)) -> E.catchE (hdl (m <$ ctx)) (hdl . (<$ ctx) . h) >>= hdl . fmap k
-    R other             -> E.ExceptT $ thread (either (pure . Left) (E.runExceptT . hdl)) (Right ctx) other
+    L (R (Catch m h k)) -> E.catchE (init m) (init . h) >>= cont k
+    R other             -> E.ExceptT $ thread (either (pure . Left) (E.runExceptT . hdl)) (Right ctx) other) hdl ctx
   {-# INLINE alg #-}
 
 instance Monad m => Algebra (I.IdentityT m) where
