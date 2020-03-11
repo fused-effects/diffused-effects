@@ -1,5 +1,4 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
@@ -10,7 +9,6 @@ module Algebra
 ( type (~>)
 , Algebra(..)
 , (:+:)(..)
-, (:.:)(..)
 , Has
 , thread
 , run
@@ -29,6 +27,7 @@ import qualified Control.Monad.Trans.State.Lazy as S.L
 import qualified Control.Monad.Trans.State.Strict as S.S
 import qualified Control.Monad.Trans.Writer.Lazy as W.L
 import qualified Control.Monad.Trans.Writer.Strict as W.S
+import           Data.Functor.Compose
 import           Data.Functor.Identity
 import           Data.List.NonEmpty (NonEmpty)
 import           Data.Tuple (swap)
@@ -58,14 +57,8 @@ class Monad m => Algebra m where
 type Has eff m = (Members eff (Sig m), Algebra m)
 
 
-newtype (f :.: g) a = C { runC :: f (g a) }
-  deriving (Foldable, Functor, Traversable)
-
-infixr 7 :.:
-
-
 thread :: (Functor ctx1, Functor ctx2, Algebra m) => (forall x . ctx1 (ctx2 (n x)) -> m (ctx1 (ctx2 x))) -> ctx1 (ctx2 ()) -> Sig m n a -> m (ctx1 (ctx2 a))
-thread hdl ctx = fmap runC . alg (fmap C . hdl . runC) (C ctx)
+thread hdl ctx = fmap getCompose . alg (fmap Compose . hdl . getCompose) (Compose ctx)
 {-# INLINE thread #-}
 
 run :: Identity a -> a
