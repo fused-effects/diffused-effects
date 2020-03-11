@@ -209,9 +209,9 @@ mapLowerC :: (n (ctx b) -> n (ctx c)) -> LowerC ctx m n a b -> LowerC ctx m n a 
 mapLowerC f (LowerC r) = LowerC $ \ hdl -> f . r hdl
 
 
-newtype CtxC ctx n a b = CtxC (ctx a -> n (ctx b))
+newtype CtxC ctx m a b = CtxC (ctx a -> m (ctx b))
 
-instance Monad n => C.Category (CtxC ctx n) where
+instance Monad m => C.Category (CtxC ctx m) where
   id = CtxC pure
 
   CtxC f . CtxC g = CtxC $ f <=< g
