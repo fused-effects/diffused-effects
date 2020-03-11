@@ -8,6 +8,7 @@ module Algebra.GADT
 , thread
 ) where
 
+import qualified Control.Monad.Trans.Maybe as M
 import qualified Control.Monad.Trans.Reader as R
 import           Data.Functor.Compose
 import           Data.Functor.Identity
@@ -67,6 +68,14 @@ instance Algebra ((->) r) where
     where
     lower = hdl . (<$ ctx)
 
+
+instance Algebra m => Algebra (M.MaybeT m) where
+  type Sig (M.MaybeT m) = Empty :+: Sig m
+
+  alg hdl ctx = \case
+    L Empty -> M.MaybeT (pure Nothing)
+    R other -> M.MaybeT (thread (maybe (pure Nothing) (M.runMaybeT . hdl)) (Just ctx) other)
+  {-# INLINE alg #-}
 
 instance Algebra m => Algebra (R.ReaderT r m) where
   type Sig (R.ReaderT r m) = Reader r :+: Sig m
