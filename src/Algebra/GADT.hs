@@ -43,11 +43,13 @@ instance Algebra Maybe where
   type Sig Maybe = Empty
 
   alg _ _ Empty = Nothing
+  {-# INLINE alg #-}
 
 instance Algebra NonEmpty where
   type Sig NonEmpty = Choose
 
   alg _ ctx Choose = pure (True <$ ctx) <> pure (False <$ ctx)
+  {-# INLINE alg #-}
 
 instance Algebra (Either e) where
   type Sig (Either e) = Error e
@@ -63,6 +65,7 @@ instance Algebra [] where
   alg _ ctx = \case
     L Empty  -> []
     R Choose -> [True <$ ctx, False <$ ctx]
+  {-# INLINE alg #-}
 
 instance Algebra ((->) r) where
   type Sig ((->) r) = Reader r
@@ -70,6 +73,7 @@ instance Algebra ((->) r) where
   alg hdl ctx = \case
     Ask       -> (<$ ctx)
     Local f m -> lower hdl ctx m . f
+  {-# INLINE alg #-}
 
 
 instance Algebra m => Algebra (M.MaybeT m) where
@@ -96,3 +100,4 @@ instance Algebra m => Algebra (R.ReaderT r m) where
     L Ask         -> (<$ ctx) <$> R.ask
     L (Local f m) -> R.local f (lower hdl ctx m)
     R other       -> R.ReaderT $ \ r -> alg ((`R.runReaderT` r) . hdl) ctx other
+  {-# INLINE alg #-}
