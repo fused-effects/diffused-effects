@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 module Algebra.GADT
@@ -8,6 +9,7 @@ module Algebra.GADT
 
 import Data.Functor.Identity
 import Data.Kind (Type)
+import Effect.GADT
 import Effect.Sum
 
 class Monad m => Algebra m where
@@ -28,3 +30,11 @@ lowering
   -> a
 lowering with hdl ctx = with (hdl . (<$ ctx)) (\ k -> hdl . fmap k)
 {-# INLINE lowering #-}
+
+instance Algebra (Either e) where
+  type Sig (Either e) = Error e
+
+  alg = lowering $ \ init _ -> \case
+    Throw e   -> Left e
+    Catch m h -> either (init . h) pure (init m)
+  {-# INLINE alg #-}
