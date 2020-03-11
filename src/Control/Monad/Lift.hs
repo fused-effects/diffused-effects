@@ -10,6 +10,7 @@ module Control.Monad.Lift
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Except as E
 import           Control.Monad.Trans.Lower
+import qualified Control.Monad.Trans.Maybe as M
 import qualified Control.Monad.Trans.Reader as R
 import qualified Control.Monad.Trans.State.Lazy as S.L
 import qualified Control.Monad.Trans.State.Strict as S.S
@@ -34,6 +35,11 @@ instance MonadLift (E.ExceptT e) where
   type Ctx (E.ExceptT e) = Either e
 
   liftWith = E.ExceptT . runLowerT (Dist (either (pure . Left) E.runExceptT)) (Right ())
+
+instance MonadLift M.MaybeT where
+  type Ctx M.MaybeT = Maybe
+
+  liftWith = M.MaybeT . runLowerT (Dist (maybe (pure Nothing) M.runMaybeT)) (Just ())
 
 instance MonadLift (R.ReaderT r) where
   liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (hom (`R.runReaderT` r)) (Identity ()) m
