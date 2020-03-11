@@ -4,8 +4,10 @@
 module Algebra.GADT
 ( Algebra(..)
 , send
+, thread
 ) where
 
+import Data.Functor.Compose
 import Data.Functor.Identity
 import Data.List.NonEmpty (NonEmpty)
 import Data.Kind (Type)
@@ -21,6 +23,11 @@ class Monad m => Algebra m where
 send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
 send = fmap runIdentity . alg (fmap Identity . runIdentity) (Identity ()) . inj
 {-# INLINE send #-}
+
+thread :: (Functor ctx1, Functor ctx2, Algebra m) => (forall x . ctx1 (ctx2 (n x)) -> m (ctx1 (ctx2 x))) -> ctx1 (ctx2 ()) -> Sig m n a -> m (ctx1 (ctx2 a))
+thread hdl ctx = fmap getCompose . alg (fmap Compose . hdl . getCompose) (Compose ctx)
+{-# INLINE thread #-}
+
 
 instance Algebra Maybe where
   type Sig Maybe = Empty
