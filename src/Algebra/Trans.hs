@@ -19,7 +19,7 @@ module Algebra.Trans
 , algDefault
 , Hom
 , runDist
-, homDist
+, hom
 , (>~>)
 , (<~<)
 , (~>)
@@ -30,18 +30,33 @@ module Algebra.Trans
 , Point(..)
 , runLowerT
 , LowerT(..)
-, initial
-, cont
+, initialT
+, contT
 , mapLowerT
-, liftInitial
+, liftInitialT
 , liftWithin
+, LowerC(..)
+, fromLowerT
+, fromLowerC
+, initialC
+, liftInitialC
+, contC
+, liftC
+, mapLowerC
+, CtxC(..)
 ) where
 
+import qualified Control.Arrow as A
+import           Control.Category ((<<<), (>>>))
+import qualified Control.Category as C
+import           Control.Monad ((<=<))
 import           Control.Monad.Trans.Class
 import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
 import qualified Control.Monad.Trans.State.Lazy as S.L
 import qualified Control.Monad.Trans.State.Strict as S.S
+import           Data.Coerce
+import           Data.Functor (($>))
 import           Data.Functor.Compose
 import           Data.Functor.Identity
 import           Data.Kind (Type)
@@ -95,8 +110,8 @@ type Hom m n = forall x . m x -> n x
 runDist :: ctx (m a) -> Dist ctx m n -> n (ctx a)
 runDist cm (Dist run) = run cm
 
-homDist :: Functor n => Hom m n -> Dist Identity m n
-homDist hom = Dist (fmap Identity . hom . runIdentity)
+hom :: Functor n => Hom m n -> Dist Identity m n
+hom hom = Dist (fmap Identity . hom . runIdentity)
 
 (>~>) :: (Functor n, Functor ctx2) => Dist ctx1 l m -> Dist ctx2 m n -> Dist (Compose ctx2 ctx1) l n
 Dist hdl1 >~> Dist hdl2 = Dist (fmap Compose . hdl2 . fmap hdl1 . getCompose)
@@ -143,11 +158,11 @@ newtype LowerT ctx m n a = LowerT (Dist ctx m n -> ctx () -> n a)
 instance MonadTrans (LowerT ctx m) where
   lift = LowerT . const . const
 
-initial :: Functor ctx => m a -> LowerT ctx m n (ctx a)
-initial m = liftInitial ($ m)
+initialT :: Functor ctx => m a -> LowerT ctx m n (ctx a)
+initialT m = liftInitialT ($ m)
 
-cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
-cont k ctx = LowerT $ const . runDist (k <$> ctx)
+contT :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
+contT k ctx = LowerT $ const . runDist (k <$> ctx)
 
 mapLowerT :: (n a -> n b) -> LowerT ctx m n a -> LowerT ctx m n b
 mapLowerT f = mapLowerTDist f id
@@ -158,22 +173,71 @@ mapLowerTDist f g = mapLowerTDistCtx f g id
 mapLowerTDistCtx :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
 mapLowerTDistCtx f g h (LowerT m) = LowerT $ \ hdl ctx -> f (m (g hdl) (h ctx))
 
-liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-liftInitial with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
+liftInitialT :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
+liftInitialT with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
 
 liftWithin :: (MonadLift t, Monad m) => LowerT (Compose (Ctx t) ctx) n m (Ctx t a) -> LowerT ctx n (t m) a
 liftWithin m = LowerT $ \ hdl1 ctx1 -> liftWith $ LowerT $ \ hdl2 ctx2 -> runLowerT (hdl2 <~< hdl1) (Compose (ctx1 <$ ctx2)) m
 
 
+newtype ReaderC r arr a b = ReaderC (r -> arr a b)
+
+instance C.Category arr => C.Category (ReaderC r arr) where
+  id = ReaderC $ const C.id
+
+  ReaderC f . ReaderC g = ReaderC $ \ hdl -> f hdl <<< g hdl
+
+instance A.Arrow arr => A.Arrow (ReaderC r arr) where
+  arr = ReaderC . const . A.arr
+
+  ReaderC l *** ReaderC r = ReaderC $ \ hdl -> l hdl A.*** r hdl
+
+
+newtype LowerC ctx m n a b = LowerC (Dist ctx m n -> ctx a -> n (ctx b))
+
+deriving via ReaderC (Dist ctx m n) (CtxC ctx n) instance Monad n => C.Category (LowerC ctx m n)
+
+fromLowerT :: LowerT ctx m n (ctx a) -> LowerC ctx m n () a
+fromLowerT = coerce
+
+fromLowerC :: LowerC ctx m n () a -> LowerT ctx m n (ctx a)
+fromLowerC = coerce
+
+
+initialC :: Functor ctx => m a -> LowerC ctx m n () a
+initialC m = liftInitialC ($ m)
+
+liftInitialC :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n (ctx b)) -> LowerC ctx m n () b
+liftInitialC with = LowerC $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
+
+contC :: Functor ctx => (a -> m b) -> LowerC ctx m n a b
+contC k = LowerC $ \ (Dist hdl) ctx -> hdl (k <$> ctx)
+
+liftC :: (Functor ctx, Functor n) => n a -> LowerC ctx m n () a
+liftC n = LowerC . const $ (<$> n) . ($>)
+
+
+mapLowerC :: (n (ctx b) -> n (ctx c)) -> LowerC ctx m n a b -> LowerC ctx m n a c
+mapLowerC f (LowerC r) = LowerC $ \ hdl -> f . r hdl
+
+
+newtype CtxC ctx m a b = CtxC (ctx a -> m (ctx b))
+
+instance Monad m => C.Category (CtxC ctx m) where
+  id = CtxC pure
+
+  CtxC f . CtxC g = CtxC $ f <=< g
+
+
 instance MonadLift (R.ReaderT r) where
-  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (homDist (`R.runReaderT` r)) (Identity ()) m
+  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (hom (`R.runReaderT` r)) (Identity ()) m
 
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
-  algT = \case
-    Ask       k -> lift R.ask >>= initial . k
-    Local f m k -> mapLowerT (R.local f) (initial m) >>= cont k
+  algT = fromLowerC . \case
+    Ask       k -> liftC R.ask >>> contC k
+    Local f m k -> mapLowerC (R.local f) (initialC m) >>> contC k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
@@ -185,9 +249,9 @@ instance MonadLift (E.ExceptT e) where
 instance Algebra m => AlgebraTrans (E.ExceptT e) m where
   type SigT (E.ExceptT e) = Error e
 
-  algT = \case
-    L (Throw e)     -> lift (E.throwE e)
-    R (Catch m h k) -> liftInitial (\ initial -> E.catchE (initial m) (initial . h)) >>= cont k
+  algT = fromLowerC . \case
+    L (Throw e)     -> liftC (E.throwE e)
+    R (Catch m h k) -> liftInitialC (\ initialC -> E.catchE (initialC m) (initialC . h)) >>> contC k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
@@ -199,9 +263,9 @@ instance MonadLift (S.L.StateT s) where
 instance Algebra m => AlgebraTrans (S.L.StateT s) m where
   type SigT (S.L.StateT s) = State s
 
-  algT = \case
-    Get   k -> lift S.L.get     >>= initial . k
-    Put s k -> lift (S.L.put s) >>  initial k
+  algT = fromLowerC . \case
+    Get   k -> liftC S.L.get     >>> contC k
+    Put s k -> liftC (S.L.put s) >>> contC (const k)
 
 deriving via AlgT (S.L.StateT s) m instance Algebra m => Algebra (S.L.StateT s m)
 
@@ -213,8 +277,8 @@ instance MonadLift (S.S.StateT s) where
 instance Algebra m => AlgebraTrans (S.S.StateT s) m where
   type SigT (S.S.StateT s) = State s
 
-  algT = \case
-    Get   k -> lift S.S.get     >>= initial . k
-    Put s k -> lift (S.S.put s) >>  initial k
+  algT = fromLowerC . \case
+    Get   k -> liftC S.S.get     >>> contC k
+    Put s k -> liftC (S.S.put s) >>> contC (const k)
 
 deriving via AlgT (S.S.StateT s) m instance Algebra m => Algebra (S.S.StateT s m)
