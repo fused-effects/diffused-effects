@@ -55,6 +55,7 @@ import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Reader as R
 import qualified Control.Monad.Trans.State.Lazy as S.L
 import qualified Control.Monad.Trans.State.Strict as S.S
+import           Data.Coerce
 import           Data.Functor (($>))
 import           Data.Functor.Compose
 import           Data.Functor.Identity
@@ -197,10 +198,10 @@ newtype LowerC ctx m n a b = LowerC (Dist ctx m n -> ctx a -> n (ctx b))
 deriving via ReaderC (Dist ctx m n) (CtxC ctx n) instance Monad n => C.Category (LowerC ctx m n)
 
 fromLowerT :: LowerT ctx m n (ctx a) -> LowerC ctx m n () a
-fromLowerT (LowerT r) = LowerC r
+fromLowerT = coerce
 
 fromLowerC :: LowerC ctx m n () a -> LowerT ctx m n (ctx a)
-fromLowerC (LowerC r) = LowerT r
+fromLowerC = coerce
 
 
 initialC :: Functor ctx => m a -> LowerC ctx m n () a
