@@ -19,7 +19,7 @@ module Algebra.Trans
 , algDefault
 , Hom
 , runDist
-, homDist
+, hom
 , (>~>)
 , (<~<)
 , (~>)
@@ -108,8 +108,8 @@ type Hom m n = forall x . m x -> n x
 runDist :: ctx (m a) -> Dist ctx m n -> n (ctx a)
 runDist cm (Dist run) = run cm
 
-homDist :: Functor n => Hom m n -> Dist Identity m n
-homDist hom = Dist (fmap Identity . hom . runIdentity)
+hom :: Functor n => Hom m n -> Dist Identity m n
+hom hom = Dist (fmap Identity . hom . runIdentity)
 
 (>~>) :: (Functor n, Functor ctx2) => Dist ctx1 l m -> Dist ctx2 m n -> Dist (Compose ctx2 ctx1) l n
 Dist hdl1 >~> Dist hdl2 = Dist (fmap Compose . hdl2 . fmap hdl1 . getCompose)
@@ -218,7 +218,7 @@ instance Monad m => C.Category (CtxC ctx m) where
 
 
 instance MonadLift (R.ReaderT r) where
-  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (homDist (`R.runReaderT` r)) (Identity ()) m
+  liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (hom (`R.runReaderT` r)) (Identity ()) m
 
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
