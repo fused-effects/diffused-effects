@@ -11,7 +11,6 @@ module Control.Monad.Trans.Lower
 , mapLowerT
   -- * Distributive laws
 , Hom
-, runDist
 , hom
 , (>~>)
 , (<~<)
@@ -20,6 +19,8 @@ module Control.Monad.Trans.Lower
 , (>~)
 , (~<)
 , Handler
+  -- * Wrapped handlers
+, runDist
 , WrappedHandler(..)
 ) where
 
@@ -56,9 +57,6 @@ mapLowerT f g h m = lowerT $ \ hdl ctx -> f (runLowerT (g hdl) (h ctx) m)
 type Hom m n = forall x . m x -> n x
 
 
-runDist :: ctx (m a) -> WrappedHandler ctx m n -> n (ctx a)
-runDist cm (WrappedHandler run) = run cm
-
 hom :: Functor n => Hom m n -> Handler Identity m n
 hom hom = fmap Identity . hom . runIdentity
 
@@ -93,5 +91,9 @@ hdl1 ~< hdl2 = hdl1 . hdl2
 infixr 1 ~<
 
 type Handler ctx m n = forall x . ctx (m x) -> n (ctx x)
+
+
+runDist :: ctx (m a) -> WrappedHandler ctx m n -> n (ctx a)
+runDist cm (WrappedHandler run) = run cm
 
 newtype WrappedHandler ctx m n = WrappedHandler { unwrapHandler :: Handler ctx m n }
