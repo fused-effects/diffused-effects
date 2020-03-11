@@ -8,6 +8,7 @@ module Effect.GADT
 , Error
 , NonDet
 , Reader(..)
+, State(..)
 , Throw(..)
 ) where
 
@@ -30,6 +31,10 @@ type NonDet = Empty :+: Choose
 data Reader r m k where
   Ask :: Reader r m r
   Local :: (r -> r) -> m a -> Reader r m a
+
+data State s m k where
+  Get ::      State s m s
+  Put :: s -> State s m ()
 
 data Throw e (m :: Type -> Type) k where
   Throw :: e -> Throw e m a
