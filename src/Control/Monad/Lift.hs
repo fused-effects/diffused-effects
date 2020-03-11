@@ -14,6 +14,8 @@ import qualified Control.Monad.Trans.Maybe as M
 import qualified Control.Monad.Trans.Reader as R
 import qualified Control.Monad.Trans.State.Lazy as S.L
 import qualified Control.Monad.Trans.State.Strict as S.S
+import qualified Control.Monad.Trans.Writer.Lazy as W.L
+import qualified Control.Monad.Trans.Writer.Strict as W.S
 import           Data.Functor.Compose
 import           Data.Functor.Identity
 import           Data.Tuple (swap)
@@ -53,3 +55,13 @@ instance MonadLift (S.S.StateT s) where
   type Ctx (S.S.StateT s) = (,) s
 
   liftWith m = S.S.StateT $ \ s -> swap <$> runLowerT (fmap swap . uncurry (flip S.S.runStateT)) (s, ()) m
+
+instance Monoid w => MonadLift (W.L.WriterT w) where
+  type Ctx (W.L.WriterT w) = (,) w
+
+  liftWith m = W.L.WriterT $ swap <$> runLowerT (\ (s, x) -> swap . fmap (mappend s) <$> W.L.runWriterT x) (mempty, ()) m
+
+instance Monoid w => MonadLift (W.S.WriterT w) where
+  type Ctx (W.S.WriterT w) = (,) w
+
+  liftWith m = W.S.WriterT $ swap <$> runLowerT (\ (s, x) -> swap . fmap (mappend s) <$> W.S.runWriterT x) (mempty, ()) m
