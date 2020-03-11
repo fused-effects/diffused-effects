@@ -41,7 +41,7 @@ class Monad m => Algebra m where
   alg :: Functor ctx => Sig m n a -> LowerT ctx n m (ctx a)
 
 
-class (MonadLift t, Algebra m, Monad (t m)) => AlgebraTrans t m where
+class (MonadLift t, Algebra m) => AlgebraTrans t m where
   type SigT t :: (Type -> Type) -> (Type -> Type)
 
   algT :: Functor ctx => SigT t n a -> LowerT ctx n (t m) (ctx a)
