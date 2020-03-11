@@ -37,6 +37,7 @@ module Algebra.Trans
 , liftWithin
 , LowerC(..)
 , fromLowerT
+, fromLowerC
 ) where
 
 import qualified Control.Category as C
@@ -178,6 +179,9 @@ instance Monad n => C.Category (LowerC ctx m n) where
 
 fromLowerT :: LowerT ctx m n (ctx a) -> LowerC ctx m n () a
 fromLowerT (LowerT r) = LowerC r
+
+fromLowerC :: LowerC ctx m n () a -> LowerT ctx m n (ctx a)
+fromLowerC (LowerC r) = LowerT r
 
 
 instance MonadLift (R.ReaderT r) where
