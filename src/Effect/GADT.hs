@@ -43,4 +43,4 @@ data Throw e (m :: Type -> Type) k where
 data Writer w m k where
   Tell :: w -> Writer w m ()
   Listen :: m a -> Writer w m (w, a)
-  Pass :: m (w -> w, a) -> Writer w m a
+  Censor :: (w -> w) -> m a -> Writer w m a
