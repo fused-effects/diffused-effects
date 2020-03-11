@@ -99,9 +99,9 @@ instance Algebra Maybe where
 instance Algebra (Either e) where
   type Sig (Either e) = Error e
 
-  alg hdl ctx = \case
+  alg = lowering $ \ init cont -> \case
     L (Throw e)     -> Left e
-    R (Catch m h k) -> either (hdl . (<$ ctx) . h) pure (hdl (m <$ ctx)) >>= hdl . fmap k
+    R (Catch m h k) -> either (init . h) pure (init m) >>= cont k
   {-# INLINE alg #-}
 
 instance Algebra Identity where
