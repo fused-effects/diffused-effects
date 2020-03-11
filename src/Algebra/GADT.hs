@@ -8,6 +8,7 @@ module Algebra.GADT
 , thread
 ) where
 
+import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Maybe as M
 import qualified Control.Monad.Trans.Reader as R
 import           Data.Functor.Compose
@@ -75,6 +76,17 @@ instance Algebra m => Algebra (M.MaybeT m) where
   alg hdl ctx = \case
     L Empty -> M.MaybeT (pure Nothing)
     R other -> M.MaybeT (thread (maybe (pure Nothing) (M.runMaybeT . hdl)) (Just ctx) other)
+  {-# INLINE alg #-}
+
+instance Algebra m => Algebra (E.ExceptT e m) where
+  type Sig (E.ExceptT e m) = Error e :+: Sig m
+
+  alg hdl ctx = \case
+    L (L (Throw e))   -> E.throwE e
+    L (R (Catch m h)) -> E.catchE (lower m) (lower . h)
+    R other           -> E.ExceptT $ thread (either (pure . Left) (E.runExceptT . hdl)) (Right ctx) other
+    where
+    lower = hdl . (<$ ctx)
   {-# INLINE alg #-}
 
 instance Algebra m => Algebra (R.ReaderT r m) where
