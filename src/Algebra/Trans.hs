@@ -38,6 +38,7 @@ module Algebra.Trans
 , LowerC(..)
 , fromLowerT
 , fromLowerC
+, initialC
 , liftInitialC
 ) where
 
@@ -184,6 +185,9 @@ fromLowerT (LowerT r) = LowerC r
 fromLowerC :: LowerC ctx m n () a -> LowerT ctx m n (ctx a)
 fromLowerC (LowerC r) = LowerT r
 
+
+initialC :: Functor ctx => m a -> LowerC ctx m n () a
+initialC m = liftInitialC ($ m)
 
 liftInitialC :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n (ctx b)) -> LowerC ctx m n () b
 liftInitialC with = LowerC $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
