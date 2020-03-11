@@ -6,8 +6,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 module Algebra
-( type (~>)
-, Algebra(..)
+( Algebra(..)
 , (:+:)(..)
 , Has
 , thread
@@ -42,11 +41,6 @@ import           Effect.State.Internal
 import           Effect.Sum
 import           Effect.Throw.Internal
 import           Effect.Writer.Internal
-
-type f ~> g = forall x . f x -> g x
-
-infixr 0 ~>
-
 
 class Monad m => Algebra m where
   type Sig m :: (* -> *) -> (* -> *)
