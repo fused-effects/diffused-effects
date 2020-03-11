@@ -7,6 +7,7 @@ module Algebra.GADT
 , Algebra(..)
 , send
 , thread
+, liftInit
 , lowerInit
 , lowerCont
 ) where
@@ -40,6 +41,10 @@ thread :: (Functor ctx1, Functor ctx2, Algebra m) => (forall x . ctx1 (n x) -> m
 thread hdl1 hdl2 ctx = fmap getCompose . alg (fmap Compose . hdl1 . fmap hdl2 . getCompose) (Compose ctx)
 {-# INLINE thread #-}
 
+
+liftInit :: (Functor ctx, Functor m) => ctx () -> m a -> m (ctx a)
+liftInit ctx = fmap (<$ ctx)
+{-# INLINE liftInit #-}
 
 lowerInit :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> ctx () -> n a -> m (ctx a)
 lowerInit hdl ctx = hdl . (<$ ctx)
