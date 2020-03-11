@@ -45,6 +45,7 @@ library
     Algebra.Fail.Either
     Algebra.NonDet.Church
     Control.Monad.Lift
+    Control.Monad.Trans.Lower
     Effect.Catch
     Effect.Choose
     Effect.Cull
