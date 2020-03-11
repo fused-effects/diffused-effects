@@ -61,16 +61,6 @@ algDefault = \case
   R r -> liftWithin (getCompose <$> alg r)
 
 
-instance Algebra m => AlgebraTrans (R.ReaderT r) m where
-  type SigT (R.ReaderT r) = Reader r
-
-  algT = \case
-    Ask       k -> lift R.ask >>= lower . k
-    Local f m k -> mapLowerT (R.local f) id id (lower m) >>= lowerCont k
-
-deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
-
-
 instance Algebra m => AlgebraTrans (E.ExceptT e) m where
   type SigT (E.ExceptT e) = Error e
 
@@ -79,6 +69,16 @@ instance Algebra m => AlgebraTrans (E.ExceptT e) m where
     R (Catch m h k) -> lowerWith (\ lower -> E.catchE (lower m) (lower . h)) >>= lowerCont k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
+
+
+instance Algebra m => AlgebraTrans (R.ReaderT r) m where
+  type SigT (R.ReaderT r) = Reader r
+
+  algT = \case
+    Ask       k -> lift R.ask >>= lower . k
+    Local f m k -> mapLowerT (R.local f) id id (lower m) >>= lowerCont k
+
+deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
 
 instance Algebra m => AlgebraTrans (S.L.StateT s) m where
