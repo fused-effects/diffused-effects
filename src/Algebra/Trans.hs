@@ -211,6 +211,11 @@ mapLowerC f (LowerC r) = LowerC $ \ hdl -> f . r hdl
 
 newtype CtxC ctx n a b = CtxC (ctx a -> n (ctx b))
 
+instance Monad n => C.Category (CtxC ctx n) where
+  id = CtxC pure
+
+  CtxC f . CtxC g = CtxC $ f <=< g
+
 
 instance MonadLift (R.ReaderT r) where
   liftWith m = R.ReaderT $ \ r -> runIdentity <$> runLowerT (homDist (`R.runReaderT` r)) (Identity ()) m
