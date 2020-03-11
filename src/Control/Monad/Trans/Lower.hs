@@ -19,6 +19,7 @@ module Control.Monad.Trans.Lower
 , (>~)
 , (~<)
 , Handler(..)
+, WrappedHandler(..)
 ) where
 
 import           Control.Monad.Trans.Class
@@ -88,3 +89,5 @@ hdl1 ~< Handler hdl2 = Handler (hdl1 . hdl2)
 infixr 1 ~<
 
 newtype Handler ctx m n = Handler { appDist :: forall x . ctx (m x) -> n (ctx x) }
+
+newtype WrappedHandler ctx m n = WrappedHandler { unwrapHandler :: forall x . ctx (m x) -> n (ctx x) }
