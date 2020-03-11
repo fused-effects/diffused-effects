@@ -41,3 +41,10 @@ instance Algebra (Either e) where
     where
     lower = hdl . (<$ ctx)
   {-# INLINE alg #-}
+
+instance Algebra [] where
+  type Sig [] = NonDet
+
+  alg _ ctx = \case
+    L Empty  -> []
+    R Choose -> [True <$ ctx, False <$ ctx]
