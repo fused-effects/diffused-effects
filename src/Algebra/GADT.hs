@@ -9,8 +9,8 @@ module Algebra.GADT
 
 import Data.Functor.Compose
 import Data.Functor.Identity
-import Data.List.NonEmpty (NonEmpty)
 import Data.Kind (Type)
+import Data.List.NonEmpty (NonEmpty)
 import Effect.GADT
 import Effect.Sum
 
