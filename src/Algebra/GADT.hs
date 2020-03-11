@@ -21,6 +21,11 @@ send :: (Member eff sig, sig ~ Sig m, Algebra m) => eff m a -> m a
 send = fmap runIdentity . alg (fmap Identity . runIdentity) (Identity ()) . inj
 {-# INLINE send #-}
 
+instance Algebra Maybe where
+  type Sig Maybe = Empty
+
+  alg _ _ Empty = Nothing
+
 instance Algebra (Either e) where
   type Sig (Either e) = Error e
 
