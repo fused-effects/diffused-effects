@@ -4,10 +4,10 @@ module Control.Monad.Trans.Lower
 ( -- * Lowering monad transformer
   runLowerT
 , LowerT(..)
-, initialT
-, contT
+, initial
+, cont
 , mapLowerT
-, liftInitialT
+, liftInitial
   -- * Distributive laws
 , Hom
 , runDist
@@ -35,17 +35,17 @@ newtype LowerT ctx m n a = LowerT (Dist ctx m n -> ctx () -> n a)
 instance MonadTrans (LowerT ctx m) where
   lift = LowerT . const . const
 
-initialT :: Functor ctx => m a -> LowerT ctx m n (ctx a)
-initialT m = liftInitialT ($ m)
+initial :: Functor ctx => m a -> LowerT ctx m n (ctx a)
+initial m = liftInitial ($ m)
 
-contT :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
-contT k ctx = LowerT $ const . runDist (k <$> ctx)
+cont :: Functor ctx => (a -> m b) -> ctx a -> LowerT ctx m n (ctx b)
+cont k ctx = LowerT $ const . runDist (k <$> ctx)
 
 mapLowerT :: (n' a -> n b) -> (Dist ctx m n -> Dist ctx' m n') -> (ctx () -> ctx' ()) -> LowerT ctx' m n' a -> LowerT ctx m n b
 mapLowerT f g h (LowerT m) = LowerT $ \ hdl ctx -> f (m (g hdl) (h ctx))
 
-liftInitialT :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
-liftInitialT with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
+liftInitial :: Functor ctx => ((forall a . m a -> n (ctx a)) -> n b) -> LowerT ctx m n b
+liftInitial with = LowerT $ \ hdl ctx -> with (appDist hdl . (<$ ctx))
 
 
 type Hom m n = forall x . m x -> n x
