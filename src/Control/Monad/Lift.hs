@@ -1,10 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 module Control.Monad.Lift
 ( MonadLift(..)
 , liftDefault
 , liftWithin
+, liftWithHandler
 ) where
 
 import           Control.Monad.Trans.Class
@@ -31,6 +33,10 @@ liftDefault m = liftWith (\ ctx -> lowerT (\ _ -> (<$ ctx) <$> m))
 
 liftWithin :: (MonadLift t, Monad m) => (Compose (Ctx t) ctx () -> LowerT (Compose (Ctx t) ctx) n m (Ctx t a)) -> ctx () -> LowerT ctx n (t m) a
 liftWithin f ctx1 = lowerT $ \ hdl1 -> liftWith $ \ ctx2 -> lowerT $ \ hdl2 -> runLowerT (hdl2 <~< hdl1) (f (Compose (ctx1 <$ ctx2)))
+
+
+liftWithHandler :: Applicative ctx => (forall x . n (ctx x) -> m x) -> Handler ctx m n -> (ctx () -> LowerT ctx m n (ctx a)) -> m a
+liftWithHandler cons hdl with = cons (runLowerT hdl (with (pure ())))
 
 
 instance MonadLift (E.ExceptT e) where
