@@ -66,7 +66,7 @@ instance Algebra m => AlgebraTrans (R.ReaderT r) m where
 
   algT = \case
     Ask       k -> lift R.ask >>= initial . k
-    Local f m k -> mapLowerT (R.local f) id id (initial m) >>= cont k
+    Local f m k -> mapLowerT (R.local f) id id (initial m) >>= lowerCont k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
@@ -76,7 +76,7 @@ instance Algebra m => AlgebraTrans (E.ExceptT e) m where
 
   algT = \case
     L (Throw e)     -> lift (E.throwE e)
-    R (Catch m h k) -> liftInitial (\ initial -> E.catchE (initial m) (initial . h)) >>= cont k
+    R (Catch m h k) -> liftInitial (\ initial -> E.catchE (initial m) (initial . h)) >>= lowerCont k
 
 deriving via AlgT (E.ExceptT e) m instance Algebra m => Algebra (E.ExceptT e m)
 
