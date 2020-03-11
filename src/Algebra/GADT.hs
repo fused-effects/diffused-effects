@@ -8,7 +8,7 @@ module Algebra.GADT
 , send
 , thread
 , lowerInit
-, cont
+, lowerCont
 ) where
 
 import qualified Control.Monad.Trans.Except as E
@@ -45,9 +45,9 @@ lowerInit :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> ctx () -> n a
 lowerInit hdl ctx = hdl . (<$ ctx)
 {-# INLINE lowerInit #-}
 
-cont :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> (a -> n b) -> ctx a -> m (ctx b)
-cont hdl k = hdl . fmap k
-{-# INLINE cont #-}
+lowerCont :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> (a -> n b) -> ctx a -> m (ctx b)
+lowerCont hdl k = hdl . fmap k
+{-# INLINE lowerCont #-}
 
 
 instance Algebra Maybe where
