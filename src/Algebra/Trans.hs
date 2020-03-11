@@ -214,9 +214,9 @@ instance MonadLift (R.ReaderT r) where
 instance Algebra m => AlgebraTrans (R.ReaderT r) m where
   type SigT (R.ReaderT r) = Reader r
 
-  algT = \case
-    Ask       k -> lift R.ask >>= initialT . k
-    Local f m k -> fromLowerC $ mapLowerC (R.local f) (initialC m) >>> contC k
+  algT = fromLowerC . \case
+    Ask       k -> liftC R.ask >>> contC k
+    Local f m k -> mapLowerC (R.local f) (initialC m) >>> contC k
 
 deriving via AlgT (R.ReaderT r) m instance Algebra m => Algebra (R.ReaderT r m)
 
