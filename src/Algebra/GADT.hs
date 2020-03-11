@@ -7,7 +7,7 @@ module Algebra.GADT
 , Algebra(..)
 , send
 , thread
-, lower
+, lowerInit
 , cont
 ) where
 
@@ -15,6 +15,7 @@ import qualified Control.Monad.Trans.Except as E
 import qualified Control.Monad.Trans.Maybe as M
 import qualified Control.Monad.Trans.Reader as R
 import qualified Control.Monad.Trans.State.Strict as S.S
+import qualified Control.Monad.Trans.Writer.Strict as W.S
 import           Data.Functor.Compose
 import           Data.Functor.Identity
 import           Data.Kind (Type)
@@ -40,9 +41,9 @@ thread hdl1 hdl2 ctx = fmap getCompose . alg (fmap Compose . hdl1 . fmap hdl2 . 
 {-# INLINE thread #-}
 
 
-lower :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> ctx () -> n a -> m (ctx a)
-lower hdl ctx = hdl . (<$ ctx)
-{-# INLINE lower #-}
+lowerInit :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> ctx () -> n a -> m (ctx a)
+lowerInit hdl ctx = hdl . (<$ ctx)
+{-# INLINE lowerInit #-}
 
 cont :: Functor ctx => (forall x . ctx (n x) -> m (ctx x)) -> (a -> n b) -> ctx a -> m (ctx b)
 cont hdl k = hdl . fmap k
@@ -66,7 +67,7 @@ instance Algebra (Either e) where
 
   alg hdl ctx = \case
     L (Throw e)   -> Left e
-    R (Catch m h) -> either (lower hdl ctx . h) pure (lower hdl ctx m)
+    R (Catch m h) -> either (lowerInit hdl ctx . h) pure (lowerInit hdl ctx m)
   {-# INLINE alg #-}
 
 instance Algebra [] where
@@ -82,7 +83,7 @@ instance Algebra ((->) r) where
 
   alg hdl ctx = \case
     Ask       -> (<$ ctx)
-    Local f m -> lower hdl ctx m . f
+    Local f m -> lowerInit hdl ctx m . f
   {-# INLINE alg #-}
 
 
@@ -99,7 +100,7 @@ instance Algebra m => Algebra (E.ExceptT e m) where
 
   alg hdl ctx = \case
     L (L (Throw e))   -> E.throwE e
-    L (R (Catch m h)) -> E.catchE (lower hdl ctx m) (lower hdl ctx . h)
+    L (R (Catch m h)) -> E.catchE (lowerInit hdl ctx m) (lowerInit hdl ctx . h)
     R other           -> E.ExceptT $ thread (either (pure . Left) E.runExceptT) hdl (Right ctx) other
   {-# INLINE alg #-}
 
@@ -108,7 +109,7 @@ instance Algebra m => Algebra (R.ReaderT r m) where
 
   alg hdl ctx = \case
     L Ask         -> (<$ ctx) <$> R.ask
-    L (Local f m) -> R.local f (lower hdl ctx m)
+    L (Local f m) -> R.local f (lowerInit hdl ctx m)
     R other       -> R.ReaderT $ \ r -> alg ((`R.runReaderT` r) . hdl) ctx other
   {-# INLINE alg #-}
 
