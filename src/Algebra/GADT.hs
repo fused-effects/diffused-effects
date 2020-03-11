@@ -1,18 +1,20 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 module Algebra.GADT
 ( Algebra(..)
 , send
 , thread
 ) where
 
-import Data.Functor.Compose
-import Data.Functor.Identity
-import Data.Kind (Type)
-import Data.List.NonEmpty (NonEmpty)
-import Effect.GADT
-import Effect.Sum
+import qualified Control.Monad.Trans.Reader as R
+import           Data.Functor.Compose
+import           Data.Functor.Identity
+import           Data.Kind (Type)
+import           Data.List.NonEmpty (NonEmpty)
+import           Effect.GADT
+import           Effect.Sum
 
 class Monad m => Algebra m where
   type Sig m :: (Type -> Type) -> (Type -> Type)
@@ -62,5 +64,16 @@ instance Algebra ((->) r) where
   alg hdl ctx = \case
     Ask       -> (<$ ctx)
     Local f m -> lower m . f
+    where
+    lower = hdl . (<$ ctx)
+
+
+instance Algebra m => Algebra (R.ReaderT r m) where
+  type Sig (R.ReaderT r m) = Reader r :+: Sig m
+
+  alg hdl ctx = \case
+    L Ask         -> (<$ ctx) <$> R.ask
+    L (Local f m) -> R.local f (lower m)
+    R other       -> R.ReaderT $ \ r -> alg ((`R.runReaderT` r) . hdl) ctx other
     where
     lower = hdl . (<$ ctx)
