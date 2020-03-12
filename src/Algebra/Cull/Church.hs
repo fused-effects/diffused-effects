@@ -48,15 +48,15 @@ instance Algebra m => Algebra (CullT m) where
   type Sig (CullT m) = Cull :+: NonDet :+: Sig m
 
   alg hdl ctx = \case
-    L (Cull m k)         -> CullT (local (const True) (runCullT (hdl (m <$ ctx)))) >>= hdl . fmap k
-    R (L (L Empty))      -> CullT empty
-    R (L (R (Choose k))) -> CullT $ ReaderT $ \ cull -> do
-      let CullT l = hdl (k False <$ ctx)
-          CullT r = hdl (k True  <$ ctx)
+    L (Cull m k)     -> CullT (local (const True) (runCullT (hdl (m <$ ctx)))) >>= hdl . fmap k
+    R (L (L Empty))  -> CullT empty
+    R (L (R Choose)) -> CullT $ ReaderT $ \ cull -> do
+      let CullT l = pure (False <$ ctx)
+          CullT r = pure (True  <$ ctx)
       if cull then
         NonDetT $ \ fork leaf nil ->
           runNonDet fork leaf (runNonDet fork leaf nil (runReaderT r cull)) (runReaderT l cull)
       else
         runReaderT l cull <|> runReaderT r cull
-    R (R other)          -> CullT (alg (runCullT . hdl) ctx (R (R other)))
+    R (R other)      -> CullT (alg (runCullT . hdl) ctx (R (R other)))
   {-# INLINE alg #-}

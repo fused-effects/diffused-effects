@@ -27,8 +27,16 @@ import           Data.Functor.Identity
 import           Data.Kind (Type)
 import           Data.List.NonEmpty (NonEmpty)
 import           Data.Tuple (swap)
-import           Effect.GADT
+import           Effect.Catch.Internal
+import           Effect.Choose.Internal
+import           Effect.Empty.Internal
+import           Effect.Error.Internal
+import           Effect.NonDet.Internal
+import           Effect.Reader.Internal
+import           Effect.State.Internal
 import           Effect.Sum
+import           Effect.Throw.Internal
+import           Effect.Writer.Internal
 
 type Handler ctx m n = forall x. ctx (m x) -> n (ctx x)
 
@@ -143,22 +151,3 @@ instance (Monoid w, Algebra m) => Algebra (W.S.WriterT w m) where
     L (Censor f m) -> W.S.censor f (lowerInit hdl ctx m)
     R other        -> W.S.WriterT $ swap <$> thread (\ (w, x) -> swap . fmap (mappend w) <$> W.S.runWriterT x) hdl (mempty, ctx) other
   {-# INLINE alg #-}
-
-
-tell :: Has (Writer w) m => w -> m ()
-tell = send . Tell
-{-# INLINE tell #-}
-
-censor :: Has (Writer w) m => (w -> w) -> m a -> m a
-censor f m = send (Censor f m)
-{-# INLINE censor #-}
-
-listen :: Has (Writer w) m => m a -> m (w, a)
-listen m = send (Listen m)
-{-# INLINE listen #-}
-
-pass :: forall w m a . (Monoid w, Has (Writer w) m) => m (w -> w, a) -> m a
-pass m = do
-  (w, (f, a)) <- censor @w (const mempty) (listen m)
-  a <$ tell (f w)
-{-# INLINE pass #-}

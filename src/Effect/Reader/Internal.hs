@@ -1,8 +1,8 @@
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
 module Effect.Reader.Internal
 ( Reader(..)
 ) where
 
-data Reader r m k
-  = Ask (r -> m k)
-  | forall b . Local (r -> r) (m b) (b -> m k)
+data Reader r m k where
+  Ask   ::                    Reader r m r
+  Local :: (r -> r) -> m a -> Reader r m a

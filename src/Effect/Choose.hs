@@ -23,7 +23,7 @@ import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.Semigroup as S
 
 (<|>) :: Has Choose m => m a -> m a -> m a
-(<|>) a b = send (Choose (bool b a))
+(<|>) a b = send Choose >>= bool b a
 
 infixl 3 <|>
 

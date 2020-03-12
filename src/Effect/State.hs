@@ -17,15 +17,15 @@ import Algebra
 import Effect.State.Internal (State(..))
 
 get :: Has (State s) m => m s
-get = send (Get pure)
+get = send Get
 {-# INLINEABLE get #-}
 
 gets :: Has (State s) m => (s -> a) -> m a
-gets f = send (Get (pure . f))
+gets = (`fmap` get)
 {-# INLINEABLE gets #-}
 
 put :: Has (State s) m => s -> m ()
-put s = send (Put s (pure ()))
+put s = send (Put s)
 {-# INLINEABLE put #-}
 
 modify :: Has (State s) m => (s -> s) -> m ()

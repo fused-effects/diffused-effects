@@ -67,8 +67,8 @@ instance Algebra m => Algebra (ChooseT m) where
   type Sig (ChooseT m) = Choose :+: Sig m
 
   alg (hdl :: forall x . ctx (n x) -> ChooseT m (ctx x)) (ctx :: ctx ()) = \case
-    L (Choose k) -> ChooseT $ \ fork leaf -> fork (runChoose fork leaf (hdl (k True <$ ctx))) (runChoose fork leaf (hdl (k False <$ ctx)))
-    R other      -> ChooseT $ \ fork leaf -> thread dst (pure ctx) other >>= runIdentity . runChoose (coerce fork) (coerce leaf)
+    L Choose -> ChooseT $ \ fork leaf -> fork (leaf (True <$ ctx)) (leaf (False <$ ctx))
+    R other  -> ChooseT $ \ fork leaf -> thread dst (pure ctx) other >>= runIdentity . runChoose (coerce fork) (coerce leaf)
     where
     dst :: ChooseT Identity (ctx (n a)) -> m (ChooseT Identity (ctx a))
     dst = runIdentity . runChoose (liftA2 (liftA2 (<|>))) (pure . runChoose (liftA2 (<|>)) (pure . pure) . hdl)
