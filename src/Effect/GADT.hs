@@ -1,2 +1,0 @@
-module Effect.GADT
-() where

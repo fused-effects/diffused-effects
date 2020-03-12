@@ -38,7 +38,6 @@ library
   import: common
   exposed-modules:
     Algebra
-    Algebra.GADT
     Algebra.Choose.Church
     Algebra.Cull.Church
     Algebra.Cut.Church
@@ -54,7 +53,6 @@ library
     Effect.Empty
     Effect.Error
     Effect.Fail
-    Effect.GADT
     Effect.Labelled
     Effect.Lift
     Effect.NonDet
