@@ -1,5 +1,10 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
 module Effect.Choose.Internal
 ( Choose(..)
 ) where
 
-newtype Choose m k = Choose (Bool -> m k)
+import Data.Kind (Type)
+
+data Choose (m :: Type -> Type) k where
+  Choose :: Choose m Bool

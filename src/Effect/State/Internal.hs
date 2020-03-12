@@ -1,7 +1,11 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
 module Effect.State.Internal
 ( State(..)
 ) where
 
-data State s m k
-  = Get (s -> m k)
-  | Put s (m k)
+import Data.Kind (Type)
+
+data State s (m :: Type -> Type) k where
+  Get ::      State s m s
+  Put :: s -> State s m ()

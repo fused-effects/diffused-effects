@@ -1,6 +1,10 @@
+{-# LANGUAGE GADTSyntax #-}
 {-# LANGUAGE KindSignatures #-}
 module Effect.Throw.Internal
 ( Throw(..)
 ) where
 
-newtype Throw e (m :: * -> *) k = Throw e
+import Data.Kind (Type)
+
+data Throw e (m :: Type -> Type) k where
+  Throw :: e -> Throw e m a

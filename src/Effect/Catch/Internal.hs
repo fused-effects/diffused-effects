@@ -1,7 +1,7 @@
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs #-}
 module Effect.Catch.Internal
 ( Catch(..)
 ) where
 
-data Catch e m k
-  = forall b . Catch (m b) (e -> m b) (b -> m k)
+data Catch e m k where
+  Catch :: m a -> (e -> m a) -> Catch e m a

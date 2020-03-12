@@ -38,12 +38,12 @@ library
   import: common
   exposed-modules:
     Algebra
-    Algebra.Trans
     Algebra.Choose.Church
     Algebra.Cull.Church
     Algebra.Cut.Church
     Algebra.Fail.Either
     Algebra.NonDet.Church
+    Algebra.Trans
     Control.Monad.Lift
     Control.Monad.Trans.Lower
     Effect.Catch

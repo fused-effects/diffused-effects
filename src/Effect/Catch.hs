@@ -12,4 +12,4 @@ import Algebra
 import Effect.Catch.Internal (Catch(..))
 
 catchError :: Has (Catch e) m => m a -> (e -> m a) -> m a
-catchError m h = send (Catch m h pure)
+catchError m h = send (Catch m h)
