@@ -1,7 +1,9 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 module Algebra.GADT
@@ -141,3 +143,22 @@ instance (Monoid w, Algebra m) => Algebra (W.S.WriterT w m) where
     L (Censor f m) -> W.S.censor f (lowerInit hdl ctx m)
     R other        -> W.S.WriterT $ swap <$> thread (\ (w, x) -> swap . fmap (mappend w) <$> W.S.runWriterT x) hdl (mempty, ctx) other
   {-# INLINE alg #-}
+
+
+tell :: Has (Writer w) m => w -> m ()
+tell = send . Tell
+{-# INLINE tell #-}
+
+censor :: Has (Writer w) m => (w -> w) -> m a -> m a
+censor f m = send (Censor f m)
+{-# INLINE censor #-}
+
+listen :: Has (Writer w) m => m a -> m (w, a)
+listen m = send (Listen m)
+{-# INLINE listen #-}
+
+pass :: forall w m a . (Monoid w, Has (Writer w) m) => m (w -> w, a) -> m a
+pass m = do
+  (w, (f, a)) <- censor @w (const mempty) (listen m)
+  a <$ tell (f w)
+{-# INLINE pass #-}
