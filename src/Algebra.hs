@@ -205,7 +205,7 @@ instance (Algebra m, Monoid w) => Algebra (W.L.WriterT w m) where
     L (Tell w)     -> ctx <$ W.L.tell w
     L (Listen m)   -> swapAndLift <$> W.L.listen (hdl (m <$ ctx))
     L (Censor f m) -> W.L.censor f (hdl (m <$ ctx))
-    R other          -> W.L.WriterT $ swap <$> thread (\ (s, x) -> swap . fmap (mappend s) <$> W.L.runWriterT (hdl x)) (mempty, ctx) other
+    R other        -> W.L.WriterT $ swap <$> thread (\ (s, x) -> swap . fmap (mappend s) <$> W.L.runWriterT (hdl x)) (mempty, ctx) other
   {-# INLINE alg #-}
 
 instance (Algebra m, Monoid w) => Algebra (W.S.WriterT w m) where
